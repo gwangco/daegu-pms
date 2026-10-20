@@ -1,0 +1,64 @@
+server:
+  port: 8080
+  servlet:
+    encoding:
+      charset: UTF-8
+      force: true
+
+spring:
+  application:
+    name: daegu-pms
+  profiles:
+    active: local
+
+  # 초경량 H2 Database (개발 및 로컬 테스트용)
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:daegupms;MODE=MySQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password: 
+
+  # H2 웹 콘솔 활성화 (브라우저에서 DB 직접 확인 가능)
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+      settings:
+        web-allow-others: false
+
+  # 정적 리소스 및 Thymeleaf 뷰 템플릿 설정
+  thymeleaf:
+    cache: false
+    prefix: classpath:/templates/
+    suffix: .html
+    encoding: UTF-8
+
+  # 사업계획서 및 전자세금계산서/영수증 증빙 파일 업로드 용량 설정
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 20MB
+      max-request-size: 50MB
+
+  # SQL 초기화 스크립트 실행 (schema.sql, data.sql)
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema.sql
+      data-locations: classpath:data.sql
+
+# MyBatis 설정 (공공/SI 표준 매퍼)
+mybatis:
+  mapper-locations: classpath:mapper/**/*.xml
+  type-aliases-package: kr.go.daegu.pms.domain
+  configuration:
+    map-underscore-to-camel-case: true
+    jdbc-type-for-null: 'NULL'
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+
+# 로깅 레벨
+logging:
+  level:
+    root: INFO
+    kr.go.daegu.pms: DEBUG
+    org.springframework.security: INFO

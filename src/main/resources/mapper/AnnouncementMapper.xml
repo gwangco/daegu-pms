@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.go.daegu.pms.mapper.AnnouncementMapper">
+
+    <select id="selectAllAnnouncements" resultType="kr.go.daegu.pms.domain.Announcement">
+        SELECT 
+            a.announcement_id,
+            a.title,
+            a.field_code,
+            c.code_name AS field_name,
+            a.total_budget,
+            a.max_grant,
+            a.start_date,
+            a.end_date,
+            a.content,
+            a.status,
+            a.view_count,
+            a.writer_id,
+            u.user_name AS writer_name,
+            a.created_at
+        FROM announcement a
+        LEFT JOIN com_code_detail c ON a.field_code = c.code_id AND c.group_id = 'FIELD'
+        LEFT JOIN users u ON a.writer_id = u.user_id
+        <where>
+            <if test="fieldCode != null and fieldCode != ''">
+                AND a.field_code = #{fieldCode}
+            </if>
+            <if test="status != null and status != ''">
+                AND a.status = #{status}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (a.title LIKE CONCAT('%', #{keyword}, '%') OR a.content LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+        </where>
+        ORDER BY a.announcement_id DESC
+    </select>
+
+    <select id="selectAnnouncementById" resultType="kr.go.daegu.pms.domain.Announcement">
+        SELECT 
+            a.announcement_id,
+            a.title,
+            a.field_code,
+            c.code_name AS field_name,
+            a.total_budget,
+            a.max_grant,
+            a.start_date,
+            a.end_date,
+            a.content,
+            a.status,
+            a.view_count,
+            a.writer_id,
+            u.user_name AS writer_name,
+            a.created_at
+        FROM announcement a
+        LEFT JOIN com_code_detail c ON a.field_code = c.code_id AND c.group_id = 'FIELD'
+        LEFT JOIN users u ON a.writer_id = u.user_id
+        WHERE a.announcement_id = #{announcementId}
+    </select>
+
+    <insert id="insertAnnouncement" useGeneratedKeys="true" keyProperty="announcementId">
+        INSERT INTO announcement (
+            title, field_code, total_budget, max_grant, start_date, end_date, content, status, view_count, writer_id
+        ) VALUES (
+            #{title}, #{fieldCode}, #{totalBudget}, #{maxGrant}, #{startDate}, #{endDate}, #{content}, #{status}, 0, #{writerId}
+        )
+    </insert>
+
+    <update id="updateAnnouncement">
+        UPDATE announcement
+        SET title = #{title},
+            field_code = #{fieldCode},
+            total_budget = #{totalBudget},
+            max_grant = #{maxGrant},
+            start_date = #{startDate},
+            end_date = #{endDate},
+            content = #{content},
+            status = #{status}
+        WHERE announcement_id = #{announcementId}
+    </update>
+
+    <update id="incrementViewCount">
+        UPDATE announcement
+        SET view_count = view_count + 1
+        WHERE announcement_id = #{announcementId}
+    </update>
+
+    <select id="countActiveAnnouncements" resultType="int">
+        SELECT COUNT(*) FROM announcement WHERE status = 'OPEN'
+    </select>
+
+</mapper>

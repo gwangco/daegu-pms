@@ -1,0 +1,31 @@
+# Gradle & Java Build Outputs
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**/empty
+!**/src/test/**/empty
+
+# IDE Configurations
+.idea/
+*.iml
+.vscode/
+.classpath
+.project
+.settings/
+bin/
+out/
+
+# Log & Temporary files
+*.log
+*.tmp
+*.bak
+
+# OS specific files
+Thumbs.db
+.DS_Store
+
+# [Private & Local Agent Context Tracking]
+# 로컬 개발 및 AI 에이전트 인수인계용 파일은 깃에 올리지 않음
+PROJECT_CONTEXT.md
+LOCAL_*.md
+*.local

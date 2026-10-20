@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>지원사업 온라인 신청서 작성 | D-PMS</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>body { background-color: #f8f9fa; }</style>
+</head>
+<body>
+
+<div th:replace="~{fragments/navbar :: navbar}"></div>
+
+<div class="container py-4" style="max-width: 860px;">
+    <div class="mb-3">
+        <a th:href="@{'/announcements/' + ${announcement.announcementId}}" class="text-decoration-none text-muted small">
+            <i class="bi bi-arrow-left"></i> 공고 상세로 돌아가기
+        </a>
+    </div>
+
+    <div class="card border-0 shadow-sm p-4 bg-white">
+        <div class="border-bottom pb-3 mb-4">
+            <span class="badge bg-primary mb-1">지원사업 신청</span>
+            <h4 class="fw-bold text-dark mb-1" th:text="${announcement.title}">2026년 대구 미래 모빌리티 부품 R&D</h4>
+            <p class="text-muted small mb-0">기업당 최대 지원금: <strong class="text-danger" th:text="${#numbers.formatInteger(announcement.maxGrant, 0, 'COMMA')} + '원'">100,000,000원</strong></p>
+        </div>
+
+        <form th:action="@{/applications/apply}" method="post">
+            <input type="hidden" name="announcementId" th:value="${announcement.announcementId}">
+
+            <div class="mb-3">
+                <label class="form-label fw-semibold text-secondary">개발 과제명 (프로젝트명) <span class="text-danger">*</span></label>
+                <input type="text" name="projectName" class="form-control" placeholder="예: 전기차 배터리팩 경량화를 위한 탄소복합소재 부품 개발" required>
+            </div>
+
+            <div class="row g-3 mb-3">
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold text-secondary">총 소요 예산 (원) <span class="text-danger">*</span></label>
+                    <input type="number" id="totalBudget" name="totalBudget" class="form-control" placeholder="예: 125000000" required oninput="calcSelfFunding()">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold text-secondary">신청 지원금 (원) <span class="text-danger">*</span></label>
+                    <input type="number" id="requestGrant" name="requestGrant" class="form-control" placeholder="예: 100000000" th:max="${announcement.maxGrant}" required oninput="calcSelfFunding()">
+                    <div class="form-text small">공고 기준 한도 내 입력</div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold text-secondary">기업 자부담금 (자동계산)</label>
+                    <input type="number" id="selfFunding" name="selfFunding" class="form-control bg-light" readonly placeholder="0">
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-semibold text-secondary">사업계획서 요약 및 핵심 개발 목표 <span class="text-danger">*</span></label>
+                <textarea name="summary" class="form-control" rows="5" placeholder="과제의 필요성, 주요 개발 내용 및 목표 스펙, 기대효과를 요약하여 작성하세요." required></textarea>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label fw-semibold text-secondary">사업계획서 첨부 파일명</label>
+                <input type="text" name="planFileName" class="form-control" value="business_plan_daegu_2026.pdf">
+                <div class="form-text small">전자정부 EgovFileMng 연계 표준 첨부파일 규격</div>
+            </div>
+
+            <div class="d-flex justify-content-between pt-3 border-top">
+                <a th:href="@{/announcements}" class="btn btn-outline-secondary">취소</a>
+                <button type="submit" class="btn btn-primary px-4 fw-semibold">
+                    <i class="bi bi-send me-1"></i> 사업계획서 최종 제출
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function calcSelfFunding() {
+        const total = parseFloat(document.getElementById('totalBudget').value) || 0;
+        const grant = parseFloat(document.getElementById('requestGrant').value) || 0;
+        const self = Math.max(0, total - grant);
+        document.getElementById('selfFunding').value = self;
+    }
+</script>
+</body>
+</html>

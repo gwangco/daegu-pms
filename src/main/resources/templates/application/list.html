@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>과제 신청 및 선정 현황 | D-PMS</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>body { background-color: #f8f9fa; }</style>
+</head>
+<body>
+
+<div th:replace="~{fragments/navbar :: navbar}"></div>
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold text-dark mb-1">과제 신청 및 심사·선정 현황</h3>
+            <p class="text-muted small mb-0">접수된 R&D 및 기술지원 과제의 심사 진행 현황 및 사업비 정산 링크를 확인하세요.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <!-- Apache POI 대용량 엑셀 다운로드 (실무 핵심 기능) -->
+            <a th:href="@{/excel/applications}" class="btn btn-success btn-sm shadow-sm" sec:authorize="hasAnyRole('MANAGER', 'ADMIN')">
+                <i class="bi bi-file-earmark-excel me-1"></i> 엑셀 일괄 다운로드 (POI)
+            </a>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="text-center" style="width: 8%">접수번호</th>
+                            <th style="width: 25%">공고명</th>
+                            <th style="width: 15%">신청기업</th>
+                            <th>과제명</th>
+                            <th class="text-end" style="width: 12%">신청지원금</th>
+                            <th class="text-center" style="width: 12%">진행상태</th>
+                            <th class="text-center" style="width: 14%">관리</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="app : ${applications}">
+                            <td class="text-center fw-bold text-secondary" th:text="'#' + ${app.applicationId}">#1</td>
+                            <td class="small text-truncate" style="max-width: 200px;" th:text="${app.announcementTitle}">공고명</td>
+                            <td>
+                                <strong class="text-dark" th:text="${app.companyName}">대구모빌리티</strong>
+                                <div class="small text-muted" th:text="${app.businessNo}">504-81-98765</div>
+                            </td>
+                            <td>
+                                <a th:href="@{'/applications/' + ${app.applicationId}}" class="text-decoration-none fw-semibold text-dark" th:text="${app.projectName}">
+                                    도심형 PBV 자율주행용 센서 국산화 개발
+                                </a>
+                            </td>
+                            <td class="text-end fw-bold text-primary" th:text="${#numbers.formatInteger(app.requestGrant, 0, 'COMMA')} + '원'">
+                                100,000,000원
+                            </td>
+                            <td class="text-center">
+                                <span th:if="${app.status == 'SUBMITTED'}" class="badge bg-secondary">접수완료</span>
+                                <span th:if="${app.status == 'EVALUATING'}" class="badge bg-info text-dark">전문가심사중</span>
+                                <span th:if="${app.status == 'SELECTED'}" class="badge bg-success">최종선정(협약)</span>
+                                <span th:if="${app.status == 'REJECTED'}" class="badge bg-danger">심사탈락</span>
+                            </td>
+                            <td class="text-center">
+                                <div class="btn-group btn-group-sm">
+                                    <a th:href="@{'/applications/' + ${app.applicationId}}" class="btn btn-outline-secondary">조회</a>
+                                    <!-- 최종 선정된 과제는 e-정산 시스템으로 연결 -->
+                                    <a th:if="${app.status == 'SELECTED'}" th:href="@{'/settlements/application/' + ${app.applicationId}}" class="btn btn-primary" title="사업비 e-정산">
+                                        <i class="bi bi-receipt me-1"></i> e-정산
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(applications)}">
+                            <td colspan="7" class="text-center py-4 text-muted">등록된 과제 신청 내역이 없습니다.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="~{fragments/navbar :: footer}"></div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
