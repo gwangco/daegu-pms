@@ -28,4 +28,6 @@ Thumbs.db
 # 로컬 개발 및 AI 에이전트 인수인계용 파일은 깃에 올리지 않음
 PROJECT_CONTEXT.md
 LOCAL_*.md
+NOTION_*.md
 *.local
+
