@@ -11,8 +11,8 @@
         </Console>
     </Appenders>
     <Loggers>
-        <!-- 우리 업무 코드 -->
-        <Logger name="kr.go.daegu.pms" level="DEBUG" additivity="false">
+        <!-- MyBatis Mapper도 이 패키지에 속한다. DEBUG/TRACE는 SQL 인자·결과를 노출하므로 INFO 유지 -->
+        <Logger name="kr.go.daegu.pms" level="INFO" additivity="false">
             <AppenderRef ref="console"/>
         </Logger>
         <!-- eGovFrame 실행환경 -->
