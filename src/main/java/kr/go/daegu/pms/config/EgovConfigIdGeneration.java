@@ -38,4 +38,19 @@ public class EgovConfigIdGeneration {
         idGnrService.setTableName("APPLICATION_RECEIPT");
         return idGnrService;
     }
+
+    /**
+     * 공지 ID: NTC_0000000001 형식 (eGov 코드 생성기의 ServiceImpl 이 PK 를 IdGnr 로 발급하는 방식).
+     * 공지 ID 는 결번이 문제되지 않으므로 blockSize 10 으로 DB 접근을 줄인다. (접수번호와 비교해 볼 것)
+     */
+    @Bean(destroyMethod = "destroy")
+    public EgovTableIdGnrServiceImpl noticeIdGnrService(@Qualifier("dataSource") DataSource dataSource) {
+        EgovTableIdGnrServiceImpl idGnrService = new EgovTableIdGnrServiceImpl();
+        idGnrService.setDataSource(dataSource);
+        idGnrService.setStrategy(new EgovIdGnrStrategyImpl("NTC_", 10, '0'));
+        idGnrService.setBlockSize(10);
+        idGnrService.setTable("ids");
+        idGnrService.setTableName("NOTICE");
+        return idGnrService;
+    }
 }

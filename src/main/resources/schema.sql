@@ -143,3 +143,20 @@ CREATE TABLE IF NOT EXISTS settlement (
     FOREIGN KEY (reviewed_by) REFERENCES users(user_id)
 );
 CREATE INDEX IF NOT EXISTS idx_settlement_application ON settlement (application_id, status);
+
+-- 9. 공지사항 (eGovFrame VS Code 확장 CRUD 코드 생성기 입력 DDL: docs/egov-codegen/notice.ddl.sql)
+CREATE TABLE IF NOT EXISTS notice (
+    notice_id VARCHAR(20) PRIMARY KEY,        -- eGov IdGnr 채번: NTC_0000000001
+    title VARCHAR(200) NOT NULL,
+    content CLOB NOT NULL,
+    important_yn CHAR(1) DEFAULT 'N' NOT NULL,
+    view_count INT DEFAULT 0 NOT NULL,
+    use_yn CHAR(1) DEFAULT 'Y' NOT NULL,      -- 논리 삭제 플래그
+    writer_id VARCHAR(50) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_by VARCHAR(50),
+    updated_at TIMESTAMP,
+    FOREIGN KEY (writer_id) REFERENCES users(user_id),
+    FOREIGN KEY (updated_by) REFERENCES users(user_id)
+);
+CREATE INDEX IF NOT EXISTS idx_notice_list ON notice (use_yn, important_yn, created_at);

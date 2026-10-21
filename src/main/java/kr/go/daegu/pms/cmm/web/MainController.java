@@ -3,6 +3,8 @@ package kr.go.daegu.pms.cmm.web;
 import kr.go.daegu.pms.announcement.service.AnnouncementSearchVO;
 import kr.go.daegu.pms.announcement.service.AnnouncementService;
 import kr.go.daegu.pms.application.service.ApplicationService;
+import kr.go.daegu.pms.notice.service.NoticeService;
+import kr.go.daegu.pms.notice.service.NoticeVO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -17,6 +19,7 @@ public class MainController {
 
     private final AnnouncementService announcementService;
     private final ApplicationService applicationService;
+    private final NoticeService noticeService;
 
     @GetMapping("/")
     public String index(Model model) {
@@ -30,6 +33,11 @@ public class MainController {
         searchVO.setStatus("OPEN");
         searchVO.setRecordCountPerPage(RECENT_ANNOUNCEMENT_COUNT);
         model.addAttribute("announcements", announcementService.selectAnnouncementList(searchVO));
+
+        // 최근 공지사항 5건 (중요 공지 우선)
+        NoticeVO noticeSearchVO = new NoticeVO();
+        noticeSearchVO.setRecordCountPerPage(RECENT_ANNOUNCEMENT_COUNT);
+        model.addAttribute("notices", noticeService.selectNoticeList(noticeSearchVO));
 
         // 전략산업별 예산 배분 차트 데이터 (DB 집계)
         model.addAttribute("fieldBudgetStats", announcementService.selectFieldBudgetStatList());

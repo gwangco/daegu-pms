@@ -24,5 +24,6 @@
         <typeAlias alias="userVO" type="kr.go.daegu.pms.user.service.UserVO"/>
         <typeAlias alias="commonCodeVO" type="kr.go.daegu.pms.cmm.service.CommonCodeVO"/>
         <typeAlias alias="fileVO" type="kr.go.daegu.pms.cmm.service.FileVO"/>
+        <typeAlias alias="noticeVO" type="kr.go.daegu.pms.notice.service.NoticeVO"/>
     </typeAliases>
 </configuration>
