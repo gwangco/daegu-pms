@@ -52,14 +52,7 @@ spring:
       # 미지정 시 OS 기본 문자셋(한글 Windows = MS949)으로 읽어 한글 seed 데이터가 깨진다
       encoding: UTF-8
 
-# MyBatis 설정 (공공/SI 표준 매퍼)
-mybatis:
-  mapper-locations: classpath:mapper/**/*.xml
-  type-aliases-package: kr.go.daegu.pms.domain
-  configuration:
-    map-underscore-to-camel-case: true
-    jdbc-type-for-null: 'NULL'
-    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+# MyBatis 설정은 eGovFrame 방식대로 Java Config(EgovConfigMapper) + egovframework/sqlmap/sql-mapper-config.xml 에서 관리
 
 # D-PMS 애플리케이션 전용 설정
 app:

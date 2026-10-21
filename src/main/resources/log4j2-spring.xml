@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Log4j2 설정 (전자정부 표준프레임워크 실행환경의 로깅 구현체)
+    - 파일명이 log4j2-spring.xml 이면 Spring Boot 가 읽어 application.yml 의 logging.level 도 함께 적용한다
+    - 운영에서는 RollingFile 로 파일 보관 기간을 정하고, 개인정보가 로그에 남지 않도록 주의한다
+-->
+<Configuration status="WARN">
+    <Appenders>
+        <Console name="console" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} %5p [%t] %c{1.} - %m%n" charset="UTF-8"/>
+        </Console>
+    </Appenders>
+    <Loggers>
+        <!-- 우리 업무 코드 -->
+        <Logger name="kr.go.daegu.pms" level="DEBUG" additivity="false">
+            <AppenderRef ref="console"/>
+        </Logger>
+        <!-- eGovFrame 실행환경 -->
+        <Logger name="org.egovframe" level="INFO" additivity="false">
+            <AppenderRef ref="console"/>
+        </Logger>
+        <Logger name="org.springframework" level="INFO" additivity="false">
+            <AppenderRef ref="console"/>
+        </Logger>
+        <Root level="INFO">
+            <AppenderRef ref="console"/>
+        </Root>
+    </Loggers>
+</Configuration>

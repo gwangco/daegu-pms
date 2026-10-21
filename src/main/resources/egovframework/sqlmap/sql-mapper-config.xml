@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN" "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<!-- MyBatis 전역 설정 (전자정부 표준프레임워크 sql-mapper-config.xml 규칙) -->
+<configuration>
+    <settings>
+        <!-- 쿼리 1건이 이 시간(초)을 넘기면 중단 (무한 대기·과부하 방지) -->
+        <setting name="defaultStatementTimeout" value="10"/>
+        <!-- DB 컬럼 user_name → Java 필드 userName 자동 매핑 -->
+        <setting name="mapUnderscoreToCamelCase" value="true"/>
+        <!-- null 파라미터를 JDBC NULL 로 전달 (Oracle 등에서 "부적합한 열 유형" 오류 방지) -->
+        <setting name="jdbcTypeForNull" value="NULL"/>
+        <setting name="logImpl" value="SLF4J"/>
+    </settings>
+
+    <typeAliases>
+        <package name="kr.go.daegu.pms.domain"/>
+    </typeAliases>
+</configuration>
