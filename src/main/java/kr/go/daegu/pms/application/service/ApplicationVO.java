@@ -17,6 +17,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class ApplicationVO {
     private Long applicationId;
+    private String receiptNo;          // 대외 공개용 접수번호 (eGov IdGnr 채번, 서버에서만 설정)
 
     @NotNull(message = "신청할 공고 정보가 없습니다.")
     private Long announcementId;

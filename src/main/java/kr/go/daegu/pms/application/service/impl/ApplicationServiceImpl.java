@@ -1,20 +1,24 @@
 package kr.go.daegu.pms.application.service.impl;
 
-import org.egovframe.rte.fdl.cmmn.EgovAbstractServiceImpl;
-import kr.go.daegu.pms.cmm.exception.BusinessException;
-import kr.go.daegu.pms.cmm.util.SecurityUtil;
-import kr.go.daegu.pms.announcement.service.AnnouncementVO;
-import kr.go.daegu.pms.application.service.ApplicationVO;
-import kr.go.daegu.pms.application.service.ApplicationSearchVO;
-import kr.go.daegu.pms.application.service.ApplicationStatus;
-import kr.go.daegu.pms.cmm.service.FileVO;
-import kr.go.daegu.pms.evaluation.service.impl.EvaluationMapper;
 import kr.go.daegu.pms.announcement.service.AnnouncementService;
+import kr.go.daegu.pms.announcement.service.AnnouncementVO;
 import kr.go.daegu.pms.application.service.ApplicationAccessChecker;
+import kr.go.daegu.pms.application.service.ApplicationSearchVO;
 import kr.go.daegu.pms.application.service.ApplicationService;
+import kr.go.daegu.pms.application.service.ApplicationStatus;
+import kr.go.daegu.pms.application.service.ApplicationVO;
+import kr.go.daegu.pms.cmm.exception.BusinessException;
 import kr.go.daegu.pms.cmm.service.FileService;
+import kr.go.daegu.pms.cmm.service.FileVO;
+import kr.go.daegu.pms.cmm.util.SecurityUtil;
+import kr.go.daegu.pms.evaluation.service.impl.EvaluationMapper;
+import jakarta.annotation.Resource;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.egovframe.rte.fdl.cmmn.EgovAbstractServiceImpl;
+import org.egovframe.rte.fdl.cmmn.exception.BaseRuntimeException;
+import org.egovframe.rte.fdl.cmmn.exception.FdlException;
+import org.egovframe.rte.fdl.idgnr.EgovIdGnrService;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -35,6 +39,13 @@ public class ApplicationServiceImpl extends EgovAbstractServiceImpl implements A
     private final FileService fileService;
     private final ApplicationAccessChecker accessChecker;
     private final Clock clock;
+
+    /**
+     * 접수번호 채번 서비스 (EgovConfigIdGeneration 의 receiptNoIdGnrService).
+     * 같은 타입(EgovIdGnrService)의 Bean 이 여러 개일 수 있으므로 eGov 관례대로 @Resource(name) 으로 이름을 지정해 주입한다.
+     */
+    @Resource(name = "receiptNoIdGnrService")
+    private EgovIdGnrService receiptNoIdGnrService;
 
     @Override
     public List<ApplicationVO> selectApplicationList(ApplicationSearchVO searchVO) {
@@ -110,6 +121,7 @@ public class ApplicationServiceImpl extends EgovAbstractServiceImpl implements A
         application.setSelfFunding(application.getTotalBudget() - application.getRequestGrant());
         application.setPlanFileId(file.getFileId());
         application.setStatus(ApplicationStatus.SUBMITTED.name());
+        application.setReceiptNo(nextReceiptNo());
         try {
             applicationMapper.insertApplication(application);
         } catch (DuplicateKeyException e) {
@@ -151,5 +163,14 @@ public class ApplicationServiceImpl extends EgovAbstractServiceImpl implements A
     @Override
     public int selectSelectedApplicationCount() {
         return applicationMapper.selectSelectedApplicationCount();
+    }
+
+    /** 접수번호 발급 (예: DPMS-00000004). 채번 실패는 시스템 장애이므로 eGov 예외 후처리 대상이 된다 */
+    private String nextReceiptNo() {
+        try {
+            return receiptNoIdGnrService.getNextStringId();
+        } catch (FdlException e) {
+            throw new BaseRuntimeException("접수번호 채번에 실패했습니다.", e);
+        }
     }
 }

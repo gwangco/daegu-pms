@@ -11,6 +11,7 @@
     -->
     <sql id="applicationColumns">
             app.application_id,
+            app.receipt_no,
             app.announcement_id,
             a.title AS announcement_title,
             app.company_user_id,
@@ -58,7 +59,9 @@
                 AND app.status = #{status}
             </if>
             <if test="searchKeyword != null and searchKeyword != ''">
-                AND (app.project_name LIKE CONCAT('%', #{searchKeyword}, '%') OR u.company_name LIKE CONCAT('%', #{searchKeyword}, '%'))
+                AND (app.project_name LIKE CONCAT('%', #{searchKeyword}, '%')
+                     OR u.company_name LIKE CONCAT('%', #{searchKeyword}, '%')
+                     OR app.receipt_no = #{searchKeyword})
             </if>
         </where>
     </sql>
@@ -105,9 +108,9 @@
 
     <insert id="insertApplication" parameterType="applicationVO" useGeneratedKeys="true" keyProperty="applicationId">
         INSERT INTO application (
-            announcement_id, company_user_id, project_name, total_budget, request_grant, self_funding, summary, plan_file_id, status, submitted_at
+            receipt_no, announcement_id, company_user_id, project_name, total_budget, request_grant, self_funding, summary, plan_file_id, status, submitted_at
         ) VALUES (
-            #{announcementId}, #{companyUserId}, #{projectName}, #{totalBudget}, #{requestGrant}, #{selfFunding}, #{summary}, #{planFileId}, #{status}, CURRENT_TIMESTAMP
+            #{receiptNo}, #{announcementId}, #{companyUserId}, #{projectName}, #{totalBudget}, #{requestGrant}, #{selfFunding}, #{summary}, #{planFileId}, #{status}, CURRENT_TIMESTAMP
         )
     </insert>
 

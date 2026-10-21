@@ -22,6 +22,13 @@ CREATE TABLE IF NOT EXISTS com_code_detail (
     FOREIGN KEY (group_id) REFERENCES com_code_group(group_id)
 );
 
+-- 2-1. 채번 테이블 (전자정부 ID Generation: EgovTableIdGnrServiceImpl 이 사용)
+--      table_name 별로 다음에 발급할 번호(next_id)를 관리한다
+CREATE TABLE IF NOT EXISTS ids (
+    table_name VARCHAR(20) PRIMARY KEY,
+    next_id DECIMAL(30) NOT NULL
+);
+
 -- 3. 사용자 및 기관 회원 (RBAC 4단계 권한)
 CREATE TABLE IF NOT EXISTS users (
     user_id VARCHAR(50) PRIMARY KEY,
@@ -72,6 +79,7 @@ CREATE INDEX IF NOT EXISTS idx_announcement_status_end ON announcement (status, 
 -- 6. 기업 사업신청서 (상태머신 라이프사이클)
 CREATE TABLE IF NOT EXISTS application (
     application_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    receipt_no VARCHAR(20) NOT NULL,          -- 대외 공개용 접수번호 (eGov IdGnr 채번: DPMS-00000001)
     announcement_id BIGINT NOT NULL,
     company_user_id VARCHAR(50) NOT NULL,
     project_name VARCHAR(200) NOT NULL,
@@ -87,7 +95,8 @@ CREATE TABLE IF NOT EXISTS application (
     FOREIGN KEY (company_user_id) REFERENCES users(user_id),
     FOREIGN KEY (plan_file_id) REFERENCES com_file(file_id),
     -- 한 기업은 같은 공고에 1회만 신청 가능 (중복 신청 DB 레벨 차단)
-    CONSTRAINT uk_application_announcement_company UNIQUE (announcement_id, company_user_id)
+    CONSTRAINT uk_application_announcement_company UNIQUE (announcement_id, company_user_id),
+    CONSTRAINT uk_application_receipt_no UNIQUE (receipt_no)
 );
 CREATE INDEX IF NOT EXISTS idx_application_company ON application (company_user_id);
 

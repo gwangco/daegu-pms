@@ -11,6 +11,9 @@ INSERT INTO com_code_group (group_id, group_name, description, use_yn) VALUES
 ('EXP_ITEM', '사업비 비목분류', '보조금 관리규정에 따른 사업비 집행 비목', 'Y'),
 ('SETTLE_STATUS', '정산 검수상태', '사업비 영수증 검수 상태', 'Y');
 
+-- 1-1. 채번 테이블 초기값: seed 신청서가 접수번호 1~3 을 사용하므로 다음 발급 번호는 4
+INSERT INTO ids (table_name, next_id) VALUES ('APPLICATION_RECEIPT', 4);
+
 -- 2. 공통코드 상세
 INSERT INTO com_code_detail (group_id, code_id, code_name, sort_order, use_yn) VALUES
 ('FIELD', 'MOBILITY', '미래 모빌리티/부품', 1, 'Y'),
@@ -84,16 +87,16 @@ INSERT INTO announcement (title, field_code, total_budget, max_grant, start_date
 
 -- 5. 신청서 샘플 (announcement 13 = 모빌리티 R&D, 14 = AI·SW 바우처)
 --    seed 계획서 파일은 물리 파일이 없으므로 plan_file_id 는 NULL
-INSERT INTO application (announcement_id, company_user_id, project_name, total_budget, request_grant, self_funding, summary, status, submitted_at) VALUES
-(13, 'company1', '도심형 PBV 자율주행용 고정밀 조향센서 모듈 국산화 개발', 125000000, 100000000, 25000000,
+INSERT INTO application (receipt_no, announcement_id, company_user_id, project_name, total_budget, request_grant, self_funding, summary, status, submitted_at) VALUES
+('DPMS-00000001', 13, 'company1', '도심형 PBV 자율주행용 고정밀 조향센서 모듈 국산화 개발', 125000000, 100000000, 25000000,
 '대구 국가산단 및 테크노폴리스 자율주행 실증단지 인프라와 연계하여 중소형 PBV에 탑재 가능한 0.05도 정밀도 조향각 센서 국산화 개발 및 신뢰성 인증 획득.',
 'SELECTED', '2026-10-15 14:30:00'),
 
-(14, 'company2', '북성로 공구골목 가공 공정 매칭을 위한 비전 AI 기반 도면 분석 솔루션', 62500000, 50000000, 12500000,
+('DPMS-00000002', 14, 'company2', '북성로 공구골목 가공 공정 매칭을 위한 비전 AI 기반 도면 분석 솔루션', 62500000, 50000000, 12500000,
 '2D CAD 및 스캔 도면의 형상 치수를 딥러닝 비전 알고리즘으로 자동 추출하여 최적의 북성로 가공 업체를 실시간 역경매 추천하는 지능형 솔루션.',
 'EVALUATING', '2026-10-18 11:20:00'),
 
-(14, 'company1', '차량 부품 외관검사 데이터 기반 AI 불량 예측 솔루션', 50000000, 40000000, 10000000,
+('DPMS-00000003', 14, 'company1', '차량 부품 외관검사 데이터 기반 AI 불량 예측 솔루션', 50000000, 40000000, 10000000,
 '모빌리티 부품 생산라인의 외관검사 이미지를 축적·학습하여 불량 발생을 사전 예측하는 AI 솔루션 개발.',
 'SUBMITTED', '2026-10-20 10:05:00');
 

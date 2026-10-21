@@ -107,6 +107,47 @@ class WorkflowIntegrationTest extends IntegrationTestSupport {
     }
 
     @Test
+    @DisplayName("접수번호: eGov IdGnr 로 DPMS-00000000 형식 채번, 연속 발급, 화면 값 변조 무시, 접수번호로 검색 가능")
+    @WithUserDetails("company1")
+    void receiptNumberIssued() throws Exception {
+        MvcResult first = mockMvc.perform(multipart("/applications/apply")
+                        .file(pdf("planFile", "a.pdf"))
+                        .param("announcementId", "15").param("projectName", "접수번호 검증 1")
+                        .param("totalBudget", "1000").param("requestGrant", "500").param("summary", "s")
+                        .param("receiptNo", "DPMS-99999999")                       // 변조 시도
+                        .with(csrf()))
+                .andExpect(status().is3xxRedirection()).andReturn();
+        ApplicationVO saved = applicationMapper.selectApplication(
+                Long.valueOf(first.getResponse().getRedirectedUrl().replace("/applications/", ""))).orElseThrow();
+
+        assertThat(saved.getReceiptNo()).matches("DPMS-\\d{8}").isNotEqualTo("DPMS-99999999");
+
+        // 다른 기업의 다음 신청은 바로 다음 번호
+        MvcResult second = mockMvc.perform(multipart("/applications/apply")
+                        .file(pdf("planFile", "b.pdf"))
+                        .param("announcementId", "16").param("projectName", "접수번호 검증 2")
+                        .param("totalBudget", "1000").param("requestGrant", "500").param("summary", "s")
+                        .with(csrf()).with(user("company2").roles("COMPANY")))
+                .andExpect(status().is3xxRedirection()).andReturn();
+        ApplicationVO next = applicationMapper.selectApplication(
+                Long.valueOf(second.getResponse().getRedirectedUrl().replace("/applications/", ""))).orElseThrow();
+        long n1 = Long.parseLong(saved.getReceiptNo().substring(5));
+        assertThat(Long.parseLong(next.getReceiptNo().substring(5))).isEqualTo(n1 + 1);
+
+        // 접수번호로 검색
+        mockMvc.perform(get("/applications").param("searchKeyword", saved.getReceiptNo()))
+                .andExpect(model().attribute("applications", org.hamcrest.Matchers.hasSize(1)));
+    }
+
+    @Test
+    @DisplayName("seed 신청서는 접수번호 DPMS-00000001 부터 표시된다")
+    @WithUserDetails("manager1")
+    void seedReceiptNumbers() throws Exception {
+        mockMvc.perform(get("/applications/1"))
+                .andExpect(content().string(containsString("접수번호 DPMS-00000001")));
+    }
+
+    @Test
     @DisplayName("확장자 위조(내용은 JSP) 및 허용되지 않은 확장자 업로드 차단")
     @WithUserDetails("company1")
     void rejectMaliciousFile() throws Exception {

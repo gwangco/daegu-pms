@@ -64,7 +64,7 @@ public class ExcelServiceImpl extends EgovAbstractServiceImpl implements ExcelSe
             for (ApplicationVO app : applications) {
                 Row row = sheet.createRow(rowIdx++);
 
-                Cell c0 = row.createCell(0); c0.setCellValue(app.getApplicationId()); c0.setCellStyle(dataStyle);
+                Cell c0 = row.createCell(0); c0.setCellValue(app.getReceiptNo()); c0.setCellStyle(dataStyle);
                 Cell c1 = row.createCell(1); c1.setCellValue(app.getAnnouncementTitle()); c1.setCellStyle(dataStyle);
                 Cell c2 = row.createCell(2); c2.setCellValue(app.getCompanyName()); c2.setCellStyle(dataStyle);
                 Cell c3 = row.createCell(3); c3.setCellValue(app.getBusinessNo()); c3.setCellStyle(dataStyle);
