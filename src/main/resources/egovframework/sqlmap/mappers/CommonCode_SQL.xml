@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.go.daegu.pms.cmm.service.impl.CommonCodeMapper">
+
+    <!-- 사용중(use_yn='Y')인 코드만 정렬순서대로 조회 → 화면 select 박스 구성 -->
+    <select id="selectCodeList" resultType="commonCodeVO">
+        SELECT d.group_id, g.group_name, d.code_id, d.code_name, d.sort_order, d.use_yn
+        FROM com_code_detail d
+        INNER JOIN com_code_group g ON d.group_id = g.group_id
+        WHERE d.group_id = #{groupId}
+          AND d.use_yn = 'Y'
+        ORDER BY d.sort_order
+    </select>
+
+    <!-- 화면에서 넘어온 코드값이 실제 존재하는 코드인지 서버 검증 -->
+    <select id="selectCodeCount" resultType="int">
+        SELECT COUNT(*)
+        FROM com_code_detail
+        WHERE group_id = #{groupId}
+          AND code_id = #{codeId}
+          AND use_yn = 'Y'
+    </select>
+
+</mapper>

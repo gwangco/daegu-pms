@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.go.daegu.pms.notice.service.impl.NoticeMapper">
+
+	<resultMap id="notice" type="kr.go.daegu.pms.notice.service.NoticeVO">
+		<result property="noticeId" column="notice_id"/>
+		<result property="title" column="title"/>
+		<result property="content" column="content"/>
+		<result property="importantYn" column="important_yn"/>
+		<result property="viewCount" column="view_count"/>
+		<result property="useYn" column="use_yn"/>
+		<result property="writerId" column="writer_id"/>
+		<result property="createdAt" column="created_at"/>
+		<result property="updatedBy" column="updated_by"/>
+		<result property="updatedAt" column="updated_at"/>
+	</resultMap>
+
+	<insert id="insertNotice">
+
+			INSERT INTO notice (
+				notice_id
+							, title
+							, content
+							, important_yn
+							, view_count
+							, use_yn
+							, writer_id
+							, created_at
+							, updated_by
+							, updated_at
+			 )
+			VALUES (
+				#{noticeId}
+							, #{title}
+							, #{content}
+							, #{importantYn}
+							, #{viewCount}
+							, #{useYn}
+							, #{writerId}
+							, #{createdAt}
+							, #{updatedBy}
+							, #{updatedAt}
+			 )
+
+	</insert>
+
+	<update id="updateNotice">
+
+			UPDATE notice
+			SET				title=#{title}				, content=#{content}
+				, important_yn=#{importantYn}
+				, view_count=#{viewCount}
+				, use_yn=#{useYn}
+				, writer_id=#{writerId}
+				, created_at=#{createdAt}
+				, updated_by=#{updatedBy}
+				, updated_at=#{updatedAt}
+			WHERE
+				notice_id=#{noticeId}
+
+	</update>
+
+	<delete id="deleteNotice">
+
+			DELETE FROM notice
+			WHERE
+				notice_id=#{noticeId}
+
+	</delete>
+
+	<select id="selectNotice" resultMap="notice">
+
+			SELECT
+				notice_id
+				, title
+				, content
+				, important_yn
+				, view_count
+				, use_yn
+				, writer_id
+				, created_at
+				, updated_by
+				, updated_at
+			FROM notice
+			WHERE
+				notice_id = #{noticeId}
+
+	</select>
+
+	<select id="selectNoticeList" resultMap="notice">
+
+			SELECT
+				notice_id
+				, title
+				, content
+				, important_yn
+				, view_count
+				, use_yn
+				, writer_id
+				, created_at
+				, updated_by
+				, updated_at
+			FROM notice
+			WHERE 1=1
+			<if test="searchKeyword != null and searchKeyword != ''">
+				<bind name="searchPattern" value="'%' + searchKeyword + '%'"/>
+		        <choose>
+		            <when test="searchCondition == 0">
+						AND	notice_id LIKE #{searchPattern}
+					</when>
+		            <when test="searchCondition == 1">
+								
+								AND title LIKE #{searchPattern}
+								
+								
+								
+								
+								
+								
+								
+								
+					</when>
+				</choose>
+			</if>
+			ORDER BY notice_id DESC
+			LIMIT #{recordCountPerPage} OFFSET #{firstIndex}
+
+	</select>
+
+	<select id="selectNoticeListTotCnt" resultType="int">
+
+			SELECT COUNT(*) totcnt
+			FROM notice
+			WHERE 1=1
+			<if test="searchKeyword != null and searchKeyword != ''">
+				<bind name="searchPattern" value="'%' + searchKeyword + '%'"/>
+		        <choose>
+		            <when test="searchCondition == 0">
+						AND notice_id LIKE #{searchPattern}
+					</when>
+		            <when test="searchCondition == 1">
+								
+								
+						AND title LIKE #{searchPattern}
+								
+								
+								
+								
+								
+								
+								
+								
+					</when>
+				</choose>
+			</if>
+	</select>
+
+</mapper>

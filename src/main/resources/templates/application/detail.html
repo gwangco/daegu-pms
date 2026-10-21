@@ -22,7 +22,7 @@
     <div class="card border-0 shadow-sm p-4 bg-white mb-4">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <div>
-                <span class="badge bg-secondary me-1" th:text="'접수번호 #' + ${app.applicationId}">#1</span>
+                <span class="badge bg-secondary me-1" th:text="'접수번호 ' + ${app.receiptNo}">접수번호 DPMS-00000001</span>
                 <th:block th:replace="~{fragments/common :: appStatus(${app.status})}"></th:block>
             </div>
             <div class="text-muted small">

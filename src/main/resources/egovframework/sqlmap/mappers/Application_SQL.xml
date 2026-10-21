@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.go.daegu.pms.application.service.impl.ApplicationMapper">
+
+    <!--
+        평가 점수는 평가위원이 여러 명일 수 있으므로 JOIN 대신 스칼라 서브쿼리로 평균을 구한다.
+        (evaluation 을 LEFT JOIN 하면 평가위원 수만큼 신청서 행이 중복되어
+         상세 조회 시 TooManyResultsException 이 발생한다)
+    -->
+    <sql id="applicationColumns">
+            app.application_id,
+            app.receipt_no,
+            app.announcement_id,
+            a.title AS announcement_title,
+            app.company_user_id,
+            u.company_name,
+            u.business_no,
+            app.project_name,
+            app.total_budget,
+            app.request_grant,
+            app.self_funding,
+            app.summary,
+            app.plan_file_id,
+            f.original_name AS plan_file_name,
+            app.status,
+            c.code_name AS status_name,
+            app.submitted_at,
+            app.created_at,
+            (SELECT ROUND(AVG(e.total_score), 1)
+               FROM evaluation e
+              WHERE e.application_id = app.application_id
+                AND e.status = 'COMPLETED') AS avg_score
+    </sql>
+
+    <sql id="applicationJoins">
+        FROM application app
+        INNER JOIN announcement a ON app.announcement_id = a.announcement_id
+        INNER JOIN users u ON app.company_user_id = u.user_id
+        LEFT JOIN com_code_detail c ON app.status = c.code_id AND c.group_id = 'APP_STATUS'
+        LEFT JOIN com_file f ON app.plan_file_id = f.file_id
+    </sql>
+
+    <sql id="searchCondition">
+        <where>
+            <if test="announcementId != null">
+                AND app.announcement_id = #{announcementId}
+            </if>
+            <if test="companyUserId != null and companyUserId != ''">
+                AND app.company_user_id = #{companyUserId}
+            </if>
+            <if test="evaluatorUserId != null and evaluatorUserId != ''">
+                AND EXISTS (SELECT 1 FROM evaluation ev
+                             WHERE ev.application_id = app.application_id
+                               AND ev.evaluator_user_id = #{evaluatorUserId})
+            </if>
+            <if test="status != null and status != ''">
+                AND app.status = #{status}
+            </if>
+            <if test="searchKeyword != null and searchKeyword != ''">
+                AND (app.project_name LIKE CONCAT('%', #{searchKeyword}, '%')
+                     OR u.company_name LIKE CONCAT('%', #{searchKeyword}, '%')
+                     OR app.receipt_no = #{searchKeyword})
+            </if>
+        </where>
+    </sql>
+
+    <select id="selectApplicationList" parameterType="applicationSearchVO" resultType="applicationVO">
+        SELECT
+            <include refid="applicationColumns"/>
+        <include refid="applicationJoins"/>
+        <include refid="searchCondition"/>
+        ORDER BY app.application_id DESC
+        <if test="recordCountPerPage > 0">
+            LIMIT #{recordCountPerPage} OFFSET #{firstIndex}
+        </if>
+    </select>
+
+    <select id="selectApplicationListTotCnt" parameterType="applicationSearchVO" resultType="int">
+        SELECT COUNT(*)
+        FROM application app
+        INNER JOIN users u ON app.company_user_id = u.user_id
+        <include refid="searchCondition"/>
+    </select>
+
+    <select id="selectApplication" resultType="applicationVO">
+        SELECT
+            <include refid="applicationColumns"/>
+        <include refid="applicationJoins"/>
+        WHERE app.application_id = #{applicationId}
+    </select>
+
+    <!-- 정산 등록 트랜잭션 동안 해당 과제 행을 잠가 동시 등록에 의한 예산 초과를 방지 -->
+    <select id="selectApplicationForUpdate" resultType="applicationVO">
+        SELECT application_id, company_user_id, request_grant, status
+        FROM application
+        WHERE application_id = #{applicationId}
+        FOR UPDATE
+    </select>
+
+    <select id="selectApplicationCountByCompany" resultType="int">
+        SELECT COUNT(*)
+        FROM application
+        WHERE announcement_id = #{announcementId}
+          AND company_user_id = #{companyUserId}
+    </select>
+
+    <insert id="insertApplication" parameterType="applicationVO" useGeneratedKeys="true" keyProperty="applicationId">
+        INSERT INTO application (
+            receipt_no, announcement_id, company_user_id, project_name, total_budget, request_grant, self_funding, summary, plan_file_id, status, submitted_at
+        ) VALUES (
+            #{receiptNo}, #{announcementId}, #{companyUserId}, #{projectName}, #{totalBudget}, #{requestGrant}, #{selfFunding}, #{summary}, #{planFileId}, #{status}, CURRENT_TIMESTAMP
+        )
+    </insert>
+
+    <update id="updateApplicationStatus">
+        UPDATE application
+        SET status = #{status}
+        WHERE application_id = #{applicationId}
+    </update>
+
+    <select id="selectTotalApplicationCount" resultType="int">
+        SELECT COUNT(*) FROM application
+    </select>
+
+    <select id="selectSelectedApplicationCount" resultType="int">
+        SELECT COUNT(*) FROM application WHERE status = 'SELECTED'
+    </select>
+
+</mapper>

@@ -24,7 +24,7 @@
         </div>
         <div class="d-flex gap-2" sec:authorize="hasAnyRole('MANAGER', 'ADMIN')">
             <!-- 현재 검색조건 그대로 엑셀 다운로드 -->
-            <a th:href="@{/excel/applications(status=${searchVO.status}, keyword=${searchVO.keyword})}" class="btn btn-success btn-sm shadow-sm">
+            <a th:href="@{/excel/applications(status=${searchVO.status}, searchKeyword=${searchVO.searchKeyword})}" class="btn btn-success btn-sm shadow-sm">
                 <i class="bi bi-file-earmark-excel me-1"></i> 엑셀 다운로드 (POI)
             </a>
         </div>
@@ -41,7 +41,7 @@
                     </select>
                 </div>
                 <div class="col-md-7">
-                    <input type="text" th:field="*{keyword}" class="form-control form-control-sm" placeholder="과제명 또는 기업명 검색..." maxlength="50">
+                    <input type="text" th:field="*{searchKeyword}" class="form-control form-control-sm" placeholder="과제명·기업명 또는 접수번호(DPMS-…) 검색..." maxlength="50">
                 </div>
                 <div class="col-md-2">
                     <button type="submit" class="btn btn-secondary btn-sm w-100"><i class="bi bi-search me-1"></i> 검색</button>
@@ -60,8 +60,8 @@
                 <table class="table table-hover align-middle mb-0">
                     <thead class="table-light">
                         <tr>
-                            <th class="text-center" style="width: 8%">접수번호</th>
-                            <th style="width: 22%">공고명</th>
+                            <th class="text-center" style="width: 11%">접수번호</th>
+                            <th style="width: 19%">공고명</th>
                             <th style="width: 15%">신청기업</th>
                             <th>과제명</th>
                             <th class="text-end" style="width: 12%">신청지원금</th>
@@ -72,7 +72,7 @@
                     </thead>
                     <tbody>
                         <tr th:each="app : ${applications}">
-                            <td class="text-center fw-bold text-secondary" th:text="'#' + ${app.applicationId}">#1</td>
+                            <td class="text-center fw-bold text-secondary small" th:text="${app.receiptNo}">DPMS-00000001</td>
                             <td class="small text-truncate" style="max-width: 200px;" th:text="${app.announcementTitle}">공고명</td>
                             <td>
                                 <strong class="text-dark" th:text="${app.companyName}">대구모빌리티</strong>

@@ -44,7 +44,7 @@
                     </select>
                 </div>
                 <div class="col-md-4">
-                    <input type="text" th:field="*{keyword}" class="form-control form-control-sm" placeholder="공고명·내용 검색어 입력..." maxlength="50">
+                    <input type="text" th:field="*{searchKeyword}" class="form-control form-control-sm" placeholder="공고명·내용 검색어 입력..." maxlength="50">
                 </div>
                 <div class="col-md-2">
                     <button type="submit" class="btn btn-secondary btn-sm w-100">
@@ -57,7 +57,7 @@
 
     <div class="small text-muted mb-2">
         총 <strong class="text-dark" th:text="${paginationInfo.totalRecordCount}">0</strong>건
-        (<span th:text="${paginationInfo.currentPageNo}">1</span> / <span th:text="${paginationInfo.totalPageCount}">1</span> 페이지)
+        <span th:if="${paginationInfo.totalPageCount > 0}">(<span th:text="${paginationInfo.currentPageNo}">1</span> / <span th:text="${paginationInfo.totalPageCount}">1</span> 페이지)</span>
     </div>
 
     <!-- 공고 카드 목록 -->

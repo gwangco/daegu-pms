@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.go.daegu.pms.settlement.service.impl.SettlementMapper">
+
+    <sql id="settlementColumns">
+            s.settlement_id,
+            s.application_id,
+            s.item_code,
+            c.code_name AS item_name,
+            s.expense_date,
+            s.vendor_name,
+            s.supply_amount,
+            s.vat_amount,
+            s.total_amount,
+            s.description,
+            s.receipt_file_id,
+            f.original_name AS receipt_file_name,
+            s.status,
+            s.reject_reason,
+            s.reviewed_by,
+            s.reviewed_at,
+            s.created_at
+    </sql>
+
+    <sql id="settlementJoins">
+        FROM settlement s
+        LEFT JOIN com_code_detail c ON s.item_code = c.code_id AND c.group_id = 'EXP_ITEM'
+        LEFT JOIN com_file f ON s.receipt_file_id = f.file_id
+    </sql>
+
+    <select id="selectSettlementList" resultType="settlementVO">
+        SELECT
+            <include refid="settlementColumns"/>
+        <include refid="settlementJoins"/>
+        WHERE s.application_id = #{applicationId}
+        ORDER BY s.expense_date DESC, s.settlement_id DESC
+    </select>
+
+    <select id="selectSettlement" resultType="settlementVO">
+        SELECT
+            <include refid="settlementColumns"/>
+        <include refid="settlementJoins"/>
+        WHERE s.settlement_id = #{settlementId}
+    </select>
+
+    <insert id="insertSettlement" parameterType="settlementVO" useGeneratedKeys="true" keyProperty="settlementId">
+        INSERT INTO settlement (
+            application_id, item_code, expense_date, vendor_name, supply_amount, vat_amount, total_amount, description, receipt_file_id, status
+        ) VALUES (
+            #{applicationId}, #{itemCode}, #{expenseDate}, #{vendorName}, #{supplyAmount}, #{vatAmount}, #{totalAmount}, #{description}, #{receiptFileId}, #{status}
+        )
+    </insert>
+
+    <update id="updateSettlementReview">
+        UPDATE settlement
+        SET status = #{status},
+            reject_reason = #{rejectReason},
+            reviewed_by = #{reviewedBy},
+            reviewed_at = CURRENT_TIMESTAMP
+        WHERE settlement_id = #{settlementId}
+          AND status = 'REQUESTED'
+    </update>
+
+    <select id="selectApprovedAmount" resultType="long">
+        SELECT COALESCE(SUM(total_amount), 0)
+        FROM settlement
+        WHERE application_id = #{applicationId} AND status = 'APPROVED'
+    </select>
+
+    <select id="selectUsedAmount" resultType="long">
+        SELECT COALESCE(SUM(total_amount), 0)
+        FROM settlement
+        WHERE application_id = #{applicationId} AND status IN ('APPROVED', 'REQUESTED')
+    </select>
+
+</mapper>

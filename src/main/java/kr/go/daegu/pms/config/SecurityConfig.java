@@ -39,9 +39,12 @@ public class SecurityConfig {
                 .requestMatchers("/h2-console/**").hasRole("ADMIN")
                 // 공고 등록은 담당자/관리자 (아래 공고 조회 허용 규칙보다 먼저 선언해야 함 - 위에서부터 순서대로 매칭)
                 .requestMatchers("/announcements/new").hasAnyRole("MANAGER", "ADMIN")
+                // 공지사항 등록/수정/삭제는 담당자/관리자 (아래 공지 조회 허용 규칙보다 먼저)
+                .requestMatchers("/notices/new", "/notices/*/edit", "/notices/*/delete").hasAnyRole("MANAGER", "ADMIN")
                 // 공개 페이지 (메인, 로그인, 공고 목록/상세 조회)
                 .requestMatchers("/", "/login").permitAll()
                 .requestMatchers(HttpMethod.GET, "/announcements", "/announcements/*").permitAll()
+                .requestMatchers(HttpMethod.GET, "/notices", "/notices/*").permitAll()
                 // 평가위원 전용 채점 화면
                 .requestMatchers("/evaluator/**").hasRole("EVALUATOR")
                 // 엑셀 다운로드 (개인정보·사업자번호 포함) 는 담당자/관리자만

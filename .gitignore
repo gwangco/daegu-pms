@@ -1,9 +1,8 @@
-# Gradle & Java Build Outputs
+# Maven 빌드 산출물
+target/
+# (이전 Gradle 빌드 산출물 - 혹시 남아 있어도 커밋되지 않도록 유지)
 .gradle/
 build/
-!gradle/wrapper/gradle-wrapper.jar
-!**/src/main/**/empty
-!**/src/test/**/empty
 
 # IDE Configurations
 .idea/
@@ -12,6 +11,7 @@ build/
 .classpath
 .project
 .settings/
+.factorypath
 bin/
 out/
 
@@ -19,10 +19,19 @@ out/
 *.log
 *.tmp
 *.bak
+logs/
 
 # OS specific files
 Thumbs.db
 .DS_Store
+
+# 환경변수/비밀값 파일 (DB 비밀번호, API 키 등은 절대 커밋하지 않는다)
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.jks
 
 # [Private & Local Agent Context Tracking]
 # 로컬 개발 및 AI 에이전트 인수인계용 파일은 깃에 올리지 않음
@@ -31,9 +40,9 @@ LOCAL_*.md
 NOTION_*.md
 *.local
 
-
-# 로컬 JDK 배포본 (프로젝트 폴더 밖에 두는 것을 권장)
+# 로컬 JDK 배포본 (JDK 는 프로젝트 폴더 밖 ~/.jdks 에 둔다. 실수 방지를 위해 패턴 유지)
 oracleJdk-*/
+jdk-*/
 
 # 업로드 파일 저장소 (실행 시 생성되는 사용자 첨부파일)
 uploads/

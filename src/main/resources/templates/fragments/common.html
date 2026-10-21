@@ -28,46 +28,31 @@
 
 <!--
     전자정부 표준 페이징 바  ([처음] [이전] 1 2 3 ... [다음] [마지막])
-    eGov JSP 의 <ui:pagination paginationInfo="${paginationInfo}" jsFunction="fn_egov_link_page"/> 와 같은 역할.
+    - 계산: org.egovframe.rte.ptl.mvc.tags.ui.pagination.PaginationInfo
+    - 그리기: EgovBootstrapPaginationRenderer (eGov AbstractPaginationRenderer 확장)
+    eGov JSP 의 <ui:pagination paginationInfo="${paginationInfo}" jsFunction="fnLinkPage"/> 와 같은 역할.
     검색폼(id=searchForm)의 hidden pageIndex 값을 바꿔 submit 하므로 검색조건이 유지된다.
+
+    th:utext 를 쓰는 이유: 렌더러가 만든 HTML(<li>…)을 그대로 출력해야 하기 때문.
+    렌더러 결과에는 정수(페이지 번호)와 아래 고정 함수명만 들어가므로 XSS 위험이 없다.
 -->
 <th:block th:fragment="pagination(paginationInfo)">
     <nav th:if="${paginationInfo.totalRecordCount > 0}" class="mt-4" aria-label="페이지 이동">
-        <ul class="pagination pagination-sm justify-content-center mb-0">
-            <li class="page-item" th:classappend="${paginationInfo.currentPageNo == 1} ? 'disabled'">
-                <a class="page-link" href="#" data-page="1" title="처음">&laquo;</a>
-            </li>
-            <li class="page-item" th:classappend="${!paginationInfo.hasPreviousBlock} ? 'disabled'">
-                <a class="page-link" href="#" th:data-page="${paginationInfo.firstPageNoOnPageList - 1}" title="이전 블록">&lsaquo; 이전</a>
-            </li>
-            <li class="page-item"
-                th:each="pageNo : ${#numbers.sequence(paginationInfo.firstPageNoOnPageList, paginationInfo.lastPageNoOnPageList)}"
-                th:classappend="${pageNo == paginationInfo.currentPageNo} ? 'active'">
-                <a class="page-link" href="#" th:data-page="${pageNo}" th:text="${pageNo}">1</a>
-            </li>
-            <li class="page-item" th:classappend="${!paginationInfo.hasNextBlock} ? 'disabled'">
-                <a class="page-link" href="#" th:data-page="${paginationInfo.lastPageNoOnPageList + 1}" title="다음 블록">다음 &rsaquo;</a>
-            </li>
-            <li class="page-item" th:classappend="${paginationInfo.currentPageNo == paginationInfo.totalPageCount} ? 'disabled'">
-                <a class="page-link" href="#" th:data-page="${paginationInfo.totalPageCount}" title="마지막">&raquo;</a>
-            </li>
-        </ul>
+        <ul class="pagination pagination-sm justify-content-center mb-0"
+            th:utext="${#egovPaginationRenderer.renderPagination(paginationInfo, 'fnLinkPage')}"></ul>
     </nav>
     <script>
+        // 페이지 번호 클릭 시 검색조건을 유지한 채 해당 페이지로 이동 (eGov 의 fn_egov_link_page 와 같은 역할)
+        function fnLinkPage(pageNo) {
+            const form = document.getElementById('searchForm');
+            form.pageIndex.value = pageNo;
+            form.submit();
+        }
         (function () {
             const form = document.getElementById('searchForm');
             if (!form) return;
             // 검색 버튼으로 새로 검색하면 1페이지부터
             form.addEventListener('submit', function () { form.pageIndex.value = 1; });
-            // 페이지 번호 클릭 시 검색조건을 유지한 채 해당 페이지로 이동 (eGov fn_egov_link_page)
-            document.querySelectorAll('.pagination [data-page]').forEach(function (link) {
-                link.addEventListener('click', function (e) {
-                    e.preventDefault();
-                    if (link.parentElement.classList.contains('disabled')) return;
-                    form.pageIndex.value = link.dataset.page;
-                    form.submit();
-                });
-            });
         })();
     </script>
 </th:block>

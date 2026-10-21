@@ -21,7 +21,7 @@
     <div class="card border-0 shadow-sm p-4 bg-white mb-4">
         <div class="d-flex justify-content-between align-items-center mb-2">
             <span class="badge bg-success">협약체결 과제</span>
-            <span class="text-muted small">과제번호 #<span th:text="${app.applicationId}">1</span></span>
+            <span class="text-muted small">접수번호 <span th:text="${app.receiptNo}">DPMS-00000001</span></span>
         </div>
         <h4 class="fw-bold text-dark mb-1" th:text="${app.projectName}">과제명</h4>
         <div class="text-secondary small mb-4">수행기업: <strong class="text-dark" th:text="${app.companyName}">기업명</strong></div>

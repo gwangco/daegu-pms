@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" th:with="registerFlag=${#strings.isEmpty(noticeVO.noticeId)} ? 'create' : 'modify'">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title th:if="${registerFlag == 'modify'}">Notice Update</title>
+    <title th:if="${registerFlag == 'create'}">Notice Regist</title>
+
+    <!-- KRDS CSS -->
+	<link rel="stylesheet" type="text/css" th:href="@{/css/component/output.css}">
+	<link rel="stylesheet" type="text/css" th:href="@{/css/egovframe.css}">
+	<script th:inline="javascript" th:src="@{/js/jquery.min.js}"></script>
+	<script th:inline="javascript" th:src="@{/js/component/ui-script.js}" defer></script>
+	<script th:inline="javascript" th:src="@{/js/egovframework/common.js}" defer></script>
+
+	<!--For Custom Validation-->
+	<!-- egovframe-Todo: Validator 적용시 아래 주석 코드 참고 -->
+    <!-- <script th:inline="javascript" th:src="@{/js/egovframework/EgovValidation.js}" defer></script> -->
+
+    <script th:inline="javascript" defer>
+	    function fn_egov_list() {
+            $('#detailForm').attr('method', 'get').attr('action', contextPath + '/notice/noticeList.do').submit();
+        }
+
+        function fn_egov_add() {
+            if (confirm('Are you sure you want to register?')) {
+                let frm = document.detailForm;
+                // egovframe-Todo: Validator 적용시 아래 주석 코드 참고
+                // EgovValidation.js 파일에 validateNoticeVO 함수 추가 필요
+                // if (!validateNoticeVO(frm)) {
+				//	  return;
+				// }
+				$('#detailForm').attr('method', 'post').attr('action', contextPath + '/notice/addNotice.do').submit();
+            }
+        }
+
+        function fn_egov_update() {
+            if (confirm('Are you sure you want to modify?')) {
+            	let frm = document.detailForm;
+                // egovframe-Todo: Validator 적용시 아래 주석 코드 참고
+                // EgovValidation.js 파일에 validateNoticeVO 함수 추가 필요
+                // if (!validateNoticeVO(frm)) {
+				//	  return;
+				// }
+            	$('#detailForm').attr('method', 'post').attr('action', contextPath + '/notice/updateNotice.do').submit();
+			}
+        }
+
+        function fn_egov_delete() {
+            if (confirm('Are you sure you want to delete?')) {
+                $('#detailForm').attr('method', 'post').attr('action', contextPath + '/notice/deleteNotice.do').submit();
+            }
+        }
+
+        function fn_egov_reset() {
+            $('form').each(function() {
+                this.reset();
+            });
+        }
+    </script>
+</head>
+
+<body>
+<div id="container" class="inner">
+
+	<!-- Page Title -->
+	<h2 class="heading-large">
+	    <span th:if="${registerFlag == 'modify'}">Update</span>
+	    <span th:if="${registerFlag == 'create'}">Regist</span>
+	</h2>
+
+	<form id="detailForm" name="detailForm" th:object="${noticeVO}">
+    <input type="hidden" th:id="searchCondition" th:name="searchCondition" th:value="${noticeVO.searchCondition}" />
+    <input type="hidden" th:id="searchKeyword" th:name="searchKeyword" th:value="${noticeVO.searchKeyword}" />
+    <input type="hidden" th:id="pageIndex" th:name="pageIndex" th:value="${noticeVO.pageIndex}" />
+
+		<div class="conts-wrap">
+	        <div class="fieldset input-form">
+                <div class="form-group" th:if="${not #strings.isEmpty(noticeVO.noticeId)}">
+                    <div class="form-tit">
+                        <label for="noticeId">NoticeId</label>
+                    </div>
+                    <div class="form-conts">
+                        <input type="text" id="noticeId" name="noticeId" class="krds-input" th:value="${noticeVO.noticeId}" th:readonly="readonly">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="form-tit">
+                        <label for="title">Title</label>
+                    </div>
+                    <div class="form-conts">
+                        <input type="text" id="title" name="title" class="krds-input" th:value="${noticeVO.title}">
+                        <span class="error-message" th:if="${#fields.hasErrors('title')}" th:errors="*title"></span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="form-tit">
+                        <label for="content">Content</label>
+                    </div>
+                    <div class="form-conts">
+                        <input type="text" id="content" name="content" class="krds-input" th:value="${noticeVO.content}">
+                        <span class="error-message" th:if="${#fields.hasErrors('content')}" th:errors="*content"></span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="form-tit">
+                        <label for="importantYn">ImportantYn</label>
+                    </div>
+                    <div class="form-conts">
+                        <input type="text" id="importantYn" name="importantYn" class="krds-input" th:value="${noticeVO.importantYn}">
+                        <span class="error-message" th:if="${#fields.hasErrors('importantYn')}" th:errors="*importantYn"></span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="form-tit">
+                        <label for="viewCount">ViewCount</label>
+                    </div>
+                    <div class="form-conts">
+                        <input type="text" id="viewCount" name="viewCount" class="krds-input" th:value="${noticeVO.viewCount}">
+                        <span class="error-message" th:if="${#fields.hasErrors('viewCount')}" th:errors="*viewCount"></span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="form-tit">
+                        <label for="useYn">UseYn</label>
+                    </div>
+                    <div class="form-conts">
+                        <input type="text" id="useYn" name="useYn" class="krds-input" th:value="${noticeVO.useYn}">
+                        <span class="error-message" th:if="${#fields.hasErrors('useYn')}" th:errors="*useYn"></span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="form-tit">
+                        <label for="writerId">WriterId</label>
+                    </div>
+                    <div class="form-conts">
+                        <input type="text" id="writerId" name="writerId" class="krds-input" th:value="${noticeVO.writerId}">
+                        <span class="error-message" th:if="${#fields.hasErrors('writerId')}" th:errors="*writerId"></span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="form-tit">
+                        <label for="createdAt">CreatedAt</label>
+                    </div>
+                    <div class="form-conts">
+                        <input type="text" id="createdAt" name="createdAt" class="krds-input" th:value="${noticeVO.createdAt}">
+                        <span class="error-message" th:if="${#fields.hasErrors('createdAt')}" th:errors="*createdAt"></span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="form-tit">
+                        <label for="updatedBy">UpdatedBy</label>
+                    </div>
+                    <div class="form-conts">
+                        <input type="text" id="updatedBy" name="updatedBy" class="krds-input" th:value="${noticeVO.updatedBy}">
+                        <span class="error-message" th:if="${#fields.hasErrors('updatedBy')}" th:errors="*updatedBy"></span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="form-tit">
+                        <label for="updatedAt">UpdatedAt</label>
+                    </div>
+                    <div class="form-conts">
+                        <input type="text" id="updatedAt" name="updatedAt" class="krds-input" th:value="${noticeVO.updatedAt}">
+                        <span class="error-message" th:if="${#fields.hasErrors('updatedAt')}" th:errors="*updatedAt"></span>
+                    </div>
+                </div>
+
+            </div>
+
+	        <!-- Action Buttons -->
+	        <div class="page-btn-wrap">
+                <div class="btn-wrap">
+	                <button type="button" class="krds-btn medium secondary" th:onclick="fn_egov_list()">List</button>
+	                <button type="button" class="krds-btn medium tertiary" th:onclick="fn_egov_reset()">Reset</button>
+                </div>
+	            <div class="btn-wrap">
+					<button type="button"
+	                        class="krds-btn medium"
+	                        th:onclick="fn_egov_update()"
+	                        th:if="${registerFlag == 'modify'}">Update</button>
+	                <button type="button"
+	                        class="krds-btn medium danger"
+	                        th:onclick="fn_egov_delete()"
+	                        th:if="${registerFlag == 'modify'}">Delete</button>
+	                <button type="button"
+	                        class="krds-btn medium"
+	                        th:onclick="fn_egov_add()"
+	                        th:if="${registerFlag == 'create'}">Regist</button>
+	            </div>
+	        </div>
+		</div>
+
+	</form>
+
+</div>
+
+</body>
+</html>
