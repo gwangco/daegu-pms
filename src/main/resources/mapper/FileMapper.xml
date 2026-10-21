@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.go.daegu.pms.mapper.FileMapper">
+
+    <insert id="insertFile" parameterType="AttachFile" useGeneratedKeys="true" keyProperty="fileId">
+        INSERT INTO com_file (
+            original_name, stored_name, file_path, file_ext, file_size, created_by
+        ) VALUES (
+            #{originalName}, #{storedName}, #{filePath}, #{fileExt}, #{fileSize}, #{createdBy}
+        )
+    </insert>
+
+    <select id="selectFile" resultType="AttachFile">
+        SELECT file_id, original_name, stored_name, file_path, file_ext, file_size, created_by, created_at
+        FROM com_file
+        WHERE file_id = #{fileId}
+    </select>
+
+    <select id="selectApplicationIdByPlanFile" resultType="long">
+        SELECT application_id FROM application WHERE plan_file_id = #{fileId}
+    </select>
+
+    <select id="selectApplicationIdByReceiptFile" resultType="long">
+        SELECT application_id FROM settlement WHERE receipt_file_id = #{fileId}
+    </select>
+
+</mapper>

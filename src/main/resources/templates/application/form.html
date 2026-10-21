@@ -13,7 +13,7 @@
 
 <div class="container py-4" style="max-width: 860px;">
     <div class="mb-3">
-        <a th:href="@{'/announcements/' + ${announcement.announcementId}}" class="text-decoration-none text-muted small">
+        <a th:href="@{/announcements/{id}(id=${announcement.announcementId})}" class="text-decoration-none text-muted small">
             <i class="bi bi-arrow-left"></i> 공고 상세로 돌아가기
         </a>
     </div>
@@ -21,43 +21,60 @@
     <div class="card border-0 shadow-sm p-4 bg-white">
         <div class="border-bottom pb-3 mb-4">
             <span class="badge bg-primary mb-1">지원사업 신청</span>
-            <h4 class="fw-bold text-dark mb-1" th:text="${announcement.title}">2026년 대구 미래 모빌리티 부품 R&D</h4>
-            <p class="text-muted small mb-0">기업당 최대 지원금: <strong class="text-danger" th:text="${#numbers.formatInteger(announcement.maxGrant, 0, 'COMMA')} + '원'">100,000,000원</strong></p>
+            <h4 class="fw-bold text-dark mb-1" th:text="${announcement.title}">공고명</h4>
+            <p class="text-muted small mb-0">
+                접수기간: <strong th:text="${announcement.startDate} + ' ~ ' + ${announcement.endDate}">기간</strong> ·
+                기업당 최대 지원금: <strong class="text-danger" th:text="${#numbers.formatInteger(announcement.maxGrant, 0, 'COMMA')} + '원'">100,000,000원</strong>
+            </p>
         </div>
 
-        <form th:action="@{/applications/apply}" method="post">
-            <input type="hidden" name="announcementId" th:value="${announcement.announcementId}">
+        <!-- 파일 업로드가 있으므로 multipart/form-data. th:action 사용 시 CSRF 토큰이 자동으로 포함된다 -->
+        <form th:action="@{/applications/apply}" th:object="${app}" method="post" enctype="multipart/form-data">
+            <input type="hidden" th:field="*{announcementId}">
+
+            <div th:if="${#fields.hasGlobalErrors()}" class="alert alert-danger small py-2">
+                <div th:each="err : ${#fields.globalErrors()}" th:text="${err}">오류</div>
+            </div>
 
             <div class="mb-3">
                 <label class="form-label fw-semibold text-secondary">개발 과제명 (프로젝트명) <span class="text-danger">*</span></label>
-                <input type="text" name="projectName" class="form-control" placeholder="예: 전기차 배터리팩 경량화를 위한 탄소복합소재 부품 개발" required>
+                <input type="text" th:field="*{projectName}" class="form-control" th:errorclass="is-invalid" maxlength="200"
+                       placeholder="예: 전기차 배터리팩 경량화를 위한 탄소복합소재 부품 개발" required>
+                <div class="invalid-feedback" th:errors="*{projectName}"></div>
             </div>
 
             <div class="row g-3 mb-3">
                 <div class="col-md-4">
                     <label class="form-label fw-semibold text-secondary">총 소요 예산 (원) <span class="text-danger">*</span></label>
-                    <input type="number" id="totalBudget" name="totalBudget" class="form-control" placeholder="예: 125000000" required oninput="calcSelfFunding()">
+                    <input type="number" id="totalBudget" th:field="*{totalBudget}" class="form-control" th:errorclass="is-invalid"
+                           min="1" placeholder="예: 125000000" required oninput="calcSelfFunding()">
+                    <div class="invalid-feedback" th:errors="*{totalBudget}"></div>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label fw-semibold text-secondary">신청 지원금 (원) <span class="text-danger">*</span></label>
-                    <input type="number" id="requestGrant" name="requestGrant" class="form-control" placeholder="예: 100000000" th:max="${announcement.maxGrant}" required oninput="calcSelfFunding()">
+                    <input type="number" id="requestGrant" th:field="*{requestGrant}" class="form-control" th:errorclass="is-invalid"
+                           min="1" th:max="${announcement.maxGrant}" placeholder="예: 100000000" required oninput="calcSelfFunding()">
+                    <div class="invalid-feedback" th:errors="*{requestGrant}"></div>
                     <div class="form-text small">공고 기준 한도 내 입력</div>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label fw-semibold text-secondary">기업 자부담금 (자동계산)</label>
-                    <input type="number" id="selfFunding" name="selfFunding" class="form-control bg-light" readonly placeholder="0">
+                    <input type="number" id="selfFunding" class="form-control bg-light" readonly placeholder="0">
+                    <div class="form-text small">제출 시 서버에서 다시 계산됩니다.</div>
                 </div>
             </div>
 
             <div class="mb-3">
                 <label class="form-label fw-semibold text-secondary">사업계획서 요약 및 핵심 개발 목표 <span class="text-danger">*</span></label>
-                <textarea name="summary" class="form-control" rows="5" placeholder="과제의 필요성, 주요 개발 내용 및 목표 스펙, 기대효과를 요약하여 작성하세요." required></textarea>
+                <textarea th:field="*{summary}" class="form-control" th:errorclass="is-invalid" rows="5" maxlength="4000"
+                          placeholder="과제의 필요성, 주요 개발 내용 및 목표 스펙, 기대효과를 요약하여 작성하세요." required></textarea>
+                <div class="invalid-feedback" th:errors="*{summary}"></div>
             </div>
 
             <div class="mb-4">
-                <label class="form-label fw-semibold text-secondary">사업계획서 첨부 파일명</label>
-                <input type="text" name="planFileName" class="form-control" value="business_plan_daegu_2026.pdf">
-                <div class="form-text small">전자정부 EgovFileMng 연계 표준 첨부파일 규격</div>
+                <label class="form-label fw-semibold text-secondary">사업계획서 파일 <span class="text-danger">*</span></label>
+                <input type="file" name="planFile" class="form-control" accept=".pdf,.hwp,.hwpx,.doc,.docx,.zip" required>
+                <div class="form-text small">PDF, HWP(X), DOC(X), ZIP / 최대 20MB. 확장자와 실제 파일 형식이 다르면 업로드가 거부됩니다.</div>
             </div>
 
             <div class="d-flex justify-content-between pt-3 border-top">
@@ -70,13 +87,15 @@
     </div>
 </div>
 
+<div th:replace="~{fragments/navbar :: footer}"></div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     function calcSelfFunding() {
         const total = parseFloat(document.getElementById('totalBudget').value) || 0;
         const grant = parseFloat(document.getElementById('requestGrant').value) || 0;
-        const self = Math.max(0, total - grant);
-        document.getElementById('selfFunding').value = self;
+        document.getElementById('selfFunding').value = Math.max(0, total - grant);
     }
+    calcSelfFunding();
 </script>
 </body>
 </html>

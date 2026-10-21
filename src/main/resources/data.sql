@@ -1,4 +1,9 @@
 -- D-PMS Initial Seed Data
+-- ※ AUTO_INCREMENT PK는 직접 지정하지 않는다.
+--   PK를 직접 넣으면 H2/MariaDB의 자동증가 시퀀스가 따라오지 않아
+--   화면에서 신규 등록 시 "PK 중복" 오류가 발생할 수 있기 때문이다.
+--   대신 INSERT 순서대로 1, 2, 3 ... 이 부여되는 것을 전제로 FK를 참조한다.
+
 -- 1. 공통코드 그룹
 INSERT INTO com_code_group (group_id, group_name, description, use_yn) VALUES
 ('FIELD', '지원 분야', '대구 신산업 R&D 및 기술지원 5대 전략 분야', 'Y'),
@@ -31,43 +36,76 @@ INSERT INTO com_code_detail (group_id, code_id, code_name, sort_order, use_yn) V
 ('SETTLE_STATUS', 'APPROVED', '검수승인', 2, 'Y'),
 ('SETTLE_STATUS', 'REJECTED', '보완(반려)', 3, 'Y');
 
--- 3. 테스트 계정 (비밀번호: 각 ID와 동일 뒤에 1234)
+-- 3. 테스트 계정
+--    비밀번호는 BCrypt 단방향 해시로 저장 (원문: admin1234 / manager1234 / eval1234 / company1234)
+--    {bcrypt} 접두어는 DelegatingPasswordEncoder가 어떤 알고리즘으로 검증할지 판단하는 표식
 INSERT INTO users (user_id, password, user_name, email, phone, company_name, business_no, role, enabled) VALUES
-('admin', '{noop}admin1234', '총괄관리자', 'admin@daegu.go.kr', '053-803-1000', '대구광역시청 미래혁신성장실', '504-83-00001', 'ROLE_ADMIN', TRUE),
-('manager1', '{noop}manager1234', '김담당', 'manager1@dpg.or.kr', '053-602-1700', '대구디지털혁신진흥원(DIP)', '504-82-12345', 'ROLE_MANAGER', TRUE),
-('evaluator1', '{noop}eval1234', '박심사', 'eval1@knu.ac.kr', '053-950-5555', '경북대학교 IT대학(평가위원)', '502-83-99999', 'ROLE_EVALUATOR', TRUE),
-('company1', '{noop}company1234', '이대표', 'ceo@daegumobility.kr', '053-740-1234', '(주)대구모빌리티솔루션', '504-81-98765', 'ROLE_COMPANY', TRUE),
-('company2', '{noop}company1234', '최기술', 'cto@suseongrobot.com', '053-750-5678', '(주)수성AI로보틱스', '504-86-54321', 'ROLE_COMPANY', TRUE);
+('admin', '{bcrypt}$2a$10$Sb920P3ksKEDtwLIDYUloud/EMTbsGI8Dby4TFSk1k1K03A3Y4M0C', '총괄관리자', 'admin@daegu.go.kr', '053-803-1000', '대구광역시청 미래혁신성장실', '504-83-00001', 'ROLE_ADMIN', TRUE),
+('manager1', '{bcrypt}$2a$10$E6.EeqgkNrLM8NfUpmPgwOVb1VQEA4FEzrmhaLuq08fN0L7bRoRMG', '김담당', 'manager1@dpg.or.kr', '053-602-1700', '대구디지털혁신진흥원(DIP)', '504-82-12345', 'ROLE_MANAGER', TRUE),
+('evaluator1', '{bcrypt}$2a$10$GXAEa62sLir/mJ0UESxhZudL1OHDmNhEefybuuvFOFDmHzJWYErhi', '박심사', 'eval1@knu.ac.kr', '053-950-5555', '경북대학교 IT대학(평가위원)', '502-83-99999', 'ROLE_EVALUATOR', TRUE),
+('evaluator2', '{bcrypt}$2a$10$GXAEa62sLir/mJ0UESxhZudL1OHDmNhEefybuuvFOFDmHzJWYErhi', '정평가', 'eval2@kmu.ac.kr', '053-580-5114', '계명대학교 공과대학(평가위원)', '502-82-88888', 'ROLE_EVALUATOR', TRUE),
+('company1', '{bcrypt}$2a$10$UmRKKM8Acu97mqwuicfeTOLiFYLPrTFCyY2dob86qY7IzzPvANZk.', '이대표', 'ceo@daegumobility.kr', '053-740-1234', '(주)대구모빌리티솔루션', '504-81-98765', 'ROLE_COMPANY', TRUE),
+('company2', '{bcrypt}$2a$10$UmRKKM8Acu97mqwuicfeTOLiFYLPrTFCyY2dob86qY7IzzPvANZk.', '최기술', 'cto@suseongrobot.com', '053-750-5678', '(주)수성AI로보틱스', '504-86-54321', 'ROLE_COMPANY', TRUE);
 
 -- 4. 지원사업 공고 샘플
-INSERT INTO announcement (announcement_id, title, field_code, total_budget, max_grant, start_date, end_date, content, status, view_count, writer_id) VALUES
-(1, '2026년 대구 미래 모빌리티 부품 R&D 및 상용화 지원사업 공고', 'MOBILITY', 1500000000, 100000000, '2026-10-01', '2026-11-30', 
-'대구광역시 내 미래 모빌리티 관련 전장부품, 구동모터, 자율주행 센서 개발 기업을 대상으로 시제품 제작 및 R&D 상용화 자금을 지원합니다. 기업당 최대 1억원 이내 지원(매칭 20% 필수).', 
-'OPEN', 245, 'manager1'),
+--    (1~11) 지난 공고 이력 (페이징 확인용) / (12~16) 현재 공고
+INSERT INTO announcement (title, field_code, total_budget, max_grant, start_date, end_date, content, status, view_count, writer_id, created_at) VALUES
+('2025년 대구 자율주행 실증 부품 시험인증 지원사업', 'MOBILITY', 700000000, 50000000, '2025-03-02', '2025-03-31', '자율주행 부품 기업의 KC·ISO 26262 시험인증 비용을 지원합니다.', 'CLOSED', 410, 'manager1', '2025-02-20 09:00:00'),
+('2025년 대구 의료기기 임상 컨설팅 바우처', 'HEALTH', 300000000, 30000000, '2025-03-10', '2025-04-10', '디지털 헬스케어 기업의 식약처 인허가 및 임상 설계 컨설팅을 지원합니다.', 'CLOSED', 215, 'manager1', '2025-03-01 09:00:00'),
+('2025년 스마트공장 고도화 공정데이터 구축 지원', 'SMART_FAB', 900000000, 80000000, '2025-04-01', '2025-04-30', '성서·달성산단 제조기업의 MES·공정데이터 수집 체계 구축을 지원합니다.', 'CLOSED', 377, 'manager1', '2025-03-20 09:00:00'),
+('2025년 AI 바우처 수요기업 매칭 지원사업', 'AI_SW', 500000000, 30000000, '2025-05-01', '2025-05-31', '지역 중소기업과 AI 솔루션 공급기업 간 매칭 바우처를 지원합니다.', 'CLOSED', 520, 'manager1', '2025-04-21 09:00:00'),
+('2025년 협동로봇 현장 실증 지원사업', 'ROBOT', 600000000, 60000000, '2025-05-15', '2025-06-15', '뿌리산업 현장에 협동로봇을 도입하는 실증 과제를 지원합니다.', 'CLOSED', 298, 'manager1', '2025-05-06 09:00:00'),
+('2025년 전기차 구동부품 경량화 기술개발', 'MOBILITY', 1200000000, 100000000, '2025-06-02', '2025-07-02', '전기차 감속기·모터 하우징 경량화 소재 부품 기술개발을 지원합니다.', 'CLOSED', 466, 'manager1', '2025-05-25 09:00:00'),
+('2025년 디지털치료기기 실증 테스트베드 이용 지원', 'HEALTH', 250000000, 25000000, '2025-07-01', '2025-07-31', '디지털치료기기 개발 기업의 병원 테스트베드 이용료를 지원합니다.', 'CLOSED', 187, 'manager1', '2025-06-20 09:00:00'),
+('2025년 공구금형 디지털 전환(DX) 지원사업', 'SMART_FAB', 400000000, 40000000, '2025-08-01', '2025-08-29', '북성로 공구골목 및 금형기업의 3D 설계·가공 데이터 전환을 지원합니다.', 'CLOSED', 233, 'manager1', '2025-07-22 09:00:00'),
+('2025년 하반기 AI 데이터 라벨링 지원사업', 'AI_SW', 350000000, 20000000, '2025-09-01', '2025-09-30', 'AI 학습용 데이터 구축 및 라벨링 비용을 지원합니다.', 'CLOSED', 341, 'manager1', '2025-08-25 09:00:00'),
+('2026년 물류 자율이동로봇(AMR) 시제품 지원', 'ROBOT', 550000000, 50000000, '2026-03-02', '2026-04-03', '물류센터용 AMR 시제품 제작 및 성능평가 비용을 지원합니다.', 'CLOSED', 274, 'manager1', '2026-02-23 09:00:00'),
+('2026년 상반기 미래차 전장부품 SW 검증 지원', 'MOBILITY', 650000000, 50000000, '2026-04-06', '2026-05-08', '차량용 SW 기능안전 및 사이버보안 검증 비용을 지원합니다.', 'CLOSED', 305, 'manager1', '2026-03-30 09:00:00'),
 
-(2, '대구디지털혁신진흥원(DIP) AI·SW 융합 솔루션 제작 바우처 지원사업', 'AI_SW', 800000000, 50000000, '2026-10-10', '2026-11-15', 
-'지역 중소제조업 및 전통산업에 인공지능(AI)과 빅데이터 솔루션을 접목하여 공정 혁신을 추진하는 기업을 지원합니다.', 
-'OPEN', 189, 'manager1'),
+('대구 로봇산업 혁신클러스터 청년 스타트업 스케일업 지원사업', 'ROBOT', 600000000, 70000000, '2026-09-01', '2026-10-15',
+'협동로봇 및 물류 자동화 로봇 시제품 제작을 위한 재료비 및 전문 가공비를 지원합니다.',
+'CLOSED', 312, 'manager1', '2026-08-25 09:00:00'),
 
-(3, '대구 로봇산업 혁신클러스터 청년 스타트업 스케일업 지원사업', 'ROBOT', 600000000, 70000000, '2026-09-01', '2026-10-15', 
-'협동로봇 및 물류 자동화 로봇 시제품 제작을 위한 재료비 및 전문 가공비를 지원합니다.', 
-'CLOSED', 312, 'manager1');
+('2026년 대구 미래 모빌리티 부품 R&D 및 상용화 지원사업 공고', 'MOBILITY', 1500000000, 100000000, '2026-10-01', '2026-11-30',
+'대구광역시 내 미래 모빌리티 관련 전장부품, 구동모터, 자율주행 센서 개발 기업을 대상으로 시제품 제작 및 R&D 상용화 자금을 지원합니다. 기업당 최대 1억원 이내 지원(매칭 20% 필수).',
+'OPEN', 245, 'manager1', '2026-09-25 09:00:00'),
 
--- 5. 신청서 샘플
-INSERT INTO application (application_id, announcement_id, company_user_id, project_name, total_budget, request_grant, self_funding, summary, plan_file_name, status, submitted_at) VALUES
-(1, 1, 'company1', '도심형 PBV 자율주행용 고정밀 조향센서 모듈 국산화 개발', 125000000, 100000000, 25000000, 
-'대구 국가산단 및 테크노폴리스 자율주행 실증단지 인프라와 연계하여 중소형 PBV에 탑재 가능한 0.05도 정밀도 조향각 센서 국산화 개발 및 신뢰성 인증 획득.', 
-'daegu_mobility_plan_v1.pdf', 'SELECTED', '2026-10-15 14:30:00'),
+('대구디지털혁신진흥원(DIP) AI·SW 융합 솔루션 제작 바우처 지원사업', 'AI_SW', 800000000, 50000000, '2026-10-10', '2026-11-15',
+'지역 중소제조업 및 전통산업에 인공지능(AI)과 빅데이터 솔루션을 접목하여 공정 혁신을 추진하는 기업을 지원합니다.',
+'OPEN', 189, 'manager1', '2026-10-02 09:00:00'),
 
-(2, 2, 'company2', '북성로 공구골목 가공 공정 매칭을 위한 비전 AI 기반 도면 분석 솔루션', 62500000, 50000000, 12500000, 
-'2D CAD 및 스캔 도면의 형상 치수를 딥러닝 비전 알고리즘으로 자동 추출하여 최적의 북성로 가공 업체를 실시간 역경매 추천하는 지능형 솔루션.', 
-'suseong_robot_ai_plan.pdf', 'EVALUATING', '2026-10-18 11:20:00');
+('2026년 하반기 디지털 헬스케어 실증 및 인허가 지원사업', 'HEALTH', 400000000, 40000000, '2026-10-12', '2026-11-20',
+'웨어러블·원격모니터링 등 디지털 헬스케어 기기의 실증 및 인허가 비용을 지원합니다.',
+'OPEN', 97, 'manager1', '2026-10-05 09:00:00'),
+
+('2026년 스마트 제조혁신 AI 품질검사 도입 지원사업', 'SMART_FAB', 500000000, 50000000, '2026-10-15', '2026-11-27',
+'제조 현장에 비전 AI 기반 자동 품질검사 시스템을 도입하는 기업을 지원합니다.',
+'OPEN', 64, 'manager1', '2026-10-08 09:00:00');
+
+-- 5. 신청서 샘플 (announcement 13 = 모빌리티 R&D, 14 = AI·SW 바우처)
+--    seed 계획서 파일은 물리 파일이 없으므로 plan_file_id 는 NULL
+INSERT INTO application (announcement_id, company_user_id, project_name, total_budget, request_grant, self_funding, summary, status, submitted_at) VALUES
+(13, 'company1', '도심형 PBV 자율주행용 고정밀 조향센서 모듈 국산화 개발', 125000000, 100000000, 25000000,
+'대구 국가산단 및 테크노폴리스 자율주행 실증단지 인프라와 연계하여 중소형 PBV에 탑재 가능한 0.05도 정밀도 조향각 센서 국산화 개발 및 신뢰성 인증 획득.',
+'SELECTED', '2026-10-15 14:30:00'),
+
+(14, 'company2', '북성로 공구골목 가공 공정 매칭을 위한 비전 AI 기반 도면 분석 솔루션', 62500000, 50000000, 12500000,
+'2D CAD 및 스캔 도면의 형상 치수를 딥러닝 비전 알고리즘으로 자동 추출하여 최적의 북성로 가공 업체를 실시간 역경매 추천하는 지능형 솔루션.',
+'EVALUATING', '2026-10-18 11:20:00'),
+
+(14, 'company1', '차량 부품 외관검사 데이터 기반 AI 불량 예측 솔루션', 50000000, 40000000, 10000000,
+'모빌리티 부품 생산라인의 외관검사 이미지를 축적·학습하여 불량 발생을 사전 예측하는 AI 솔루션 개발.',
+'SUBMITTED', '2026-10-20 10:05:00');
 
 -- 6. 평가 샘플
-INSERT INTO evaluation (evaluation_id, application_id, evaluator_user_id, quantitative_score, qualitative_score, total_score, eval_comment, status, evaluated_at) VALUES
-(1, 1, 'evaluator1', 38, 54, 92, '기술적 차별성과 대구 모빌리티 밸류체인과의 연계성이 매우 우수함. 사업화 성공 가능성이 높아 지원 타당함.', 'COMPLETED', '2026-10-19 16:00:00');
+--    과제 1: 평가위원 2명 평가 완료 (평균 88.5점) / 과제 2: 2명 배정, 채점 대기
+INSERT INTO evaluation (application_id, evaluator_user_id, quantitative_score, qualitative_score, total_score, eval_comment, status, assigned_at, evaluated_at) VALUES
+(1, 'evaluator1', 38, 54, 92, '기술적 차별성과 대구 모빌리티 밸류체인과의 연계성이 매우 우수함. 사업화 성공 가능성이 높아 지원 타당함.', 'COMPLETED', '2026-10-16 09:00:00', '2026-10-19 16:00:00'),
+(1, 'evaluator2', 35, 50, 85, '시장성은 충분하나 신뢰성 인증 일정이 다소 낙관적임. 인증 계획 보완 조건으로 지원 타당.', 'COMPLETED', '2026-10-16 09:00:00', '2026-10-19 17:30:00'),
+(2, 'evaluator1', 0, 0, 0, NULL, 'ASSIGNED', '2026-10-19 10:00:00', NULL),
+(2, 'evaluator2', 0, 0, 0, NULL, 'ASSIGNED', '2026-10-19 10:00:00', NULL);
 
--- 7. 사업비 정산 내역 샘플
-INSERT INTO settlement (settlement_id, application_id, item_code, expense_date, vendor_name, supply_amount, vat_amount, total_amount, description, receipt_file_name, status) VALUES
-(1, 1, 'EXP02', '2026-10-16', '(주)대구센서테크', 15000000, 1500000, 16500000, '센서 테스트보드 PCB 및 칩셋 샘플 구입', 'tax_invoice_20261016.pdf', 'APPROVED'),
-(2, 1, 'EXP03', '2026-10-18', '북성로정밀금형', 22000000, 2200000, 24200000, '센서 외장 알루미늄 케이스 정밀 밀링 가공', 'tax_invoice_20261018.pdf', 'REQUESTED');
+-- 7. 사업비 정산 내역 샘플 (과제 1)
+INSERT INTO settlement (application_id, item_code, expense_date, vendor_name, supply_amount, vat_amount, total_amount, description, status, reviewed_by, reviewed_at) VALUES
+(1, 'EXP02', '2026-10-16', '(주)대구센서테크', 15000000, 1500000, 16500000, '센서 테스트보드 PCB 및 칩셋 샘플 구입', 'APPROVED', 'manager1', '2026-10-17 11:00:00'),
+(1, 'EXP03', '2026-10-18', '북성로정밀금형', 22000000, 2200000, 24200000, '센서 외장 알루미늄 케이스 정밀 밀링 가공', 'REQUESTED', NULL, NULL);

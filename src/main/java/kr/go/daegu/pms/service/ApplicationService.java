@@ -1,59 +1,28 @@
 package kr.go.daegu.pms.service;
 
 import kr.go.daegu.pms.domain.Application;
-import kr.go.daegu.pms.mapper.ApplicationMapper;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import kr.go.daegu.pms.domain.ApplicationSearchVO;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
-@Service
-@RequiredArgsConstructor
-public class ApplicationService {
+public interface ApplicationService {
 
-    private final ApplicationMapper applicationMapper;
+    /** 로그인 사용자 권한에 맞는 신청서 목록 (기업=본인, 평가위원=배정과제, 담당자=전체) */
+    List<Application> selectApplicationList(ApplicationSearchVO searchVO);
 
-    @Transactional(readOnly = true)
-    public List<Application> getApplications(Long announcementId, String companyUserId, String status) {
-        return applicationMapper.selectApplications(announcementId, companyUserId, status);
-    }
+    int selectApplicationListTotCnt(ApplicationSearchVO searchVO);
 
-    @Transactional(readOnly = true)
-    public Application getApplicationById(Long applicationId) {
-        return applicationMapper.selectApplicationById(applicationId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 신청서입니다. ID: " + applicationId));
-    }
+    /** 열람 권한을 검사한 뒤 신청서 상세 반환 */
+    Application selectApplication(Long applicationId);
 
-    @Transactional
-    public void submitApplication(Application application) {
-        // 비즈니스 유효성 검증
-        if (application.getTotalBudget() <= 0) {
-            throw new IllegalArgumentException("총 소요 예산은 0원보다 커야 합니다.");
-        }
-        if (application.getRequestGrant() <= 0) {
-            throw new IllegalArgumentException("신청 지원금은 0원보다 커야 합니다.");
-        }
-        if (application.getRequestGrant() > application.getTotalBudget()) {
-            throw new IllegalArgumentException("신청 지원금은 총 소요 예산을 초과할 수 없습니다.");
-        }
-        
-        application.setStatus("SUBMITTED");
-        applicationMapper.insertApplication(application);
-    }
+    /** 사업계획서 제출. 생성된 신청서 ID 반환 */
+    Long insertApplication(Application application, MultipartFile planFile);
 
-    @Transactional
-    public void changeStatus(Long applicationId, String status) {
-        applicationMapper.updateApplicationStatus(applicationId, status);
-    }
+    /** 담당자의 심사 상태 변경 (상태머신 규칙 검증) */
+    void updateApplicationStatus(Long applicationId, String statusCode);
 
-    @Transactional(readOnly = true)
-    public int getTotalApplicationsCount() {
-        return applicationMapper.countTotalApplications();
-    }
+    int selectTotalApplicationCount();
 
-    @Transactional(readOnly = true)
-    public int getSelectedApplicationsCount() {
-        return applicationMapper.countSelectedApplications();
-    }
+    int selectSelectedApplicationCount();
 }

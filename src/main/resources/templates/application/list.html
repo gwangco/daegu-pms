@@ -10,19 +10,48 @@
 <body>
 
 <div th:replace="~{fragments/navbar :: navbar}"></div>
+<div th:replace="~{fragments/navbar :: flash}"></div>
 
 <div class="container py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h3 class="fw-bold text-dark mb-1">과제 신청 및 심사·선정 현황</h3>
-            <p class="text-muted small mb-0">접수된 R&D 및 기술지원 과제의 심사 진행 현황 및 사업비 정산 링크를 확인하세요.</p>
+            <p class="text-muted small mb-0">
+                <span sec:authorize="hasRole('COMPANY')">우리 기업이 신청한 과제만 표시됩니다.</span>
+                <span sec:authorize="hasRole('EVALUATOR')">평가위원으로 배정된 과제만 표시됩니다.</span>
+                <span sec:authorize="hasAnyRole('MANAGER', 'ADMIN')">접수된 전체 과제의 심사 진행 현황입니다.</span>
+            </p>
         </div>
-        <div class="d-flex gap-2">
-            <!-- Apache POI 대용량 엑셀 다운로드 (실무 핵심 기능) -->
-            <a th:href="@{/excel/applications}" class="btn btn-success btn-sm shadow-sm" sec:authorize="hasAnyRole('MANAGER', 'ADMIN')">
-                <i class="bi bi-file-earmark-excel me-1"></i> 엑셀 일괄 다운로드 (POI)
+        <div class="d-flex gap-2" sec:authorize="hasAnyRole('MANAGER', 'ADMIN')">
+            <!-- 현재 검색조건 그대로 엑셀 다운로드 -->
+            <a th:href="@{/excel/applications(status=${searchVO.status}, keyword=${searchVO.keyword})}" class="btn btn-success btn-sm shadow-sm">
+                <i class="bi bi-file-earmark-excel me-1"></i> 엑셀 다운로드 (POI)
             </a>
         </div>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-body p-3">
+            <form id="searchForm" th:action="@{/applications}" th:object="${searchVO}" method="get" class="row g-2 align-items-center">
+                <input type="hidden" th:field="*{pageIndex}">
+                <div class="col-md-3">
+                    <select th:field="*{status}" class="form-select form-select-sm">
+                        <option value="">전체 진행상태</option>
+                        <option th:each="s : ${statuses}" th:value="${s.name()}" th:text="${s.label}">상태</option>
+                    </select>
+                </div>
+                <div class="col-md-7">
+                    <input type="text" th:field="*{keyword}" class="form-control form-control-sm" placeholder="과제명 또는 기업명 검색..." maxlength="50">
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-secondary btn-sm w-100"><i class="bi bi-search me-1"></i> 검색</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="small text-muted mb-2">
+        총 <strong class="text-dark" th:text="${paginationInfo.totalRecordCount}">0</strong>건
     </div>
 
     <div class="card border-0 shadow-sm">
@@ -32,12 +61,13 @@
                     <thead class="table-light">
                         <tr>
                             <th class="text-center" style="width: 8%">접수번호</th>
-                            <th style="width: 25%">공고명</th>
+                            <th style="width: 22%">공고명</th>
                             <th style="width: 15%">신청기업</th>
                             <th>과제명</th>
                             <th class="text-end" style="width: 12%">신청지원금</th>
-                            <th class="text-center" style="width: 12%">진행상태</th>
-                            <th class="text-center" style="width: 14%">관리</th>
+                            <th class="text-center" style="width: 8%">평균점수</th>
+                            <th class="text-center" style="width: 11%">진행상태</th>
+                            <th class="text-center" style="width: 12%">관리</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -49,37 +79,38 @@
                                 <div class="small text-muted" th:text="${app.businessNo}">504-81-98765</div>
                             </td>
                             <td>
-                                <a th:href="@{'/applications/' + ${app.applicationId}}" class="text-decoration-none fw-semibold text-dark" th:text="${app.projectName}">
-                                    도심형 PBV 자율주행용 센서 국산화 개발
+                                <a th:href="@{/applications/{id}(id=${app.applicationId})}" class="text-decoration-none fw-semibold text-dark" th:text="${app.projectName}">
+                                    과제명
                                 </a>
                             </td>
                             <td class="text-end fw-bold text-primary" th:text="${#numbers.formatInteger(app.requestGrant, 0, 'COMMA')} + '원'">
                                 100,000,000원
                             </td>
+                            <td class="text-center small" th:text="${app.avgScore != null} ? ${#numbers.formatDecimal(app.avgScore, 1, 1)} : '-'">-</td>
                             <td class="text-center">
-                                <span th:if="${app.status == 'SUBMITTED'}" class="badge bg-secondary">접수완료</span>
-                                <span th:if="${app.status == 'EVALUATING'}" class="badge bg-info text-dark">전문가심사중</span>
-                                <span th:if="${app.status == 'SELECTED'}" class="badge bg-success">최종선정(협약)</span>
-                                <span th:if="${app.status == 'REJECTED'}" class="badge bg-danger">심사탈락</span>
+                                <th:block th:replace="~{fragments/common :: appStatus(${app.status})}"></th:block>
                             </td>
                             <td class="text-center">
                                 <div class="btn-group btn-group-sm">
-                                    <a th:href="@{'/applications/' + ${app.applicationId}}" class="btn btn-outline-secondary">조회</a>
-                                    <!-- 최종 선정된 과제는 e-정산 시스템으로 연결 -->
-                                    <a th:if="${app.status == 'SELECTED'}" th:href="@{'/settlements/application/' + ${app.applicationId}}" class="btn btn-primary" title="사업비 e-정산">
+                                    <a th:href="@{/applications/{id}(id=${app.applicationId})}" class="btn btn-outline-secondary">조회</a>
+                                    <!-- 최종 선정된 과제는 e-정산 시스템으로 연결 (평가위원 제외) -->
+                                    <a th:if="${app.status == 'SELECTED'}" sec:authorize="!hasRole('EVALUATOR')"
+                                       th:href="@{/settlements/application/{id}(id=${app.applicationId})}" class="btn btn-primary" title="사업비 e-정산">
                                         <i class="bi bi-receipt me-1"></i> e-정산
                                     </a>
                                 </div>
                             </td>
                         </tr>
                         <tr th:if="${#lists.isEmpty(applications)}">
-                            <td colspan="7" class="text-center py-4 text-muted">등록된 과제 신청 내역이 없습니다.</td>
+                            <td colspan="8" class="text-center py-4 text-muted">조회된 과제 신청 내역이 없습니다.</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
+
+    <th:block th:replace="~{fragments/common :: pagination(${paginationInfo})}"></th:block>
 </div>
 
 <div th:replace="~{fragments/navbar :: footer}"></div>
