@@ -1,5 +1,7 @@
 package kr.go.daegu.pms.application.web;
 
+import kr.go.daegu.pms.cmm.message.AppMessages;
+
 import jakarta.validation.Valid;
 import kr.go.daegu.pms.cmm.exception.BusinessException;
 import org.egovframe.rte.ptl.mvc.tags.ui.pagination.PaginationInfo;
@@ -27,6 +29,8 @@ import java.util.List;
 @RequestMapping("/applications")
 @RequiredArgsConstructor
 public class ApplicationController {
+
+    private final AppMessages messages;
 
     private final ApplicationService applicationService;
     private final AnnouncementService announcementService;
@@ -66,7 +70,7 @@ public class ApplicationController {
         if (!bindingResult.hasErrors()) {
             try {
                 Long id = applicationService.insertApplication(application, planFile);
-                redirectAttributes.addFlashAttribute("successMessage", "사업계획서가 정상적으로 제출되었습니다.");
+                redirectAttributes.addFlashAttribute("successMessage", messages.text("application.submitted"));
                 return "redirect:/applications/" + id;
             } catch (BusinessException e) {
                 bindingResult.reject("business", e.getMessage());
@@ -100,7 +104,7 @@ public class ApplicationController {
                                RedirectAttributes redirectAttributes) {
         try {
             applicationService.updateApplicationStatus(id, status);
-            redirectAttributes.addFlashAttribute("successMessage", "진행상태가 변경되었습니다.");
+            redirectAttributes.addFlashAttribute("successMessage", messages.text("application.status.updated"));
         } catch (BusinessException e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }
@@ -115,7 +119,7 @@ public class ApplicationController {
                                   RedirectAttributes redirectAttributes) {
         try {
             evaluationService.assignEvaluator(id, evaluatorUserId);
-            redirectAttributes.addFlashAttribute("successMessage", "평가위원이 배정되었습니다.");
+            redirectAttributes.addFlashAttribute("successMessage", messages.text("evaluation.assigned"));
         } catch (BusinessException e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }

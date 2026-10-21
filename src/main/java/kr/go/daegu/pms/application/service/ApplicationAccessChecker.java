@@ -1,11 +1,11 @@
 package kr.go.daegu.pms.application.service;
 
-import kr.go.daegu.pms.cmm.exception.NotFoundException;
+import kr.go.daegu.pms.cmm.message.AppMessages;
+
 import kr.go.daegu.pms.cmm.util.SecurityUtil;
 import kr.go.daegu.pms.application.service.impl.ApplicationMapper;
 import kr.go.daegu.pms.evaluation.service.impl.EvaluationMapper;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Component;
 
 /**
@@ -22,6 +22,8 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class ApplicationAccessChecker {
 
+    private final AppMessages messages;
+
     private final ApplicationMapper applicationMapper;
     private final EvaluationMapper evaluationMapper;
 
@@ -33,7 +35,7 @@ public class ApplicationAccessChecker {
         if (SecurityUtil.isStaff() || isOwner(application) || isAssignedEvaluator(applicationId)) {
             return application;
         }
-        throw new AccessDeniedException("해당 과제에 대한 열람 권한이 없습니다.");
+        throw messages.denied("application.read.denied");
     }
 
     /**
@@ -44,7 +46,7 @@ public class ApplicationAccessChecker {
         if (SecurityUtil.isStaff() || isOwner(application)) {
             return application;
         }
-        throw new AccessDeniedException("해당 과제의 사업비 정산에 대한 접근 권한이 없습니다.");
+        throw messages.denied("settlement.read.denied");
     }
 
     public boolean isOwner(ApplicationVO application) {
@@ -63,6 +65,6 @@ public class ApplicationAccessChecker {
 
     private ApplicationVO findApplication(Long applicationId) {
         return applicationMapper.selectApplication(applicationId)
-                .orElseThrow(() -> new NotFoundException("존재하지 않는 신청서입니다."));
+                .orElseThrow(() -> messages.notFound("application.notFound"));
     }
 }

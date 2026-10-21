@@ -1,7 +1,10 @@
 package kr.go.daegu.pms.cmm.exception;
 
+import kr.go.daegu.pms.cmm.message.AppMessages;
+
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import lombok.RequiredArgsConstructor;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -20,7 +23,10 @@ import org.springframework.web.multipart.MaxUploadSizeExceededException;
  */
 @Slf4j
 @ControllerAdvice
+@RequiredArgsConstructor
 public class GlobalExceptionHandler {
+
+    private final AppMessages messages;
 
     @ExceptionHandler(BusinessException.class)
     public String handleBusiness(BusinessException e, Model model, HttpServletResponse response) {
@@ -41,7 +47,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     public String handleMaxUpload(Model model, HttpServletResponse response) {
         response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-        model.addAttribute("errorMessage", "첨부파일 용량이 허용 한도(파일당 20MB)를 초과했습니다.");
+        model.addAttribute("errorMessage", messages.text("file.size.exceeded"));
         return "error/business";
     }
 }

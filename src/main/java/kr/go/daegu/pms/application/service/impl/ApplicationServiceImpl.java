@@ -1,5 +1,7 @@
 package kr.go.daegu.pms.application.service.impl;
 
+import kr.go.daegu.pms.cmm.message.AppMessages;
+
 import kr.go.daegu.pms.announcement.service.AnnouncementService;
 import kr.go.daegu.pms.announcement.service.AnnouncementVO;
 import kr.go.daegu.pms.application.service.ApplicationAccessChecker;
@@ -7,7 +9,6 @@ import kr.go.daegu.pms.application.service.ApplicationSearchVO;
 import kr.go.daegu.pms.application.service.ApplicationService;
 import kr.go.daegu.pms.application.service.ApplicationStatus;
 import kr.go.daegu.pms.application.service.ApplicationVO;
-import kr.go.daegu.pms.cmm.exception.BusinessException;
 import kr.go.daegu.pms.cmm.service.FileService;
 import kr.go.daegu.pms.cmm.service.FileVO;
 import kr.go.daegu.pms.cmm.util.SecurityUtil;
@@ -20,7 +21,6 @@ import org.egovframe.rte.fdl.cmmn.exception.BaseRuntimeException;
 import org.egovframe.rte.fdl.cmmn.exception.FdlException;
 import org.egovframe.rte.fdl.idgnr.EgovIdGnrService;
 import org.springframework.dao.DuplicateKeyException;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -32,6 +32,8 @@ import java.util.List;
 @Service("applicationService")
 @RequiredArgsConstructor
 public class ApplicationServiceImpl extends EgovAbstractServiceImpl implements ApplicationService {
+
+    private final AppMessages messages;
 
     private final ApplicationMapper applicationMapper;
     private final EvaluationMapper evaluationMapper;
@@ -74,7 +76,7 @@ public class ApplicationServiceImpl extends EgovAbstractServiceImpl implements A
         } else if (SecurityUtil.hasRole(SecurityUtil.ROLE_EVALUATOR)) {
             searchVO.setEvaluatorUserId(currentUserId);
         } else {
-            throw new AccessDeniedException("신청서 목록 조회 권한이 없습니다.");
+            throw messages.denied("application.list.denied");
         }
     }
 
@@ -86,7 +88,7 @@ public class ApplicationServiceImpl extends EgovAbstractServiceImpl implements A
     @Override
     public Long insertApplication(ApplicationVO application, MultipartFile planFile) {
         if (!SecurityUtil.hasRole(SecurityUtil.ROLE_COMPANY)) {
-            throw new AccessDeniedException("기업회원만 사업을 신청할 수 있습니다.");
+            throw messages.denied("application.create.denied");
         }
         String companyUserId = SecurityUtil.getCurrentUserId();
         AnnouncementVO announcement = announcementService.selectAnnouncement(application.getAnnouncementId());
@@ -96,22 +98,20 @@ public class ApplicationServiceImpl extends EgovAbstractServiceImpl implements A
         if (!AnnouncementVO.STATUS_OPEN.equals(announcement.getStatus())
                 || today.isBefore(announcement.getStartDate())
                 || today.isAfter(announcement.getEndDate())) {
-            throw new BusinessException("접수 기간이 아닌 공고입니다. (접수기간: "
-                    + announcement.getStartDate() + " ~ " + announcement.getEndDate() + ")");
+            throw messages.business("application.period.closed", announcement.getStartDate(), announcement.getEndDate());
         }
 
         // 2) 금액 검증 (화면의 max 속성은 우회 가능하므로 서버에서 다시 검증)
         if (application.getRequestGrant() > application.getTotalBudget()) {
-            throw new BusinessException("신청 지원금은 총 소요 예산을 초과할 수 없습니다.");
+            throw messages.business("application.budget.exceeded");
         }
         if (application.getRequestGrant() > announcement.getMaxGrant()) {
-            throw new BusinessException("신청 지원금이 공고의 기업당 최대 지원금("
-                    + String.format("%,d", announcement.getMaxGrant()) + "원)을 초과합니다.");
+            throw messages.business("application.grant.exceeded", announcement.getMaxGrant());
         }
 
         // 3) 중복 신청 (DB 유니크 제약도 함께 걸려 있어 동시 요청도 차단됨)
         if (applicationMapper.selectApplicationCountByCompany(announcement.getAnnouncementId(), companyUserId) > 0) {
-            throw new BusinessException("이미 신청한 공고입니다. 한 공고에는 1회만 신청할 수 있습니다.");
+            throw messages.business("application.duplicate");
         }
 
         // 4) 첨부파일 저장 후 신청서 등록 (등록 실패 시 트랜잭션 롤백 → 저장된 파일도 삭제됨)
@@ -125,7 +125,7 @@ public class ApplicationServiceImpl extends EgovAbstractServiceImpl implements A
         try {
             applicationMapper.insertApplication(application);
         } catch (DuplicateKeyException e) {
-            throw new BusinessException("이미 신청한 공고입니다. 한 공고에는 1회만 신청할 수 있습니다.");
+            throw messages.business("application.duplicate");
         }
         log.info("[과제 신청] applicationId={}, company={}", application.getApplicationId(), companyUserId);
         return application.getApplicationId();
@@ -134,21 +134,23 @@ public class ApplicationServiceImpl extends EgovAbstractServiceImpl implements A
     @Override
     public void updateApplicationStatus(Long applicationId, String statusCode) {
         if (!SecurityUtil.isStaff()) {
-            throw new AccessDeniedException("심사 상태 변경 권한이 없습니다.");
+            throw messages.denied("application.status.denied");
         }
         ApplicationStatus next = ApplicationStatus.fromCode(statusCode)
-                .orElseThrow(() -> new BusinessException("올바르지 않은 진행상태 값입니다."));
-        ApplicationVO application = accessChecker.getReadableApplication(applicationId);
+                .orElseThrow(() -> messages.business("application.status.invalid"));
+        // 심사·배정·채점은 같은 신청서 행을 먼저 잠근다. 검증 이후 다른 요청이 상태를 바꾸지 못하게 한다.
+        ApplicationVO application = applicationMapper.selectApplicationForUpdate(applicationId)
+                .orElseThrow(() -> messages.notFound("application.notFound"));
         ApplicationStatus current = ApplicationStatus.fromCode(application.getStatus())
                 .orElseThrow(() -> new IllegalStateException("알 수 없는 저장 상태: " + application.getStatus()));
 
         if (!current.manualNextStatuses().contains(next)) {
-            throw new BusinessException("'" + current.getLabel() + "' 상태에서 '" + next.getLabel() + "' 상태로 변경할 수 없습니다.");
+            throw messages.business("application.status.transitionDenied", current.getLabel(), next.getLabel());
         }
         if (next == ApplicationStatus.SELECTED) {
             if (evaluationMapper.selectEvaluationCount(applicationId, null) == 0
                     || evaluationMapper.selectIncompleteEvaluationCount(applicationId) > 0) {
-                throw new BusinessException("배정된 평가위원의 채점이 모두 완료되어야 최종 선정할 수 있습니다.");
+                throw messages.business("application.evaluation.incomplete");
             }
         }
         applicationMapper.updateApplicationStatus(applicationId, next.name());
