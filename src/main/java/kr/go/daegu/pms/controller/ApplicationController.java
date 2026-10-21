@@ -1,15 +1,25 @@
 package kr.go.daegu.pms.controller;
 
+import jakarta.validation.Valid;
+import kr.go.daegu.pms.common.exception.BusinessException;
+import kr.go.daegu.pms.common.paging.PaginationInfo;
+import kr.go.daegu.pms.common.paging.PagingHelper;
+import kr.go.daegu.pms.common.util.SecurityUtil;
 import kr.go.daegu.pms.domain.Announcement;
 import kr.go.daegu.pms.domain.Application;
+import kr.go.daegu.pms.domain.ApplicationSearchVO;
+import kr.go.daegu.pms.domain.ApplicationStatus;
 import kr.go.daegu.pms.service.AnnouncementService;
 import kr.go.daegu.pms.service.ApplicationService;
+import kr.go.daegu.pms.service.EvaluationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 
@@ -20,26 +30,18 @@ public class ApplicationController {
 
     private final ApplicationService applicationService;
     private final AnnouncementService announcementService;
+    private final EvaluationService evaluationService;
+    private final PagingHelper pagingHelper;
 
-    // 기업 사용자: 본인 신청 내역 조회 / 관리자: 전체 신청 내역 조회
+    // 기업: 본인 신청 내역 / 평가위원: 배정 과제 / 담당자·관리자: 전체 (범위는 서비스에서 강제)
     @GetMapping
-    public String list(
-            @RequestParam(value = "announcementId", required = false) Long announcementId,
-            @RequestParam(value = "status", required = false) String status,
-            Authentication authentication,
-            Model model) {
+    public String list(@ModelAttribute("searchVO") ApplicationSearchVO searchVO, Model model) {
+        PaginationInfo paginationInfo = pagingHelper.prepare(searchVO);
 
-        String companyUserId = null;
-        boolean isCompany = authentication.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_COMPANY"));
-
-        if (isCompany) {
-            companyUserId = authentication.getName();
-        }
-
-        List<Application> list = applicationService.getApplications(announcementId, companyUserId, status);
-        model.addAttribute("applications", list);
-        model.addAttribute("isCompany", isCompany);
+        model.addAttribute("applications", applicationService.selectApplicationList(searchVO));
+        paginationInfo.setTotalRecordCount(applicationService.selectApplicationListTotCnt(searchVO));
+        model.addAttribute("paginationInfo", paginationInfo);
+        model.addAttribute("statuses", ApplicationStatus.values());
         return "application/list";
     }
 
@@ -47,42 +49,76 @@ public class ApplicationController {
     @GetMapping("/apply")
     @PreAuthorize("hasRole('COMPANY')")
     public String applyForm(@RequestParam("announcementId") Long announcementId, Model model) {
-        Announcement announcement = announcementService.getAnnouncementDetail(announcementId);
-        Application application = Application.builder()
-                .announcementId(announcementId)
-                .announcementTitle(announcement.getTitle())
-                .build();
-
+        Announcement announcement = announcementService.selectAnnouncement(announcementId);
         model.addAttribute("announcement", announcement);
-        model.addAttribute("application", application);
+        model.addAttribute("app", Application.builder().announcementId(announcementId).build());
         return "application/form";
     }
 
-    // 사업 신청서 제출
+    // 사업 신청서 제출 (사업계획서 파일 첨부)
     @PostMapping("/apply")
     @PreAuthorize("hasRole('COMPANY')")
-    public String submit(
-            @ModelAttribute Application application,
-            Authentication authentication) {
-
-        application.setCompanyUserId(authentication.getName());
-        applicationService.submitApplication(application);
-        return "redirect:/applications";
+    public String submit(@Valid @ModelAttribute("app") Application application,
+                         BindingResult bindingResult,
+                         @RequestParam(value = "planFile", required = false) MultipartFile planFile,
+                         Model model,
+                         RedirectAttributes redirectAttributes) {
+        if (!bindingResult.hasErrors()) {
+            try {
+                Long id = applicationService.insertApplication(application, planFile);
+                redirectAttributes.addFlashAttribute("successMessage", "사업계획서가 정상적으로 제출되었습니다.");
+                return "redirect:/applications/" + id;
+            } catch (BusinessException e) {
+                bindingResult.reject("business", e.getMessage());
+            }
+        }
+        model.addAttribute("announcement", announcementService.selectAnnouncement(application.getAnnouncementId()));
+        return "application/form";
     }
 
-    // 신청서 상세 조회
+    // 신청서 상세 조회 (열람 권한은 서비스에서 검사)
     @GetMapping("/{id}")
     public String detail(@PathVariable("id") Long id, Model model) {
-        Application application = applicationService.getApplicationById(id);
-        model.addAttribute("application", application);
+        Application application = applicationService.selectApplication(id);
+        model.addAttribute("app", application);
+
+        if (SecurityUtil.isStaff()) {
+            ApplicationStatus current = ApplicationStatus.fromCode(application.getStatus()).orElse(null);
+            model.addAttribute("nextStatuses", current == null ? List.of() : current.manualNextStatuses());
+            model.addAttribute("evaluatorAssignable", current != null && current.isEvaluatorAssignable());
+            model.addAttribute("evaluations", evaluationService.selectEvaluationListByApplication(id));
+            model.addAttribute("assignableEvaluators", evaluationService.selectAssignableEvaluatorList(id));
+        }
         return "application/detail";
     }
 
-    // 관리자: 상태 변경 (서류적격, 심사중, 선정, 탈락)
+    // 담당자: 심사 상태 변경 (서류적격, 선정, 탈락)
     @PostMapping("/{id}/status")
     @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
-    public String updateStatus(@PathVariable("id") Long id, @RequestParam("status") String status) {
-        applicationService.changeStatus(id, status);
+    public String updateStatus(@PathVariable("id") Long id,
+                               @RequestParam("status") String status,
+                               RedirectAttributes redirectAttributes) {
+        try {
+            applicationService.updateApplicationStatus(id, status);
+            redirectAttributes.addFlashAttribute("successMessage", "진행상태가 변경되었습니다.");
+        } catch (BusinessException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
+        return "redirect:/applications/" + id;
+    }
+
+    // 담당자: 평가위원 배정
+    @PostMapping("/{id}/evaluators")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
+    public String assignEvaluator(@PathVariable("id") Long id,
+                                  @RequestParam("evaluatorUserId") String evaluatorUserId,
+                                  RedirectAttributes redirectAttributes) {
+        try {
+            evaluationService.assignEvaluator(id, evaluatorUserId);
+            redirectAttributes.addFlashAttribute("successMessage", "평가위원이 배정되었습니다.");
+        } catch (BusinessException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
         return "redirect:/applications/" + id;
     }
 }

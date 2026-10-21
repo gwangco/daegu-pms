@@ -19,6 +19,9 @@
                 <li class="nav-item" sec:authorize="isAuthenticated()">
                     <a class="nav-link" th:href="@{/applications}">과제신청·선정현황</a>
                 </li>
+                <li class="nav-item" sec:authorize="hasRole('EVALUATOR')">
+                    <a class="nav-link text-warning" th:href="@{/evaluator/evaluations}">내 평가과제</a>
+                </li>
                 <li class="nav-item" sec:authorize="hasAnyRole('MANAGER', 'ADMIN')">
                     <a class="nav-link text-warning" th:href="@{/announcements/new}">+ 공고등록</a>
                 </li>
@@ -46,11 +49,23 @@
     </div>
 </nav>
 
+<!-- 처리 결과 메시지 (RedirectAttributes.addFlashAttribute 로 전달된 1회성 메시지) -->
+<div th:fragment="flash" class="container pt-3">
+    <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show small mb-0" role="alert">
+        <i class="bi bi-check-circle me-1"></i><span th:text="${successMessage}">처리되었습니다.</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show small mb-0" role="alert">
+        <i class="bi bi-exclamation-triangle me-1"></i><span th:text="${errorMessage}">오류</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+</div>
+
 <footer th:fragment="footer" class="bg-light text-muted py-4 mt-5 border-top">
     <div class="container text-center">
         <p class="mb-1 fw-bold text-dark">대구광역시 공공 R&D·창업 지원사업 통합관리 및 e-정산 시스템 (D-PMS)</p>
-        <p class="small text-secondary mb-0">전자정부프레임워크 4.x / Spring Boot 3.3 / MyBatis / H2-MariaDB 표준 아키텍처 준수</p>
-        <p class="small text-secondary mt-1">© 2026 Daegu Metropolitan City. All Rights Reserved.</p>
+        <p class="small text-secondary mb-0">Spring Boot 3.3 / MyBatis / Spring Security 6 / H2-MariaDB · 전자정부 표준프레임워크 아키텍처 규칙 적용</p>
+        <p class="small text-secondary mt-1">본 시스템은 취업 포트폴리오용 데모이며 실제 기관과 관련이 없습니다.</p>
     </div>
 </footer>
 </body>

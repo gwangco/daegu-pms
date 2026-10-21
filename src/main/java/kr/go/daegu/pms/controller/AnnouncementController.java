@@ -1,15 +1,20 @@
 package kr.go.daegu.pms.controller;
 
+import jakarta.validation.Valid;
+import kr.go.daegu.pms.common.exception.BusinessException;
+import kr.go.daegu.pms.common.paging.PaginationInfo;
+import kr.go.daegu.pms.common.paging.PagingHelper;
 import kr.go.daegu.pms.domain.Announcement;
+import kr.go.daegu.pms.domain.AnnouncementSearchVO;
 import kr.go.daegu.pms.service.AnnouncementService;
+import kr.go.daegu.pms.service.CommonCodeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 @RequestMapping("/announcements")
@@ -17,26 +22,23 @@ import java.util.List;
 public class AnnouncementController {
 
     private final AnnouncementService announcementService;
+    private final CommonCodeService commonCodeService;
+    private final PagingHelper pagingHelper;
 
     @GetMapping
-    public String list(
-            @RequestParam(value = "fieldCode", required = false) String fieldCode,
-            @RequestParam(value = "status", required = false) String status,
-            @RequestParam(value = "keyword", required = false) String keyword,
-            Model model) {
+    public String list(@ModelAttribute("searchVO") AnnouncementSearchVO searchVO, Model model) {
+        PaginationInfo paginationInfo = pagingHelper.prepare(searchVO);
 
-        List<Announcement> list = announcementService.getAnnouncements(fieldCode, status, keyword);
-        model.addAttribute("announcements", list);
-        model.addAttribute("fieldCode", fieldCode);
-        model.addAttribute("status", status);
-        model.addAttribute("keyword", keyword);
+        model.addAttribute("announcements", announcementService.selectAnnouncementList(searchVO));
+        paginationInfo.setTotalRecordCount(announcementService.selectAnnouncementListTotCnt(searchVO));
+        model.addAttribute("paginationInfo", paginationInfo);
+        model.addAttribute("fieldCodes", commonCodeService.selectCodeList(CommonCodeService.GROUP_FIELD));
         return "announcement/list";
     }
 
     @GetMapping("/{id}")
     public String detail(@PathVariable("id") Long id, Model model) {
-        Announcement announcement = announcementService.getAnnouncementDetail(id);
-        model.addAttribute("announcement", announcement);
+        model.addAttribute("announcement", announcementService.selectAnnouncementWithViewCount(id));
         return "announcement/detail";
     }
 
@@ -44,14 +46,26 @@ public class AnnouncementController {
     @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     public String newForm(Model model) {
         model.addAttribute("announcement", new Announcement());
+        model.addAttribute("fieldCodes", commonCodeService.selectCodeList(CommonCodeService.GROUP_FIELD));
         return "announcement/form";
     }
 
     @PostMapping("/new")
     @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
-    public String create(@ModelAttribute Announcement announcement, Authentication authentication) {
-        announcement.setWriterId(authentication.getName());
-        announcementService.createAnnouncement(announcement);
-        return "redirect:/announcements";
+    public String create(@Valid @ModelAttribute("announcement") Announcement announcement,
+                         BindingResult bindingResult,
+                         Model model,
+                         RedirectAttributes redirectAttributes) {
+        if (!bindingResult.hasErrors()) {
+            try {
+                Long id = announcementService.insertAnnouncement(announcement);
+                redirectAttributes.addFlashAttribute("successMessage", "공고가 등록되었습니다.");
+                return "redirect:/announcements/" + id;
+            } catch (BusinessException e) {
+                bindingResult.reject("business", e.getMessage());
+            }
+        }
+        model.addAttribute("fieldCodes", commonCodeService.selectCodeList(CommonCodeService.GROUP_FIELD));
+        return "announcement/form";
     }
 }

@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="kr.go.daegu.pms.mapper.AnnouncementMapper">
 
-    <select id="selectAllAnnouncements" resultType="kr.go.daegu.pms.domain.Announcement">
-        SELECT 
+    <!-- 목록/상세 공통 조회 컬럼 -->
+    <sql id="announcementColumns">
             a.announcement_id,
             a.title,
             a.field_code,
@@ -20,9 +20,10 @@
             a.writer_id,
             u.user_name AS writer_name,
             a.created_at
-        FROM announcement a
-        LEFT JOIN com_code_detail c ON a.field_code = c.code_id AND c.group_id = 'FIELD'
-        LEFT JOIN users u ON a.writer_id = u.user_id
+    </sql>
+
+    <!-- 목록 조회와 건수 조회가 반드시 같은 조건을 쓰도록 WHERE 절을 공유 -->
+    <sql id="searchCondition">
         <where>
             <if test="fieldCode != null and fieldCode != ''">
                 AND a.field_code = #{fieldCode}
@@ -34,32 +35,37 @@
                 AND (a.title LIKE CONCAT('%', #{keyword}, '%') OR a.content LIKE CONCAT('%', #{keyword}, '%'))
             </if>
         </where>
-        ORDER BY a.announcement_id DESC
+    </sql>
+
+    <select id="selectAnnouncementList" parameterType="AnnouncementSearchVO" resultType="Announcement">
+        SELECT
+            <include refid="announcementColumns"/>
+        FROM announcement a
+        LEFT JOIN com_code_detail c ON a.field_code = c.code_id AND c.group_id = 'FIELD'
+        LEFT JOIN users u ON a.writer_id = u.user_id
+        <include refid="searchCondition"/>
+        ORDER BY a.created_at DESC, a.announcement_id DESC
+        <if test="recordCountPerPage > 0">
+            LIMIT #{recordCountPerPage} OFFSET #{firstIndex}
+        </if>
     </select>
 
-    <select id="selectAnnouncementById" resultType="kr.go.daegu.pms.domain.Announcement">
-        SELECT 
-            a.announcement_id,
-            a.title,
-            a.field_code,
-            c.code_name AS field_name,
-            a.total_budget,
-            a.max_grant,
-            a.start_date,
-            a.end_date,
-            a.content,
-            a.status,
-            a.view_count,
-            a.writer_id,
-            u.user_name AS writer_name,
-            a.created_at
+    <select id="selectAnnouncementListTotCnt" parameterType="AnnouncementSearchVO" resultType="int">
+        SELECT COUNT(*)
+        FROM announcement a
+        <include refid="searchCondition"/>
+    </select>
+
+    <select id="selectAnnouncement" resultType="Announcement">
+        SELECT
+            <include refid="announcementColumns"/>
         FROM announcement a
         LEFT JOIN com_code_detail c ON a.field_code = c.code_id AND c.group_id = 'FIELD'
         LEFT JOIN users u ON a.writer_id = u.user_id
         WHERE a.announcement_id = #{announcementId}
     </select>
 
-    <insert id="insertAnnouncement" useGeneratedKeys="true" keyProperty="announcementId">
+    <insert id="insertAnnouncement" parameterType="Announcement" useGeneratedKeys="true" keyProperty="announcementId">
         INSERT INTO announcement (
             title, field_code, total_budget, max_grant, start_date, end_date, content, status, view_count, writer_id
         ) VALUES (
@@ -67,27 +73,36 @@
         )
     </insert>
 
-    <update id="updateAnnouncement">
-        UPDATE announcement
-        SET title = #{title},
-            field_code = #{fieldCode},
-            total_budget = #{totalBudget},
-            max_grant = #{maxGrant},
-            start_date = #{startDate},
-            end_date = #{endDate},
-            content = #{content},
-            status = #{status}
-        WHERE announcement_id = #{announcementId}
-    </update>
-
-    <update id="incrementViewCount">
+    <update id="updateViewCount">
         UPDATE announcement
         SET view_count = view_count + 1
         WHERE announcement_id = #{announcementId}
     </update>
 
-    <select id="countActiveAnnouncements" resultType="int">
+    <select id="selectActiveAnnouncementCount" resultType="int">
         SELECT COUNT(*) FROM announcement WHERE status = 'OPEN'
     </select>
+
+    <!-- 대시보드: 분야별 공고 예산 합계 (공통코드 정렬순서 기준, 공고 없는 분야도 0으로 표시) -->
+    <select id="selectFieldBudgetStatList" resultType="FieldBudgetStat">
+        SELECT
+            c.code_id AS field_code,
+            c.code_name AS field_name,
+            COALESCE(SUM(a.total_budget), 0) AS total_budget
+        FROM com_code_detail c
+        LEFT JOIN announcement a ON a.field_code = c.code_id
+        WHERE c.group_id = 'FIELD'
+          AND c.use_yn = 'Y'
+        GROUP BY c.code_id, c.code_name, c.sort_order
+        ORDER BY c.sort_order
+    </select>
+
+    <!-- 배치: 마감일(end_date)이 오늘보다 이전인 접수중 공고를 마감 처리 -->
+    <update id="updateExpiredAnnouncementsToClosed">
+        UPDATE announcement
+        SET status = 'CLOSED'
+        WHERE status = 'OPEN'
+          AND end_date &lt; #{today}
+    </update>
 
 </mapper>

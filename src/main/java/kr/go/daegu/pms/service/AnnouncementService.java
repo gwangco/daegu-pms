@@ -1,38 +1,33 @@
 package kr.go.daegu.pms.service;
 
 import kr.go.daegu.pms.domain.Announcement;
-import kr.go.daegu.pms.mapper.AnnouncementMapper;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import kr.go.daegu.pms.domain.AnnouncementSearchVO;
+import kr.go.daegu.pms.domain.FieldBudgetStat;
 
 import java.util.List;
 
-@Service
-@RequiredArgsConstructor
-public class AnnouncementService {
+/**
+ * 지원사업 공고 서비스.
+ * 전자정부 표준: Controller 는 이 인터페이스에만 의존하고, 실제 구현은 impl 패키지의 AnnouncementServiceImpl 이 담당한다.
+ */
+public interface AnnouncementService {
 
-    private final AnnouncementMapper announcementMapper;
+    List<Announcement> selectAnnouncementList(AnnouncementSearchVO searchVO);
 
-    @Transactional(readOnly = true)
-    public List<Announcement> getAnnouncements(String fieldCode, String status, String keyword) {
-        return announcementMapper.selectAllAnnouncements(fieldCode, status, keyword);
-    }
+    int selectAnnouncementListTotCnt(AnnouncementSearchVO searchVO);
 
-    @Transactional
-    public Announcement getAnnouncementDetail(Long announcementId) {
-        announcementMapper.incrementViewCount(announcementId);
-        return announcementMapper.selectAnnouncementById(announcementId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 공고입니다. ID: " + announcementId));
-    }
+    /** 공고 조회 (조회수 증가 없음 - 신청서 작성 화면 등 내부 용도) */
+    Announcement selectAnnouncement(Long announcementId);
 
-    @Transactional
-    public void createAnnouncement(Announcement announcement) {
-        announcementMapper.insertAnnouncement(announcement);
-    }
+    /** 공고 상세 조회 (조회수 1 증가) */
+    Announcement selectAnnouncementWithViewCount(Long announcementId);
 
-    @Transactional(readOnly = true)
-    public int getActiveCount() {
-        return announcementMapper.countActiveAnnouncements();
-    }
+    Long insertAnnouncement(Announcement announcement);
+
+    int selectActiveAnnouncementCount();
+
+    List<FieldBudgetStat> selectFieldBudgetStatList();
+
+    /** 접수 마감일이 지난 공고를 마감 처리하고 처리 건수를 반환 (배치) */
+    int closeExpiredAnnouncements();
 }
