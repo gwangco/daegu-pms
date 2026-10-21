@@ -13,11 +13,15 @@ public interface AnnouncementService {
 
     int selectAnnouncementListTotCnt(AnnouncementSearchVO searchVO);
 
-    /** 공고 조회 (조회수 증가 없음 - 신청서 작성 화면 등 내부 용도) */
+    /** 공고 조회 (존재하지 않으면 NotFoundException) */
     AnnouncementVO selectAnnouncement(Long announcementId);
 
-    /** 공고 상세 조회 (조회수 1 증가) */
-    AnnouncementVO selectAnnouncementWithViewCount(Long announcementId);
+    /**
+     * 조회수 1 증가.
+     * eGov 트랜잭션 규칙상 select* 메서드는 읽기 전용이므로, 데이터를 바꾸는 조회수 증가는 update* 로 분리한다.
+     * (eGov 게시판 공통컴포넌트의 updateInqireCo + selectBoardArticle 구성과 동일)
+     */
+    void updateViewCount(Long announcementId);
 
     Long insertAnnouncement(AnnouncementVO announcement);
 

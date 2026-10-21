@@ -19,7 +19,8 @@ public class GlobalBindingAdvice {
     @InitBinder
     public void initBinder(WebDataBinder binder) {
         binder.setDisallowedFields(
-                "firstIndex", "recordCountPerPage",                      // 페이징 (서버 계산)
+                "firstIndex", "lastIndex", "recordCountPerPage",          // 페이징 (서버 계산)
+                "pageUnit", "pageSize",                                   // 페이징 (EgovPropertyService 값)
                 "companyUserId", "evaluatorUserId", "writerId",           // 소유자 (로그인 정보로 결정)
                 "createdBy", "reviewedBy", "viewCount",                   // 감사/집계 컬럼
                 "planFileId", "receiptFileId",                            // 파일 ID (업로드 결과로 결정)

@@ -1,5 +1,6 @@
 package kr.go.daegu.pms.cmm.service.impl;
 
+import org.egovframe.rte.fdl.cmmn.EgovAbstractServiceImpl;
 import kr.go.daegu.pms.cmm.exception.BusinessException;
 import kr.go.daegu.pms.cmm.exception.NotFoundException;
 import kr.go.daegu.pms.cmm.util.SecurityUtil;
@@ -12,7 +13,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
@@ -46,7 +46,7 @@ import java.util.UUID;
 @Slf4j
 @Service("fileService")
 @RequiredArgsConstructor
-public class FileServiceImpl implements FileService {
+public class FileServiceImpl extends EgovAbstractServiceImpl implements FileService {
 
     private static final int MAX_ORIGINAL_NAME_LENGTH = 200;
     private static final DateTimeFormatter SUB_DIR_FORMAT = DateTimeFormatter.ofPattern("yyyy/MM");
@@ -72,7 +72,6 @@ public class FileServiceImpl implements FileService {
     private final Clock clock;
 
     @Override
-    @Transactional
     public FileVO storeFile(MultipartFile multipartFile) {
         if (multipartFile == null || multipartFile.isEmpty()) {
             throw new BusinessException("첨부파일을 선택하세요.");
@@ -118,7 +117,6 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Download loadDownload(Long fileId) {
         FileVO file = fileMapper.selectFile(fileId)
                 .orElseThrow(() -> new NotFoundException("존재하지 않는 파일입니다."));

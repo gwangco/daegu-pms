@@ -24,7 +24,7 @@
         </div>
         <div class="d-flex gap-2" sec:authorize="hasAnyRole('MANAGER', 'ADMIN')">
             <!-- 현재 검색조건 그대로 엑셀 다운로드 -->
-            <a th:href="@{/excel/applications(status=${searchVO.status}, keyword=${searchVO.keyword})}" class="btn btn-success btn-sm shadow-sm">
+            <a th:href="@{/excel/applications(status=${searchVO.status}, searchKeyword=${searchVO.searchKeyword})}" class="btn btn-success btn-sm shadow-sm">
                 <i class="bi bi-file-earmark-excel me-1"></i> 엑셀 다운로드 (POI)
             </a>
         </div>
@@ -41,7 +41,7 @@
                     </select>
                 </div>
                 <div class="col-md-7">
-                    <input type="text" th:field="*{keyword}" class="form-control form-control-sm" placeholder="과제명 또는 기업명 검색..." maxlength="50">
+                    <input type="text" th:field="*{searchKeyword}" class="form-control form-control-sm" placeholder="과제명 또는 기업명 검색..." maxlength="50">
                 </div>
                 <div class="col-md-2">
                     <button type="submit" class="btn btn-secondary btn-sm w-100"><i class="bi bi-search me-1"></i> 검색</button>

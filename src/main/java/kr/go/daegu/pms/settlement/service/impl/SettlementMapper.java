@@ -1,13 +1,13 @@
 package kr.go.daegu.pms.settlement.service.impl;
 
 import kr.go.daegu.pms.settlement.service.SettlementVO;
-import org.apache.ibatis.annotations.Mapper;
+import org.egovframe.rte.psl.dataaccess.mapper.EgovMapper;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 import java.util.Optional;
 
-@Mapper
+@EgovMapper("settlementMapper")
 public interface SettlementMapper {
     List<SettlementVO> selectSettlementList(@Param("applicationId") Long applicationId);
     Optional<SettlementVO> selectSettlement(@Param("settlementId") Long settlementId);

@@ -1,5 +1,6 @@
 package kr.go.daegu.pms.settlement.service.impl;
 
+import org.egovframe.rte.fdl.cmmn.EgovAbstractServiceImpl;
 import kr.go.daegu.pms.cmm.exception.BusinessException;
 import kr.go.daegu.pms.cmm.exception.NotFoundException;
 import kr.go.daegu.pms.cmm.util.SecurityUtil;
@@ -16,7 +17,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.Clock;
@@ -26,7 +26,7 @@ import java.util.List;
 @Slf4j
 @Service("settlementService")
 @RequiredArgsConstructor
-public class SettlementServiceImpl implements SettlementService {
+public class SettlementServiceImpl extends EgovAbstractServiceImpl implements SettlementService {
 
     public static final String STATUS_REQUESTED = "REQUESTED";
     public static final String STATUS_APPROVED = "APPROVED";
@@ -41,7 +41,6 @@ public class SettlementServiceImpl implements SettlementService {
     private final Clock clock;
 
     @Override
-    @Transactional(readOnly = true)
     public ApplicationVO selectSettlementApplication(Long applicationId) {
         ApplicationVO application = accessChecker.getSettlementAccessibleApplication(applicationId);
         if (!ApplicationStatus.SELECTED.name().equals(application.getStatus())) {
@@ -51,28 +50,24 @@ public class SettlementServiceImpl implements SettlementService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<SettlementVO> selectSettlementList(Long applicationId) {
         accessChecker.getSettlementAccessibleApplication(applicationId);
         return settlementMapper.selectSettlementList(applicationId);
     }
 
     @Override
-    @Transactional(readOnly = true)
     public long selectApprovedAmount(Long applicationId) {
         accessChecker.getSettlementAccessibleApplication(applicationId);
         return settlementMapper.selectApprovedAmount(applicationId);
     }
 
     @Override
-    @Transactional(readOnly = true)
     public long selectUsedAmount(Long applicationId) {
         accessChecker.getSettlementAccessibleApplication(applicationId);
         return settlementMapper.selectUsedAmount(applicationId);
     }
 
     @Override
-    @Transactional
     public Long insertSettlement(SettlementVO settlement, MultipartFile receiptFile) {
         if (!SecurityUtil.hasRole(SecurityUtil.ROLE_COMPANY)) {
             throw new AccessDeniedException("과제 수행 기업만 사업비를 집행 등록할 수 있습니다.");
@@ -122,7 +117,6 @@ public class SettlementServiceImpl implements SettlementService {
     }
 
     @Override
-    @Transactional
     public Long reviewSettlement(Long settlementId, String statusCode, String rejectReason) {
         if (!SecurityUtil.isStaff()) {
             throw new AccessDeniedException("사업담당자만 정산을 검수할 수 있습니다.");

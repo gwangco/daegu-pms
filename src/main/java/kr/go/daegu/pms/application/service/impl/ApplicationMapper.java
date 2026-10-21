@@ -2,13 +2,13 @@ package kr.go.daegu.pms.application.service.impl;
 
 import kr.go.daegu.pms.application.service.ApplicationVO;
 import kr.go.daegu.pms.application.service.ApplicationSearchVO;
-import org.apache.ibatis.annotations.Mapper;
+import org.egovframe.rte.psl.dataaccess.mapper.EgovMapper;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 import java.util.Optional;
 
-@Mapper
+@EgovMapper("applicationMapper")
 public interface ApplicationMapper {
     List<ApplicationVO> selectApplicationList(ApplicationSearchVO searchVO);
     int selectApplicationListTotCnt(ApplicationSearchVO searchVO);

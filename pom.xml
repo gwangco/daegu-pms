@@ -50,6 +50,13 @@
         <dependency>
             <groupId>org.egovframe.rte</groupId>
             <artifactId>egovframe-rte-fdl-cmmn</artifactId>
+            <exclusions>
+                <!-- fdl-logging 경유로 들어오는 JPA API 제외 (JPA 미사용) -->
+                <exclusion>
+                    <groupId>jakarta.persistence</groupId>
+                    <artifactId>jakarta.persistence-api</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <!-- ID Generation: EgovIdGnrService (테이블 기반 채번) -->
         <dependency>
@@ -77,6 +84,11 @@
                 <exclusion>
                     <groupId>org.apache.ibatis</groupId>
                     <artifactId>ibatis-sqlmap</artifactId>
+                </exclusion>
+                <!-- JPA 를 쓰지 않으므로 제외 (있으면 Hibernate Validator 가 JPA 구현체를 찾다 경고를 남김) -->
+                <exclusion>
+                    <groupId>jakarta.persistence</groupId>
+                    <artifactId>jakarta.persistence-api</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>

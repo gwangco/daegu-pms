@@ -3,6 +3,7 @@ package kr.go.daegu.pms.config;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.mybatis.spring.SqlSessionFactoryBean;
 import org.mybatis.spring.SqlSessionTemplate;
+import org.egovframe.rte.psl.dataaccess.mapper.EgovMapper;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
@@ -20,7 +21,7 @@ import java.io.IOException;
  * - @MapperScan           : Mapper 인터페이스를 찾아 구현체(프록시)를 Bean 으로 등록
  */
 @Configuration
-@MapperScan(basePackages = "kr.go.daegu.pms", annotationClass = org.apache.ibatis.annotations.Mapper.class)
+@MapperScan(basePackages = "kr.go.daegu.pms", annotationClass = EgovMapper.class)
 public class EgovConfigMapper {
 
     @Bean

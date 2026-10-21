@@ -1,5 +1,6 @@
 package kr.go.daegu.pms.application.service.impl;
 
+import org.egovframe.rte.fdl.cmmn.EgovAbstractServiceImpl;
 import kr.go.daegu.pms.cmm.exception.BusinessException;
 import kr.go.daegu.pms.cmm.util.SecurityUtil;
 import kr.go.daegu.pms.announcement.service.AnnouncementVO;
@@ -17,7 +18,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.Clock;
@@ -27,7 +27,7 @@ import java.util.List;
 @Slf4j
 @Service("applicationService")
 @RequiredArgsConstructor
-public class ApplicationServiceImpl implements ApplicationService {
+public class ApplicationServiceImpl extends EgovAbstractServiceImpl implements ApplicationService {
 
     private final ApplicationMapper applicationMapper;
     private final EvaluationMapper evaluationMapper;
@@ -37,14 +37,12 @@ public class ApplicationServiceImpl implements ApplicationService {
     private final Clock clock;
 
     @Override
-    @Transactional(readOnly = true)
     public List<ApplicationVO> selectApplicationList(ApplicationSearchVO searchVO) {
         applyDataScope(searchVO);
         return applicationMapper.selectApplicationList(searchVO);
     }
 
     @Override
-    @Transactional(readOnly = true)
     public int selectApplicationListTotCnt(ApplicationSearchVO searchVO) {
         applyDataScope(searchVO);
         return applicationMapper.selectApplicationListTotCnt(searchVO);
@@ -70,13 +68,11 @@ public class ApplicationServiceImpl implements ApplicationService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public ApplicationVO selectApplication(Long applicationId) {
         return accessChecker.getReadableApplication(applicationId);
     }
 
     @Override
-    @Transactional
     public Long insertApplication(ApplicationVO application, MultipartFile planFile) {
         if (!SecurityUtil.hasRole(SecurityUtil.ROLE_COMPANY)) {
             throw new AccessDeniedException("기업회원만 사업을 신청할 수 있습니다.");
@@ -124,7 +120,6 @@ public class ApplicationServiceImpl implements ApplicationService {
     }
 
     @Override
-    @Transactional
     public void updateApplicationStatus(Long applicationId, String statusCode) {
         if (!SecurityUtil.isStaff()) {
             throw new AccessDeniedException("심사 상태 변경 권한이 없습니다.");
@@ -149,13 +144,11 @@ public class ApplicationServiceImpl implements ApplicationService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public int selectTotalApplicationCount() {
         return applicationMapper.selectTotalApplicationCount();
     }
 
     @Override
-    @Transactional(readOnly = true)
     public int selectSelectedApplicationCount() {
         return applicationMapper.selectSelectedApplicationCount();
     }

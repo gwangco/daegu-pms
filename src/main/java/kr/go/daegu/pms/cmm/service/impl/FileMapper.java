@@ -1,12 +1,12 @@
 package kr.go.daegu.pms.cmm.service.impl;
 
 import kr.go.daegu.pms.cmm.service.FileVO;
-import org.apache.ibatis.annotations.Mapper;
+import org.egovframe.rte.psl.dataaccess.mapper.EgovMapper;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.Optional;
 
-@Mapper
+@EgovMapper("fileMapper")
 public interface FileMapper {
     int insertFile(FileVO file);
     Optional<FileVO> selectFile(@Param("fileId") Long fileId);

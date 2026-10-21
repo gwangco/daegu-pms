@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.LocalDate;
@@ -32,7 +31,7 @@ public class ExcelController {
     /** 목록 화면과 같은 검색 조건으로 전체 건(페이징 없음)을 엑셀로 내려받는다 */
     @GetMapping("/applications")
     @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
-    public ResponseEntity<byte[]> downloadApplicationsExcel(@ModelAttribute ApplicationSearchVO searchVO) throws IOException {
+    public ResponseEntity<byte[]> downloadApplicationsExcel(@ModelAttribute ApplicationSearchVO searchVO) {
         byte[] excelBytes = excelService.exportApplicationsToExcel(applicationService.selectApplicationList(searchVO));
 
         String dateStr = LocalDate.now(clock).format(DateTimeFormatter.ofPattern("yyyyMMdd"));

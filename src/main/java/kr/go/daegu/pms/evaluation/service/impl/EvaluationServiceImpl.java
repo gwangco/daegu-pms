@@ -1,5 +1,6 @@
 package kr.go.daegu.pms.evaluation.service.impl;
 
+import org.egovframe.rte.fdl.cmmn.EgovAbstractServiceImpl;
 import kr.go.daegu.pms.cmm.exception.BusinessException;
 import kr.go.daegu.pms.cmm.exception.NotFoundException;
 import kr.go.daegu.pms.cmm.util.SecurityUtil;
@@ -16,7 +17,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Set;
@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service("evaluationService")
 @RequiredArgsConstructor
-public class EvaluationServiceImpl implements EvaluationService {
+public class EvaluationServiceImpl extends EgovAbstractServiceImpl implements EvaluationService {
 
     private static final int MAX_COMMENT_LENGTH = 2000;
 
@@ -35,13 +35,11 @@ public class EvaluationServiceImpl implements EvaluationService {
     private final ApplicationAccessChecker accessChecker;
 
     @Override
-    @Transactional(readOnly = true)
     public List<EvaluationVO> selectMyEvaluationList() {
         return evaluationMapper.selectEvaluationListByEvaluator(requireEvaluatorId());
     }
 
     @Override
-    @Transactional(readOnly = true)
     public EvaluationVO selectMyEvaluation(Long evaluationId) {
         String evaluatorId = requireEvaluatorId();
         EvaluationVO evaluation = evaluationMapper.selectEvaluation(evaluationId)
@@ -53,7 +51,6 @@ public class EvaluationServiceImpl implements EvaluationService {
     }
 
     @Override
-    @Transactional
     public void submitScore(Long evaluationId, int quantitativeScore, int qualitativeScore, String evalComment) {
         EvaluationVO evaluation = selectMyEvaluation(evaluationId);
 
@@ -90,14 +87,12 @@ public class EvaluationServiceImpl implements EvaluationService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<EvaluationVO> selectEvaluationListByApplication(Long applicationId) {
         requireStaff();
         return evaluationMapper.selectEvaluationListByApplication(applicationId);
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<UserVO> selectAssignableEvaluatorList(Long applicationId) {
         requireStaff();
         Set<String> assigned = evaluationMapper.selectEvaluationListByApplication(applicationId).stream()
@@ -110,7 +105,6 @@ public class EvaluationServiceImpl implements EvaluationService {
     }
 
     @Override
-    @Transactional
     public void assignEvaluator(Long applicationId, String evaluatorUserId) {
         requireStaff();
         ApplicationVO application = accessChecker.getReadableApplication(applicationId);

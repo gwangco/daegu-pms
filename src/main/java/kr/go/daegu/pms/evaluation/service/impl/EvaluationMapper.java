@@ -1,13 +1,13 @@
 package kr.go.daegu.pms.evaluation.service.impl;
 
 import kr.go.daegu.pms.evaluation.service.EvaluationVO;
-import org.apache.ibatis.annotations.Mapper;
+import org.egovframe.rte.psl.dataaccess.mapper.EgovMapper;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 import java.util.Optional;
 
-@Mapper
+@EgovMapper("evaluationMapper")
 public interface EvaluationMapper {
     List<EvaluationVO> selectEvaluationListByEvaluator(@Param("evaluatorUserId") String evaluatorUserId);
     List<EvaluationVO> selectEvaluationListByApplication(@Param("applicationId") Long applicationId);

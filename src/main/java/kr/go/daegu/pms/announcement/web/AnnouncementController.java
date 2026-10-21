@@ -2,7 +2,7 @@ package kr.go.daegu.pms.announcement.web;
 
 import jakarta.validation.Valid;
 import kr.go.daegu.pms.cmm.exception.BusinessException;
-import kr.go.daegu.pms.cmm.pagination.PaginationInfo;
+import org.egovframe.rte.ptl.mvc.tags.ui.pagination.PaginationInfo;
 import kr.go.daegu.pms.cmm.pagination.PagingHelper;
 import kr.go.daegu.pms.announcement.service.AnnouncementVO;
 import kr.go.daegu.pms.announcement.service.AnnouncementSearchVO;
@@ -38,7 +38,11 @@ public class AnnouncementController {
 
     @GetMapping("/{id}")
     public String detail(@PathVariable("id") Long id, Model model) {
-        model.addAttribute("announcement", announcementService.selectAnnouncementWithViewCount(id));
+        // 존재 확인(없으면 404) → 조회수 증가 → 화면 표시
+        AnnouncementVO announcement = announcementService.selectAnnouncement(id);
+        announcementService.updateViewCount(id);
+        announcement.setViewCount(announcement.getViewCount() + 1);
+        model.addAttribute("announcement", announcement);
         return "announcement/detail";
     }
 

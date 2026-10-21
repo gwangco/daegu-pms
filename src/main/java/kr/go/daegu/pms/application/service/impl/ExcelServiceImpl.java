@@ -1,5 +1,6 @@
 package kr.go.daegu.pms.application.service.impl;
 
+import org.egovframe.rte.fdl.cmmn.EgovAbstractServiceImpl;
 import kr.go.daegu.pms.application.service.ApplicationVO;
 import kr.go.daegu.pms.application.service.ExcelService;
 import org.apache.poi.ss.usermodel.*;
@@ -8,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
@@ -17,10 +19,10 @@ import java.util.List;
  *   (CSV 로 내보낼 때는 =, +, -, @ 로 시작하는 값을 이스케이프해야 하는 CSV 인젝션에 주의)
  */
 @Service("excelService")
-public class ExcelServiceImpl implements ExcelService {
+public class ExcelServiceImpl extends EgovAbstractServiceImpl implements ExcelService {
 
     @Override
-    public byte[] exportApplicationsToExcel(List<ApplicationVO> applications) throws IOException {
+    public byte[] exportApplicationsToExcel(List<ApplicationVO> applications) {
         try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             Sheet sheet = workbook.createSheet("지원사업_신청_및_선정현황");
 
@@ -90,6 +92,9 @@ public class ExcelServiceImpl implements ExcelService {
 
             workbook.write(out);
             return out.toByteArray();
+        } catch (IOException e) {
+            // 체크 예외를 런타임 예외로 감싼다 (eGov 예외 후처리 AOP 가 선언되지 않은 체크 예외를 던지지 않도록)
+            throw new UncheckedIOException("엑셀 파일 생성 중 오류가 발생했습니다.", e);
         }
     }
 

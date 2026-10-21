@@ -31,8 +31,8 @@
             <if test="status != null and status != ''">
                 AND a.status = #{status}
             </if>
-            <if test="keyword != null and keyword != ''">
-                AND (a.title LIKE CONCAT('%', #{keyword}, '%') OR a.content LIKE CONCAT('%', #{keyword}, '%'))
+            <if test="searchKeyword != null and searchKeyword != ''">
+                AND (a.title LIKE CONCAT('%', #{searchKeyword}, '%') OR a.content LIKE CONCAT('%', #{searchKeyword}, '%'))
             </if>
         </where>
     </sql>

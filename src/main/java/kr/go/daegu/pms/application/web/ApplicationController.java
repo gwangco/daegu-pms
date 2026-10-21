@@ -2,7 +2,7 @@ package kr.go.daegu.pms.application.web;
 
 import jakarta.validation.Valid;
 import kr.go.daegu.pms.cmm.exception.BusinessException;
-import kr.go.daegu.pms.cmm.pagination.PaginationInfo;
+import org.egovframe.rte.ptl.mvc.tags.ui.pagination.PaginationInfo;
 import kr.go.daegu.pms.cmm.pagination.PagingHelper;
 import kr.go.daegu.pms.cmm.util.SecurityUtil;
 import kr.go.daegu.pms.announcement.service.AnnouncementVO;
