@@ -91,7 +91,7 @@
         WHERE app.application_id = #{applicationId}
     </select>
 
-    <!-- 정산 등록 트랜잭션 동안 해당 과제 행을 잠가 동시 등록에 의한 예산 초과를 방지 -->
+    <!-- 상태 변경·평가 배정·채점·정산의 공통 잠금. 신청서 → 평가표/정산 순서로 잠가 경쟁 상태를 방지 -->
     <select id="selectApplicationForUpdate" resultType="applicationVO">
         SELECT application_id, company_user_id, request_grant, status
         FROM application

@@ -1,5 +1,7 @@
 package kr.go.daegu.pms.settlement.web;
 
+import kr.go.daegu.pms.cmm.message.AppMessages;
+
 import jakarta.validation.Valid;
 import kr.go.daegu.pms.cmm.exception.BusinessException;
 import kr.go.daegu.pms.application.service.ApplicationVO;
@@ -22,6 +24,8 @@ import java.time.LocalDate;
 @RequestMapping("/settlements")
 @RequiredArgsConstructor
 public class SettlementController {
+
+    private final AppMessages messages;
 
     private final SettlementService settlementService;
     private final CommonCodeService commonCodeService;
@@ -62,7 +66,7 @@ public class SettlementController {
         }
         try {
             settlementService.insertSettlement(settlement, receiptFile);
-            redirectAttributes.addFlashAttribute("successMessage", "사업비 집행 내역이 등록되었습니다. 담당자 검수 후 승인됩니다.");
+            redirectAttributes.addFlashAttribute("successMessage", messages.text("settlement.created"));
         } catch (BusinessException e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }
@@ -81,7 +85,7 @@ public class SettlementController {
         try {
             // 리다이렉트 대상도 화면 값이 아니라 실제 정산 건의 과제 ID 를 사용
             targetApplicationId = settlementService.reviewSettlement(settlementId, status, rejectReason);
-            redirectAttributes.addFlashAttribute("successMessage", "검수 처리가 완료되었습니다.");
+            redirectAttributes.addFlashAttribute("successMessage", messages.text("settlement.reviewed"));
         } catch (BusinessException e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }
@@ -92,6 +96,6 @@ public class SettlementController {
         return bindingResult.getAllErrors().stream()
                 .map(error -> error.getDefaultMessage())
                 .findFirst()
-                .orElse("입력값을 확인하세요.");
+                .orElseGet(() -> messages.text("common.input.invalid"));
     }
 }

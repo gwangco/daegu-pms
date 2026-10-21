@@ -9,7 +9,7 @@
 [![MyBatis](https://img.shields.io/badge/MyBatis-3.5.19-C70D2C)](https://mybatis.org/mybatis-3/)
 [![Spring Security](https://img.shields.io/badge/Spring%20Security-6.5-6DB33F?logo=springsecurity&logoColor=white)](https://spring.io/projects/spring-security)
 [![Maven](https://img.shields.io/badge/Build-Maven%203.9-C71A36?logo=apachemaven&logoColor=white)](https://maven.apache.org/)
-[![Tests](https://img.shields.io/badge/Tests-58%20passed-brightgreen)](#-6-실행과-테스트)
+[![Tests](https://img.shields.io/badge/Tests-78%20passed-brightgreen)](#-6-실행과-테스트)
 
 > ⚠️ 취업 포트폴리오용 데모입니다. 등장하는 기관명·사업명·기업명은 지역 맥락을 설명하기 위한 가상의 예시이며 실제 기관과 관련이 없습니다.
 
@@ -38,8 +38,10 @@
 | **표준 패키지 구조** | 업무별 `service`(인터페이스·VO) / `service.impl`(구현·Mapper) / `web`(컨트롤러) | `src/main/java` |
 | **VS Code 확장 CRUD 코드 생성기** | DDL → 공지사항 CRUD 뼈대 생성 후 보안·업무 규칙 보완 | [`docs/egov-codegen`](docs/egov-codegen/README.md) |
 | **로깅** Log4j2 | eGov 실행환경 표준 로깅 구현체 | `log4j2-spring.xml` |
+| **업무 메시지** `MessageSource` | UTF-8 번들 + `AppMessages`, 런타임 업무·권한·404 예외 분류 유지 | `cmm/message`, `egovframework/message` |
 
 > Spring Boot 단독 구성에서 eGovFrame 5.0 으로 전환한 과정은 [docs/EGOVFRAME_MIGRATION.md](docs/EGOVFRAME_MIGRATION.md) 에 정리했습니다.
+> 이후 메시지 외부화와 심사·정산 보안 개선은 [4차 스프린트 학습 문서](docs/SPRINT4_MESSAGES_SECURITY.md)에서 코드 흐름과 검증 방법을 설명합니다.
 
 ---
 
@@ -90,7 +92,9 @@ flowchart LR
 | 위험한 파일 업로드 / 경로 조작 | 화이트리스트 + 매직넘버 검사, 확장자 없는 UUID 저장, `normalize()` 후 루트 이탈 검사 |
 | CSRF | Spring Security CSRF 토큰 (상태 변경은 모두 POST) |
 | 오류 정보 노출 | 스택트레이스 비노출, eGov ExceptionTransfer 가 DB 예외를 일반 메시지로 변환 |
-| 동시성 | 정산 `SELECT … FOR UPDATE`, 채번은 eGov IdGnr 의 행 잠금, 검수·채점은 상태 조건부 UPDATE |
+| 동시성 | 심사 상태 변경·평가 배정·채점·정산이 신청서 행을 `SELECT … FOR UPDATE`로 잠금, 검수·채점은 상태 조건부 UPDATE |
+| 금액 무결성 | 공급가액 양수 검사 + `Math.addExact`로 합계 오버플로 차단, 잔액 검증 후 저장 |
+| 로그 노출 | 업무/Mapper 기본 INFO, SQL 바인딩 값 비노출 회귀 테스트 (사업계획·평가 의견·정산 적요) |
 | 공급망 | Maven Wrapper SHA-256 검증, GitHub Actions 커밋 SHA 고정·최소 권한, 미사용 라이브러리(iBATIS 2, JPA API) 제외 |
 
 ---
@@ -113,10 +117,13 @@ flowchart LR
 * 웹 포털: http://localhost:8080
 * H2 콘솔: http://localhost:8080/h2-console (`admin` 로그인 후 / `jdbc:h2:mem:daegupms` / `sa` / 비밀번호 없음)
 
-### 테스트 (58건)
+### 테스트 (78건)
 * 단위: 상태머신, 파일명 정제, eGov 페이지 렌더러, 예외 후처리 분류
 * 통합(MockMvc): IDOR·CSRF·권한, 파일 위조 차단, 예산 초과, 상태머신, 채점 중복 제출, 접수번호 채번, 공지 CRUD·XSS, **eGov 실행환경 구성(트랜잭션 규칙·Mapper·Property·메시지)**
 * GitHub Actions 가 Pull Request 마다 자동 실행
+* 4차 추가 20건: 메시지 6, 실제 DB 동시성 4, 서비스 직접 인가 4, 정산 금액 경계값 5, SQL 로그 비노출 1
+
+이 구성은 H2 인메모리 DB와 공개된 샘플 계정을 쓰는 로컬 데모입니다. 운영 DB/Flyway, 개인정보 암호화·마스킹, 로그인 실패 잠금, 감사 이력은 후속 작업이며 운영 배포 완료를 의미하지 않습니다.
 
 ### 테스트 계정 (로컬 데모 전용)
 

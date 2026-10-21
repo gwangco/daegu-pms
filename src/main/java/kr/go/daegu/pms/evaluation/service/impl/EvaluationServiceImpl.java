@@ -1,8 +1,8 @@
 package kr.go.daegu.pms.evaluation.service.impl;
 
+import kr.go.daegu.pms.cmm.message.AppMessages;
+
 import org.egovframe.rte.fdl.cmmn.EgovAbstractServiceImpl;
-import kr.go.daegu.pms.cmm.exception.BusinessException;
-import kr.go.daegu.pms.cmm.exception.NotFoundException;
 import kr.go.daegu.pms.cmm.util.SecurityUtil;
 import kr.go.daegu.pms.application.service.ApplicationVO;
 import kr.go.daegu.pms.application.service.ApplicationStatus;
@@ -10,12 +10,10 @@ import kr.go.daegu.pms.evaluation.service.EvaluationVO;
 import kr.go.daegu.pms.user.service.UserVO;
 import kr.go.daegu.pms.application.service.impl.ApplicationMapper;
 import kr.go.daegu.pms.user.service.impl.UserMapper;
-import kr.go.daegu.pms.application.service.ApplicationAccessChecker;
 import kr.go.daegu.pms.evaluation.service.EvaluationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -27,12 +25,13 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class EvaluationServiceImpl extends EgovAbstractServiceImpl implements EvaluationService {
 
+    private final AppMessages messages;
+
     private static final int MAX_COMMENT_LENGTH = 2000;
 
     private final EvaluationMapper evaluationMapper;
     private final ApplicationMapper applicationMapper;
     private final UserMapper userMapper;
-    private final ApplicationAccessChecker accessChecker;
 
     @Override
     public List<EvaluationVO> selectMyEvaluationList() {
@@ -43,9 +42,9 @@ public class EvaluationServiceImpl extends EgovAbstractServiceImpl implements Ev
     public EvaluationVO selectMyEvaluation(Long evaluationId) {
         String evaluatorId = requireEvaluatorId();
         EvaluationVO evaluation = evaluationMapper.selectEvaluation(evaluationId)
-                .orElseThrow(() -> new NotFoundException("존재하지 않는 평가 건입니다."));
+                .orElseThrow(() -> messages.notFound("evaluation.notFound"));
         if (!evaluatorId.equals(evaluation.getEvaluatorUserId())) {
-            throw new AccessDeniedException("본인에게 배정된 평가 건만 조회할 수 있습니다.");
+            throw messages.denied("evaluation.read.denied");
         }
         return evaluation;
     }
@@ -54,23 +53,27 @@ public class EvaluationServiceImpl extends EgovAbstractServiceImpl implements Ev
     public void submitScore(Long evaluationId, int quantitativeScore, int qualitativeScore, String evalComment) {
         EvaluationVO evaluation = selectMyEvaluation(evaluationId);
 
+        // 인가 후 신청서 → 평가표 순서로 잠근다. 탈락/선정과 채점이 동시에 진행되지 않게 한다.
+        ApplicationVO application = applicationMapper.selectApplicationForUpdate(evaluation.getApplicationId())
+                .orElseThrow(() -> messages.notFound("application.notFound"));
+
         if (EvaluationVO.STATUS_COMPLETED.equals(evaluation.getStatus())) {
-            throw new BusinessException("이미 제출된 평가입니다. 제출 후에는 수정할 수 없습니다.");
+            throw messages.business("evaluation.completed");
         }
-        if (!ApplicationStatus.EVALUATING.name().equals(evaluation.getApplicationStatus())) {
-            throw new BusinessException("전문가 심사 중인 과제만 채점할 수 있습니다.");
+        if (!ApplicationStatus.EVALUATING.name().equals(application.getStatus())) {
+            throw messages.business("evaluation.status.invalid");
         }
         if (quantitativeScore < 0 || quantitativeScore > EvaluationVO.MAX_QUANTITATIVE) {
-            throw new BusinessException("정량 점수는 0~" + EvaluationVO.MAX_QUANTITATIVE + "점 사이로 입력하세요.");
+            throw messages.business("evaluation.quantitative.range", EvaluationVO.MAX_QUANTITATIVE);
         }
         if (qualitativeScore < 0 || qualitativeScore > EvaluationVO.MAX_QUALITATIVE) {
-            throw new BusinessException("정성 점수는 0~" + EvaluationVO.MAX_QUALITATIVE + "점 사이로 입력하세요.");
+            throw messages.business("evaluation.qualitative.range", EvaluationVO.MAX_QUALITATIVE);
         }
         if (evalComment == null || evalComment.isBlank()) {
-            throw new BusinessException("종합 의견을 입력하세요.");
+            throw messages.business("evaluation.comment.required");
         }
         if (evalComment.length() > MAX_COMMENT_LENGTH) {
-            throw new BusinessException("종합 의견은 " + MAX_COMMENT_LENGTH + "자 이내로 입력하세요.");
+            throw messages.business("evaluation.comment.tooLong", MAX_COMMENT_LENGTH);
         }
 
         evaluation.setQuantitativeScore(quantitativeScore);
@@ -80,7 +83,7 @@ public class EvaluationServiceImpl extends EgovAbstractServiceImpl implements Ev
 
         // UPDATE ... WHERE status='ASSIGNED' AND evaluator_user_id=본인 → 동시에 두 번 제출해도 한 번만 반영
         if (evaluationMapper.updateEvaluationScore(evaluation) == 0) {
-            throw new BusinessException("이미 제출된 평가입니다.");
+            throw messages.business("evaluation.duplicateSubmission");
         }
         log.info("[평가 제출] evaluationId={}, applicationId={}, total={}",
                 evaluationId, evaluation.getApplicationId(), evaluation.getTotalScore());
@@ -107,19 +110,21 @@ public class EvaluationServiceImpl extends EgovAbstractServiceImpl implements Ev
     @Override
     public void assignEvaluator(Long applicationId, String evaluatorUserId) {
         requireStaff();
-        ApplicationVO application = accessChecker.getReadableApplication(applicationId);
+        // 최종 선정의 미완료 평가 검사와 신규 배정이 교차하지 않도록 동일한 신청서 행을 잠근다.
+        ApplicationVO application = applicationMapper.selectApplicationForUpdate(applicationId)
+                .orElseThrow(() -> messages.notFound("application.notFound"));
         ApplicationStatus status = ApplicationStatus.fromCode(application.getStatus())
                 .orElseThrow(() -> new IllegalStateException("알 수 없는 저장 상태: " + application.getStatus()));
         if (!status.isEvaluatorAssignable()) {
-            throw new BusinessException("서류적격통과 또는 전문가심사중 상태의 과제에만 평가위원을 배정할 수 있습니다.");
+            throw messages.business("evaluation.assignment.invalidStatus");
         }
 
         UserVO evaluator = userMapper.findByUserId(evaluatorUserId)
                 .filter(u -> SecurityUtil.ROLE_EVALUATOR.equals(u.getRole()) && u.isEnabled())
-                .orElseThrow(() -> new BusinessException("올바르지 않은 평가위원입니다."));
+                .orElseThrow(() -> messages.business("evaluation.evaluator.invalid"));
 
         if (evaluationMapper.selectEvaluationCount(applicationId, evaluator.getUserId()) > 0) {
-            throw new BusinessException("이미 배정된 평가위원입니다.");
+            throw messages.business("evaluation.assignment.duplicate");
         }
         try {
             evaluationMapper.insertEvaluation(EvaluationVO.builder()
@@ -127,7 +132,7 @@ public class EvaluationServiceImpl extends EgovAbstractServiceImpl implements Ev
                     .evaluatorUserId(evaluator.getUserId())
                     .build());
         } catch (DuplicateKeyException e) {
-            throw new BusinessException("이미 배정된 평가위원입니다.");
+            throw messages.business("evaluation.assignment.duplicate");
         }
 
         if (status == ApplicationStatus.DOCUMENT_PASSED) {
@@ -139,14 +144,14 @@ public class EvaluationServiceImpl extends EgovAbstractServiceImpl implements Ev
 
     private String requireEvaluatorId() {
         if (!SecurityUtil.hasRole(SecurityUtil.ROLE_EVALUATOR)) {
-            throw new AccessDeniedException("평가위원만 이용할 수 있습니다.");
+            throw messages.denied("evaluation.evaluator.denied");
         }
         return SecurityUtil.getCurrentUserId();
     }
 
     private void requireStaff() {
         if (!SecurityUtil.isStaff()) {
-            throw new AccessDeniedException("사업담당자만 이용할 수 있습니다.");
+            throw messages.denied("evaluation.staff.denied");
         }
     }
 }

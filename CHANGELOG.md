@@ -4,6 +4,29 @@
 
 ---
 
+## [0.4.0] 4차 스프린트 — 메시지 외부화와 보안·무결성 보완 (2026-10-21~22)
+브랜치: `codex/sprint4-messages-security` · 상세: [docs/SPRINT4_MESSAGES_SECURITY.md](docs/SPRINT4_MESSAGES_SECURITY.md)
+
+### 변경 (Changed)
+- 서비스의 사용자 예외, 컨트롤러 성공/오류 안내를 UTF-8 메시지 번들 + `AppMessages`로 통합
+- eGov 공통 `messageSource`를 재사용하고 `BusinessException`/`NotFoundException`/`AccessDeniedException` 분류 유지
+- 한국 로케일의 금액·날짜·상태 인자 처리, 파일명 정제 함수의 메시지 의존성 명시
+
+### 보안 및 수정 (Security / Fixed)
+- 신청 상태 변경·평가위원 배정·채점의 신청서 행 잠금을 통일해 종료 상태 덮어쓰기와 미완료 평가가 있는 선정 차단
+- 공고 등록 서비스에 담당자/관리자 권한 재검사 추가
+- 정산 공급가액 양수 검사 및 `Math.addExact`로 부가세 합계 오버플로에 의한 예산 검사 우회 차단
+- 업무/Mapper 기본 로그를 DEBUG → INFO로 변경하여 SQL 바인딩 값의 기본 로그 노출 방지
+
+### 추가 (Added)
+- 메시지 키 누락·인자·로케일·HTTP 예외 분류 회귀 테스트
+- 별도 스레드·트랜잭션과 실제 DB 잠금 대기로 검증하는 심사 경쟁 상태 테스트
+- 서비스 직접 인가, 정산 경계값, 민감 입력의 로그 비노출 테스트
+- 3부 학습용 공개 문서와 로컬 작업 일지 갱신
+- 전체 테스트 78건 성공(20건 추가), 실행 JAR의 역할별 실제 HTTP·오류 안내·인가·CSRF 검증
+
+---
+
 ## [0.3.0] 3차 스프린트 — 전자정부 표준프레임워크 5.0 전환 (2026-10-21)
 브랜치: `feature/egovframe5-migration` · 상세: [docs/EGOVFRAME_MIGRATION.md](docs/EGOVFRAME_MIGRATION.md)
 

@@ -1,5 +1,7 @@
 package kr.go.daegu.pms.evaluation.web;
 
+import kr.go.daegu.pms.cmm.message.AppMessages;
+
 import kr.go.daegu.pms.cmm.exception.BusinessException;
 import kr.go.daegu.pms.evaluation.service.EvaluationVO;
 import kr.go.daegu.pms.application.service.ApplicationService;
@@ -19,6 +21,8 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @PreAuthorize("hasRole('EVALUATOR')")
 @RequiredArgsConstructor
 public class EvaluationController {
+
+    private final AppMessages messages;
 
     private final EvaluationService evaluationService;
     private final ApplicationService applicationService;
@@ -47,10 +51,10 @@ public class EvaluationController {
                          RedirectAttributes redirectAttributes) {
         try {
             if (quantitativeScore == null || qualitativeScore == null) {
-                throw new BusinessException("정량/정성 점수를 모두 입력하세요.");
+                throw messages.business("evaluation.scores.required");
             }
             evaluationService.submitScore(id, quantitativeScore, qualitativeScore, evalComment);
-            redirectAttributes.addFlashAttribute("successMessage", "평가가 제출되었습니다. 제출된 평가는 수정할 수 없습니다.");
+            redirectAttributes.addFlashAttribute("successMessage", messages.text("evaluation.submitted"));
             return "redirect:/evaluator/evaluations";
         } catch (BusinessException e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());

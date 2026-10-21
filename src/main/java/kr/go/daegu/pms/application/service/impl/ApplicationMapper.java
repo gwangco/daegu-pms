@@ -14,7 +14,7 @@ public interface ApplicationMapper {
     int selectApplicationListTotCnt(ApplicationSearchVO searchVO);
     Optional<ApplicationVO> selectApplication(@Param("applicationId") Long applicationId);
 
-    /** 행 잠금 조회 (SELECT ... FOR UPDATE). 같은 과제에 대한 동시 정산 등록 시 예산 초과를 막기 위해 사용 */
+    /** 행 잠금 조회. 상태 변경·평가 배정·채점·정산은 신청서 행을 먼저 잠가 업무 검증과 저장을 직렬화한다. */
     Optional<ApplicationVO> selectApplicationForUpdate(@Param("applicationId") Long applicationId);
 
     int selectApplicationCountByCompany(@Param("announcementId") Long announcementId,

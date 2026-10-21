@@ -73,5 +73,7 @@ app:
 logging:
   level:
     root: INFO
-    kr.go.daegu.pms: DEBUG
+    # Mapper DEBUG는 SQL 바인딩 값(사업계획·평가 의견·정산 적요)을 그대로 출력한다.
+    # 로컬 데모에서도 실제 업무 내용을 입력할 수 있으므로 기본 INFO를 유지한다.
+    kr.go.daegu.pms: INFO
     org.springframework.security: INFO

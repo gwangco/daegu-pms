@@ -1,8 +1,8 @@
 package kr.go.daegu.pms.announcement.service.impl;
 
+import kr.go.daegu.pms.cmm.message.AppMessages;
+
 import org.egovframe.rte.fdl.cmmn.EgovAbstractServiceImpl;
-import kr.go.daegu.pms.cmm.exception.BusinessException;
-import kr.go.daegu.pms.cmm.exception.NotFoundException;
 import kr.go.daegu.pms.cmm.util.SecurityUtil;
 import kr.go.daegu.pms.announcement.service.AnnouncementVO;
 import kr.go.daegu.pms.announcement.service.AnnouncementSearchVO;
@@ -19,6 +19,8 @@ import java.util.List;
 @Service("announcementService")
 @RequiredArgsConstructor
 public class AnnouncementServiceImpl extends EgovAbstractServiceImpl implements AnnouncementService {
+
+    private final AppMessages messages;
 
     private final AnnouncementMapper announcementMapper;
     private final CommonCodeService commonCodeService;
@@ -37,7 +39,7 @@ public class AnnouncementServiceImpl extends EgovAbstractServiceImpl implements 
     @Override
     public AnnouncementVO selectAnnouncement(Long announcementId) {
         return announcementMapper.selectAnnouncement(announcementId)
-                .orElseThrow(() -> new NotFoundException("존재하지 않는 공고입니다."));
+                .orElseThrow(() -> messages.notFound("announcement.notFound"));
     }
 
     @Override
@@ -47,17 +49,20 @@ public class AnnouncementServiceImpl extends EgovAbstractServiceImpl implements 
 
     @Override
     public Long insertAnnouncement(AnnouncementVO announcement) {
+        if (!SecurityUtil.isStaff()) {
+            throw messages.denied("announcement.write.denied");
+        }
         if (!commonCodeService.isValidCode(CommonCodeService.GROUP_FIELD, announcement.getFieldCode())) {
-            throw new BusinessException("올바르지 않은 지원 분야입니다.");
+            throw messages.business("announcement.field.invalid");
         }
         if (announcement.getEndDate().isBefore(announcement.getStartDate())) {
-            throw new BusinessException("접수 마감일은 시작일 이후여야 합니다.");
+            throw messages.business("announcement.period.invalid");
         }
         if (announcement.getEndDate().isBefore(LocalDate.now(clock))) {
-            throw new BusinessException("접수 마감일이 이미 지난 공고는 등록할 수 없습니다.");
+            throw messages.business("announcement.closed");
         }
         if (announcement.getMaxGrant() > announcement.getTotalBudget()) {
-            throw new BusinessException("기업당 최대 지원금은 총 지원 예산을 초과할 수 없습니다.");
+            throw messages.business("announcement.grant.exceeded");
         }
 
         // 작성자와 상태는 화면 입력값이 아니라 서버가 결정

@@ -1,5 +1,7 @@
 package kr.go.daegu.pms.notice.web;
 
+import kr.go.daegu.pms.cmm.message.AppMessages;
+
 import jakarta.validation.Valid;
 import kr.go.daegu.pms.cmm.pagination.PagingHelper;
 import kr.go.daegu.pms.notice.service.NoticeService;
@@ -30,6 +32,8 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @RequestMapping("/notices")
 @RequiredArgsConstructor
 public class NoticeController {
+
+    private final AppMessages messages;
 
     private final NoticeService noticeService;
     private final PagingHelper pagingHelper;
@@ -70,7 +74,7 @@ public class NoticeController {
             return "notice/form";
         }
         String noticeId = noticeService.insertNotice(notice);
-        redirectAttributes.addFlashAttribute("successMessage", "공지사항이 등록되었습니다.");
+        redirectAttributes.addFlashAttribute("successMessage", messages.text("notice.created"));
         return "redirect:/notices/" + noticeId;
     }
 
@@ -91,7 +95,7 @@ public class NoticeController {
             return "notice/form";
         }
         noticeService.updateNotice(notice);
-        redirectAttributes.addFlashAttribute("successMessage", "공지사항이 수정되었습니다.");
+        redirectAttributes.addFlashAttribute("successMessage", messages.text("notice.updated"));
         return "redirect:/notices/" + noticeId;
     }
 
@@ -99,7 +103,7 @@ public class NoticeController {
     @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     public String deleteNotice(@PathVariable("noticeId") String noticeId, RedirectAttributes redirectAttributes) {
         noticeService.deleteNotice(noticeId);
-        redirectAttributes.addFlashAttribute("successMessage", "공지사항이 삭제되었습니다.");
+        redirectAttributes.addFlashAttribute("successMessage", messages.text("notice.deleted"));
         return "redirect:/notices";
     }
 }

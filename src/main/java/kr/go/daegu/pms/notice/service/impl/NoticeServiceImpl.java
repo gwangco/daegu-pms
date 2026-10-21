@@ -1,5 +1,7 @@
 package kr.go.daegu.pms.notice.service.impl;
 
+import kr.go.daegu.pms.cmm.message.AppMessages;
+
 import jakarta.annotation.Resource;
 import kr.go.daegu.pms.cmm.exception.NotFoundException;
 import kr.go.daegu.pms.cmm.util.SecurityUtil;
@@ -11,7 +13,6 @@ import org.egovframe.rte.fdl.cmmn.EgovAbstractServiceImpl;
 import org.egovframe.rte.fdl.cmmn.exception.BaseRuntimeException;
 import org.egovframe.rte.fdl.cmmn.exception.FdlException;
 import org.egovframe.rte.fdl.idgnr.EgovIdGnrService;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -29,6 +30,8 @@ import java.util.List;
 @Service("noticeService")
 @RequiredArgsConstructor
 public class NoticeServiceImpl extends EgovAbstractServiceImpl implements NoticeService {
+
+    private final AppMessages messages;
 
     private final NoticeMapper noticeMapper;
 
@@ -49,7 +52,7 @@ public class NoticeServiceImpl extends EgovAbstractServiceImpl implements Notice
     @Override
     public NoticeVO selectNotice(String noticeId) {
         return noticeMapper.selectNotice(noticeId)
-                .orElseThrow(() -> new NotFoundException("존재하지 않거나 삭제된 공지사항입니다."));
+                .orElseThrow(() -> messages.notFound("notice.notFound"));
     }
 
     @Override
@@ -86,7 +89,7 @@ public class NoticeServiceImpl extends EgovAbstractServiceImpl implements Notice
     public void deleteNotice(String noticeId) {
         requireStaff();
         if (noticeMapper.deleteNotice(noticeId, SecurityUtil.getCurrentUserId()) == 0) {
-            throw new NotFoundException("존재하지 않거나 이미 삭제된 공지사항입니다.");
+            throw messages.notFound("notice.delete.notFound");
         }
         log.info("[공지 삭제] noticeId={}, by={}", noticeId, SecurityUtil.getCurrentUserId());
     }
@@ -97,7 +100,7 @@ public class NoticeServiceImpl extends EgovAbstractServiceImpl implements Notice
 
     private void requireStaff() {
         if (!SecurityUtil.isStaff()) {
-            throw new AccessDeniedException("공지사항은 사업담당자만 등록·수정·삭제할 수 있습니다.");
+            throw messages.denied("notice.write.denied");
         }
     }
 }

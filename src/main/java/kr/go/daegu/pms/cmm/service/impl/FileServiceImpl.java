@@ -1,8 +1,8 @@
 package kr.go.daegu.pms.cmm.service.impl;
 
+import kr.go.daegu.pms.cmm.message.AppMessages;
+
 import org.egovframe.rte.fdl.cmmn.EgovAbstractServiceImpl;
-import kr.go.daegu.pms.cmm.exception.BusinessException;
-import kr.go.daegu.pms.cmm.exception.NotFoundException;
 import kr.go.daegu.pms.cmm.util.SecurityUtil;
 import kr.go.daegu.pms.config.AppProperties;
 import kr.go.daegu.pms.cmm.service.FileVO;
@@ -11,7 +11,6 @@ import kr.go.daegu.pms.cmm.service.FileService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.FileSystemResource;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
@@ -48,6 +47,8 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class FileServiceImpl extends EgovAbstractServiceImpl implements FileService {
 
+    private final AppMessages messages;
+
     private static final int MAX_ORIGINAL_NAME_LENGTH = 200;
     private static final DateTimeFormatter SUB_DIR_FORMAT = DateTimeFormatter.ofPattern("yyyy/MM");
 
@@ -74,18 +75,18 @@ public class FileServiceImpl extends EgovAbstractServiceImpl implements FileServ
     @Override
     public FileVO storeFile(MultipartFile multipartFile) {
         if (multipartFile == null || multipartFile.isEmpty()) {
-            throw new BusinessException("첨부파일을 선택하세요.");
+            throw messages.business("file.required");
         }
         String userId = SecurityUtil.getCurrentUserId();
         if (userId == null) {
-            throw new AccessDeniedException("로그인이 필요합니다.");
+            throw messages.denied("common.login.required");
         }
 
-        String originalName = sanitizeFileName(multipartFile.getOriginalFilename());
+        String originalName = sanitizeFileName(multipartFile.getOriginalFilename(), messages);
         String ext = extractExtension(originalName);
         List<String> allowed = appProperties.file().allowedExtensions();
         if (!allowed.contains(ext)) {
-            throw new BusinessException("허용되지 않는 파일 형식입니다. (허용 형식: " + String.join(", ", allowed) + ")");
+            throw messages.business("file.extension.denied", String.join(", ", allowed));
         }
         verifySignature(multipartFile, ext);
 
@@ -119,7 +120,7 @@ public class FileServiceImpl extends EgovAbstractServiceImpl implements FileServ
     @Override
     public Download loadDownload(Long fileId) {
         FileVO file = fileMapper.selectFile(fileId)
-                .orElseThrow(() -> new NotFoundException("존재하지 않는 파일입니다."));
+                .orElseThrow(() -> messages.notFound("file.notFound"));
 
         // 파일이 어느 과제에 속하는지 찾아 그 과제의 접근 권한으로 다운로드 권한을 판단
         Long planOwnerApplicationId = fileMapper.selectApplicationIdByPlanFile(fileId);
@@ -130,20 +131,20 @@ public class FileServiceImpl extends EgovAbstractServiceImpl implements FileServ
             accessChecker.getSettlementAccessibleApplication(receiptOwnerApplicationId);
         } else {
             // 어떤 업무 데이터에도 연결되지 않은 파일은 노출하지 않는다
-            throw new NotFoundException("존재하지 않는 파일입니다.");
+            throw messages.notFound("file.notFound");
         }
 
         Path path = resolveSafely(file.getFilePath(), file.getStoredName());
         if (!Files.isRegularFile(path)) {
-            throw new NotFoundException("서버에 파일이 존재하지 않습니다.");
+            throw messages.notFound("file.content.notFound");
         }
         return new Download(file, new FileSystemResource(path));
     }
 
     /** 경로 구분자/제어문자 제거 및 길이 제한. 원본 파일명은 표시용으로만 쓰고 저장 경로에는 절대 사용하지 않는다 */
-    static String sanitizeFileName(String originalFilename) {
+    static String sanitizeFileName(String originalFilename, AppMessages messages) {
         if (originalFilename == null) {
-            throw new BusinessException("파일명이 올바르지 않습니다.");
+            throw messages.business("file.name.invalid");
         }
         // 일부 브라우저는 "C:\Users\...\plan.pdf" 처럼 전체 경로를 보내므로 마지막 이름만 사용
         String name = originalFilename.replace('\\', '/');
@@ -151,7 +152,7 @@ public class FileServiceImpl extends EgovAbstractServiceImpl implements FileServ
         // 응답 헤더 분할(CRLF) 등에 악용될 수 있는 제어문자 제거
         name = name.replaceAll("[\\p{Cntrl}]", "").trim();
         if (name.isEmpty() || name.equals(".") || name.equals("..")) {
-            throw new BusinessException("파일명이 올바르지 않습니다.");
+            throw messages.business("file.name.invalid");
         }
         if (name.length() > MAX_ORIGINAL_NAME_LENGTH) {
             String ext = extractExtension(name);
@@ -186,7 +187,7 @@ public class FileServiceImpl extends EgovAbstractServiceImpl implements FileServ
         boolean matched = signatures.stream().anyMatch(headerHex::startsWith);
         if (!matched) {
             log.warn("[파일 업로드 차단] 확장자와 실제 파일 형식 불일치 ext={}, user={}", ext, SecurityUtil.getCurrentUserId());
-            throw new BusinessException("파일 내용이 확장자(." + ext + ")와 일치하지 않습니다. 올바른 파일을 첨부하세요.");
+            throw messages.business("file.signature.invalid", ext);
         }
     }
 
@@ -195,7 +196,7 @@ public class FileServiceImpl extends EgovAbstractServiceImpl implements FileServ
         Path root = Paths.get(appProperties.file().uploadDir()).toAbsolutePath().normalize();
         Path target = root.resolve(subDir).resolve(storedName).normalize();
         if (!target.startsWith(root)) {
-            throw new BusinessException("잘못된 파일 경로입니다.");
+            throw messages.business("file.path.invalid");
         }
         return target;
     }

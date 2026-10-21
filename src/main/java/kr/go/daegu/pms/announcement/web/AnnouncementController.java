@@ -1,5 +1,7 @@
 package kr.go.daegu.pms.announcement.web;
 
+import kr.go.daegu.pms.cmm.message.AppMessages;
+
 import jakarta.validation.Valid;
 import kr.go.daegu.pms.cmm.exception.BusinessException;
 import org.egovframe.rte.ptl.mvc.tags.ui.pagination.PaginationInfo;
@@ -20,6 +22,8 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @RequestMapping("/announcements")
 @RequiredArgsConstructor
 public class AnnouncementController {
+
+    private final AppMessages messages;
 
     private final AnnouncementService announcementService;
     private final CommonCodeService commonCodeService;
@@ -63,7 +67,7 @@ public class AnnouncementController {
         if (!bindingResult.hasErrors()) {
             try {
                 Long id = announcementService.insertAnnouncement(announcement);
-                redirectAttributes.addFlashAttribute("successMessage", "공고가 등록되었습니다.");
+                redirectAttributes.addFlashAttribute("successMessage", messages.text("announcement.created"));
                 return "redirect:/announcements/" + id;
             } catch (BusinessException e) {
                 bindingResult.reject("business", e.getMessage());
