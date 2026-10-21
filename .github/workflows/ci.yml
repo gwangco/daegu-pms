@@ -1,0 +1,46 @@
+# 빌드·테스트 자동화 (Pull Request 마다 실행 → 테스트가 깨진 코드는 병합 전에 발견)
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main, 'feature/**' ]
+
+# 최소 권한 원칙: 소스 읽기만 허용 (토큰 유출 시 피해 최소화)
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Maven 빌드 및 테스트 (JDK 17)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      # 외부 Action 은 태그가 아닌 커밋 SHA 로 고정 (태그가 바뀌어 악성 코드가 실행되는 공급망 공격 방지)
+      - name: 소스 체크아웃
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: JDK 17 설치
+        uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+
+      - name: 빌드 및 테스트
+        run: ./mvnw -B -ntp verify
+
+      - name: 실패 시 테스트 리포트 보관
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: surefire-reports
+          path: target/surefire-reports
+          retention-days: 7
