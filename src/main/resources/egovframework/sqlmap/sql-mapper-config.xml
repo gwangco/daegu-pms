@@ -12,7 +12,17 @@
         <setting name="logImpl" value="SLF4J"/>
     </settings>
 
+    <!-- 매퍼 XML 의 resultType/parameterType 에서 짧은 이름으로 쓰기 위한 별칭 (VO 추가 시 여기에 등록) -->
     <typeAliases>
-        <package name="kr.go.daegu.pms.domain"/>
+        <typeAlias alias="announcementVO" type="kr.go.daegu.pms.announcement.service.AnnouncementVO"/>
+        <typeAlias alias="announcementSearchVO" type="kr.go.daegu.pms.announcement.service.AnnouncementSearchVO"/>
+        <typeAlias alias="fieldBudgetStatVO" type="kr.go.daegu.pms.announcement.service.FieldBudgetStatVO"/>
+        <typeAlias alias="applicationVO" type="kr.go.daegu.pms.application.service.ApplicationVO"/>
+        <typeAlias alias="applicationSearchVO" type="kr.go.daegu.pms.application.service.ApplicationSearchVO"/>
+        <typeAlias alias="evaluationVO" type="kr.go.daegu.pms.evaluation.service.EvaluationVO"/>
+        <typeAlias alias="settlementVO" type="kr.go.daegu.pms.settlement.service.SettlementVO"/>
+        <typeAlias alias="userVO" type="kr.go.daegu.pms.user.service.UserVO"/>
+        <typeAlias alias="commonCodeVO" type="kr.go.daegu.pms.cmm.service.CommonCodeVO"/>
+        <typeAlias alias="fileVO" type="kr.go.daegu.pms.cmm.service.FileVO"/>
     </typeAliases>
 </configuration>

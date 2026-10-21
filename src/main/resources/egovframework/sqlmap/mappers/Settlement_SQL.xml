@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="kr.go.daegu.pms.mapper.SettlementMapper">
+<mapper namespace="kr.go.daegu.pms.settlement.service.impl.SettlementMapper">
 
     <sql id="settlementColumns">
             s.settlement_id,
@@ -30,7 +30,7 @@
         LEFT JOIN com_file f ON s.receipt_file_id = f.file_id
     </sql>
 
-    <select id="selectSettlementList" resultType="Settlement">
+    <select id="selectSettlementList" resultType="settlementVO">
         SELECT
             <include refid="settlementColumns"/>
         <include refid="settlementJoins"/>
@@ -38,14 +38,14 @@
         ORDER BY s.expense_date DESC, s.settlement_id DESC
     </select>
 
-    <select id="selectSettlement" resultType="Settlement">
+    <select id="selectSettlement" resultType="settlementVO">
         SELECT
             <include refid="settlementColumns"/>
         <include refid="settlementJoins"/>
         WHERE s.settlement_id = #{settlementId}
     </select>
 
-    <insert id="insertSettlement" parameterType="Settlement" useGeneratedKeys="true" keyProperty="settlementId">
+    <insert id="insertSettlement" parameterType="settlementVO" useGeneratedKeys="true" keyProperty="settlementId">
         INSERT INTO settlement (
             application_id, item_code, expense_date, vendor_name, supply_amount, vat_amount, total_amount, description, receipt_file_id, status
         ) VALUES (

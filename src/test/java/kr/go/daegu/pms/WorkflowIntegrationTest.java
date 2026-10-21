@@ -1,14 +1,14 @@
 package kr.go.daegu.pms;
 
-import kr.go.daegu.pms.domain.Announcement;
-import kr.go.daegu.pms.domain.Application;
-import kr.go.daegu.pms.domain.Evaluation;
-import kr.go.daegu.pms.domain.Settlement;
-import kr.go.daegu.pms.mapper.AnnouncementMapper;
-import kr.go.daegu.pms.mapper.ApplicationMapper;
-import kr.go.daegu.pms.mapper.EvaluationMapper;
-import kr.go.daegu.pms.mapper.SettlementMapper;
-import kr.go.daegu.pms.service.AnnouncementService;
+import kr.go.daegu.pms.announcement.service.AnnouncementVO;
+import kr.go.daegu.pms.application.service.ApplicationVO;
+import kr.go.daegu.pms.evaluation.service.EvaluationVO;
+import kr.go.daegu.pms.settlement.service.SettlementVO;
+import kr.go.daegu.pms.announcement.service.impl.AnnouncementMapper;
+import kr.go.daegu.pms.application.service.impl.ApplicationMapper;
+import kr.go.daegu.pms.evaluation.service.impl.EvaluationMapper;
+import kr.go.daegu.pms.settlement.service.impl.SettlementMapper;
+import kr.go.daegu.pms.announcement.service.AnnouncementService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -89,7 +89,7 @@ class WorkflowIntegrationTest extends IntegrationTestSupport {
                 .andReturn();
 
         Long id = Long.valueOf(result.getResponse().getRedirectedUrl().replace("/applications/", ""));
-        Application saved = applicationMapper.selectApplication(id).orElseThrow();
+        ApplicationVO saved = applicationMapper.selectApplication(id).orElseThrow();
         assertThat(saved.getStatus()).isEqualTo("SUBMITTED");
         assertThat(saved.getSelfFunding()).isEqualTo(10_000_000L);
         assertThat(saved.getCompanyUserId()).isEqualTo("company1");
@@ -188,7 +188,7 @@ class WorkflowIntegrationTest extends IntegrationTestSupport {
         mockMvc.perform(post("/evaluator/evaluations/3").with(csrf())
                         .param("quantitativeScore", "35").param("qualitativeScore", "50").param("evalComment", "우수"))
                 .andExpect(redirectedUrl("/evaluator/evaluations"));
-        Evaluation saved = evaluationMapper.selectEvaluation(3L).orElseThrow();
+        EvaluationVO saved = evaluationMapper.selectEvaluation(3L).orElseThrow();
         assertThat(saved.getStatus()).isEqualTo("COMPLETED");
         assertThat(saved.getTotalScore()).isEqualTo(85);
 
@@ -217,8 +217,8 @@ class WorkflowIntegrationTest extends IntegrationTestSupport {
                         .param("totalAmount", "1").param("description", "정상").with(csrf()))
                 .andExpect(flash().attributeExists("successMessage"));
 
-        List<Settlement> list = settlementMapper.selectSettlementList(1L);
-        Settlement created = list.stream().filter(s -> "정상".equals(s.getDescription())).findFirst().orElseThrow();
+        List<SettlementVO> list = settlementMapper.selectSettlementList(1L);
+        SettlementVO created = list.stream().filter(s -> "정상".equals(s.getDescription())).findFirst().orElseThrow();
         assertThat(created.getVatAmount()).isEqualTo(100_000L);         // 원 미만 절사
         assertThat(created.getTotalAmount()).isEqualTo(1_100_005L);
         assertThat(created.getStatus()).isEqualTo("REQUESTED");
@@ -249,7 +249,7 @@ class WorkflowIntegrationTest extends IntegrationTestSupport {
         mockMvc.perform(post("/settlements/2/review").with(csrf())
                         .param("applicationId", "999").param("status", "REJECTED").param("rejectReason", "세금계산서 금액 불일치"))
                 .andExpect(redirectedUrl("/settlements/application/1"));  // 화면 값(999)이 아닌 실제 과제로 이동
-        Settlement reviewed = settlementMapper.selectSettlement(2L).orElseThrow();
+        SettlementVO reviewed = settlementMapper.selectSettlement(2L).orElseThrow();
         assertThat(reviewed.getStatus()).isEqualTo("REJECTED");
         assertThat(reviewed.getReviewedBy()).isEqualTo("manager1");
 
@@ -263,7 +263,7 @@ class WorkflowIntegrationTest extends IntegrationTestSupport {
     @Test
     @DisplayName("마감 배치: 마감일이 지난 OPEN 공고만 CLOSED 로 전환")
     void closeExpiredAnnouncements() {
-        Announcement expired = Announcement.builder()
+        AnnouncementVO expired = AnnouncementVO.builder()
                 .title("어제 마감된 공고").fieldCode("AI_SW").totalBudget(1L).maxGrant(1L)
                 .startDate(LocalDate.of(2026, 10, 1)).endDate(LocalDate.of(2026, 10, 20))
                 .content("c").status("OPEN").writerId("manager1").build();

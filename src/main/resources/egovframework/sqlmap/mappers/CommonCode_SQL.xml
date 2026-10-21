@@ -2,10 +2,10 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="kr.go.daegu.pms.mapper.CommonCodeMapper">
+<mapper namespace="kr.go.daegu.pms.cmm.service.impl.CommonCodeMapper">
 
     <!-- 사용중(use_yn='Y')인 코드만 정렬순서대로 조회 → 화면 select 박스 구성 -->
-    <select id="selectCodeList" resultType="CommonCode">
+    <select id="selectCodeList" resultType="commonCodeVO">
         SELECT d.group_id, g.group_name, d.code_id, d.code_name, d.sort_order, d.use_yn
         FROM com_code_detail d
         INNER JOIN com_code_group g ON d.group_id = g.group_id

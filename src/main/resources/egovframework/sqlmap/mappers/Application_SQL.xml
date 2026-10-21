@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="kr.go.daegu.pms.mapper.ApplicationMapper">
+<mapper namespace="kr.go.daegu.pms.application.service.impl.ApplicationMapper">
 
     <!--
         평가 점수는 평가위원이 여러 명일 수 있으므로 JOIN 대신 스칼라 서브쿼리로 평균을 구한다.
@@ -63,7 +63,7 @@
         </where>
     </sql>
 
-    <select id="selectApplicationList" parameterType="ApplicationSearchVO" resultType="Application">
+    <select id="selectApplicationList" parameterType="applicationSearchVO" resultType="applicationVO">
         SELECT
             <include refid="applicationColumns"/>
         <include refid="applicationJoins"/>
@@ -74,14 +74,14 @@
         </if>
     </select>
 
-    <select id="selectApplicationListTotCnt" parameterType="ApplicationSearchVO" resultType="int">
+    <select id="selectApplicationListTotCnt" parameterType="applicationSearchVO" resultType="int">
         SELECT COUNT(*)
         FROM application app
         INNER JOIN users u ON app.company_user_id = u.user_id
         <include refid="searchCondition"/>
     </select>
 
-    <select id="selectApplication" resultType="Application">
+    <select id="selectApplication" resultType="applicationVO">
         SELECT
             <include refid="applicationColumns"/>
         <include refid="applicationJoins"/>
@@ -89,7 +89,7 @@
     </select>
 
     <!-- 정산 등록 트랜잭션 동안 해당 과제 행을 잠가 동시 등록에 의한 예산 초과를 방지 -->
-    <select id="selectApplicationForUpdate" resultType="Application">
+    <select id="selectApplicationForUpdate" resultType="applicationVO">
         SELECT application_id, company_user_id, request_grant, status
         FROM application
         WHERE application_id = #{applicationId}
@@ -103,7 +103,7 @@
           AND company_user_id = #{companyUserId}
     </select>
 
-    <insert id="insertApplication" parameterType="Application" useGeneratedKeys="true" keyProperty="applicationId">
+    <insert id="insertApplication" parameterType="applicationVO" useGeneratedKeys="true" keyProperty="applicationId">
         INSERT INTO application (
             announcement_id, company_user_id, project_name, total_budget, request_grant, self_funding, summary, plan_file_id, status, submitted_at
         ) VALUES (

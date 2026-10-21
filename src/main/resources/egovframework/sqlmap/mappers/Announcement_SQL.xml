@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="kr.go.daegu.pms.mapper.AnnouncementMapper">
+<mapper namespace="kr.go.daegu.pms.announcement.service.impl.AnnouncementMapper">
 
     <!-- 목록/상세 공통 조회 컬럼 -->
     <sql id="announcementColumns">
@@ -37,7 +37,7 @@
         </where>
     </sql>
 
-    <select id="selectAnnouncementList" parameterType="AnnouncementSearchVO" resultType="Announcement">
+    <select id="selectAnnouncementList" parameterType="announcementSearchVO" resultType="announcementVO">
         SELECT
             <include refid="announcementColumns"/>
         FROM announcement a
@@ -50,13 +50,13 @@
         </if>
     </select>
 
-    <select id="selectAnnouncementListTotCnt" parameterType="AnnouncementSearchVO" resultType="int">
+    <select id="selectAnnouncementListTotCnt" parameterType="announcementSearchVO" resultType="int">
         SELECT COUNT(*)
         FROM announcement a
         <include refid="searchCondition"/>
     </select>
 
-    <select id="selectAnnouncement" resultType="Announcement">
+    <select id="selectAnnouncement" resultType="announcementVO">
         SELECT
             <include refid="announcementColumns"/>
         FROM announcement a
@@ -65,7 +65,7 @@
         WHERE a.announcement_id = #{announcementId}
     </select>
 
-    <insert id="insertAnnouncement" parameterType="Announcement" useGeneratedKeys="true" keyProperty="announcementId">
+    <insert id="insertAnnouncement" parameterType="announcementVO" useGeneratedKeys="true" keyProperty="announcementId">
         INSERT INTO announcement (
             title, field_code, total_budget, max_grant, start_date, end_date, content, status, view_count, writer_id
         ) VALUES (
@@ -84,7 +84,7 @@
     </select>
 
     <!-- 대시보드: 분야별 공고 예산 합계 (공통코드 정렬순서 기준, 공고 없는 분야도 0으로 표시) -->
-    <select id="selectFieldBudgetStatList" resultType="FieldBudgetStat">
+    <select id="selectFieldBudgetStatList" resultType="fieldBudgetStatVO">
         SELECT
             c.code_id AS field_code,
             c.code_name AS field_name,

@@ -20,7 +20,7 @@ import java.io.IOException;
  * - @MapperScan           : Mapper 인터페이스를 찾아 구현체(프록시)를 Bean 으로 등록
  */
 @Configuration
-@MapperScan(basePackages = "kr.go.daegu.pms.mapper")
+@MapperScan(basePackages = "kr.go.daegu.pms", annotationClass = org.apache.ibatis.annotations.Mapper.class)
 public class EgovConfigMapper {
 
     @Bean
