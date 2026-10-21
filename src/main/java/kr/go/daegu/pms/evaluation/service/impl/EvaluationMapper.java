@@ -7,7 +7,7 @@ import org.apache.ibatis.annotations.Param;
 import java.util.List;
 import java.util.Optional;
 
-@EgovMapper("evaluationMapper")
+@EgovMapper
 public interface EvaluationMapper {
     List<EvaluationVO> selectEvaluationListByEvaluator(@Param("evaluatorUserId") String evaluatorUserId);
     List<EvaluationVO> selectEvaluationListByApplication(@Param("applicationId") Long applicationId);

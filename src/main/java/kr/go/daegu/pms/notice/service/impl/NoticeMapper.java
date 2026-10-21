@@ -10,7 +10,7 @@ import java.util.Optional;
 /**
  * 공지사항 Mapper (eGovFrame CRUD 코드 생성기 결과를 바탕으로 수정)
  */
-@EgovMapper("noticeMapper")
+@EgovMapper
 public interface NoticeMapper {
 
     List<NoticeVO> selectNoticeList(NoticeVO searchVO);

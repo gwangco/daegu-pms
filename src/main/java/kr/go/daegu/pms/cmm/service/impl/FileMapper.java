@@ -6,7 +6,7 @@ import org.apache.ibatis.annotations.Param;
 
 import java.util.Optional;
 
-@EgovMapper("fileMapper")
+@EgovMapper
 public interface FileMapper {
     int insertFile(FileVO file);
     Optional<FileVO> selectFile(@Param("fileId") Long fileId);

@@ -8,7 +8,7 @@ import org.apache.ibatis.annotations.Param;
 import java.util.List;
 import java.util.Optional;
 
-@EgovMapper("applicationMapper")
+@EgovMapper
 public interface ApplicationMapper {
     List<ApplicationVO> selectApplicationList(ApplicationSearchVO searchVO);
     int selectApplicationListTotCnt(ApplicationSearchVO searchVO);

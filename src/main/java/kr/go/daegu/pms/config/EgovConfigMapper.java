@@ -18,7 +18,10 @@ import java.io.IOException;
  *
  * - sql-mapper-config.xml : MyBatis 전역 설정(언더스코어→카멜 변환, 타입 별칭 등)
  * - mappers/*_SQL.xml     : 업무별 SQL
- * - @MapperScan           : Mapper 인터페이스를 찾아 구현체(프록시)를 Bean 으로 등록
+ * - @MapperScan           : @EgovMapper 가 붙은 인터페이스를 찾아 구현체(프록시)를 Bean 으로 등록
+ *
+ * ※ @EgovMapper("noticeMapper") 처럼 이름을 직접 주면 Spring 6.1+ 에서 "convention-based @Component names" 폐기 경고가 난다.
+ *   기본 Bean 이름이 클래스명 첫 글자 소문자(noticeMapper)라 결과가 같으므로 eGov 공식 샘플처럼 이름 없이 @EgovMapper 만 쓴다.
  */
 @Configuration
 @MapperScan(basePackages = "kr.go.daegu.pms", annotationClass = EgovMapper.class)

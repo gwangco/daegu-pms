@@ -6,7 +6,7 @@ import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
-@EgovMapper("commonCodeMapper")
+@EgovMapper
 public interface CommonCodeMapper {
     List<CommonCodeVO> selectCodeList(@Param("groupId") String groupId);
     int selectCodeCount(@Param("groupId") String groupId, @Param("codeId") String codeId);

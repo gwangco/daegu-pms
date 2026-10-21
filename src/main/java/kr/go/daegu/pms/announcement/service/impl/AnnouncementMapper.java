@@ -10,7 +10,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
-@EgovMapper("announcementMapper")
+@EgovMapper
 public interface AnnouncementMapper {
     List<AnnouncementVO> selectAnnouncementList(AnnouncementSearchVO searchVO);
     int selectAnnouncementListTotCnt(AnnouncementSearchVO searchVO);

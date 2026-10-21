@@ -7,7 +7,7 @@ import org.apache.ibatis.annotations.Param;
 import java.util.List;
 import java.util.Optional;
 
-@EgovMapper("settlementMapper")
+@EgovMapper
 public interface SettlementMapper {
     List<SettlementVO> selectSettlementList(@Param("applicationId") Long applicationId);
     Optional<SettlementVO> selectSettlement(@Param("settlementId") Long settlementId);
