@@ -75,7 +75,7 @@ public class FaqController {
         if (!bindingResult.hasErrors()) {
             try {
                 String faqId = faqService.insertFaq(faq);
-                return redirectToSaved(faqId, faq.getCategoryCode(), "faq.created", redirectAttributes);
+                return redirectToSaved(faqId, faq.getCategoryCode(), messages.text("faq.created"), redirectAttributes);
             } catch (BusinessException e) {
                 bindingResult.reject("business", e.getMessage());   // 입력값을 유지한 채 폼에 안내
             }
@@ -99,7 +99,7 @@ public class FaqController {
         if (!bindingResult.hasErrors()) {
             try {
                 faqService.updateFaq(faq);
-                return redirectToSaved(faqId, faq.getCategoryCode(), "faq.updated", redirectAttributes);
+                return redirectToSaved(faqId, faq.getCategoryCode(), messages.text("faq.updated"), redirectAttributes);
             } catch (BusinessException e) {
                 bindingResult.reject("business", e.getMessage());
             }
@@ -116,11 +116,11 @@ public class FaqController {
     }
 
     /** 저장한 FAQ 의 분류 목록으로 돌아가 해당 질문을 펼친 상태로 보여 준다 */
-    private String redirectToSaved(String faqId, String categoryCode, String messageCode,
+    private String redirectToSaved(String faqId, String categoryCode, String successMessage,
                                    RedirectAttributes redirectAttributes) {
         redirectAttributes.addAttribute("categoryCode", categoryCode);
         redirectAttributes.addFlashAttribute("openFaqId", faqId);
-        redirectAttributes.addFlashAttribute("successMessage", messages.text(messageCode));
+        redirectAttributes.addFlashAttribute("successMessage", successMessage);
         return "redirect:/faqs#faq-" + faqId;
     }
 }
