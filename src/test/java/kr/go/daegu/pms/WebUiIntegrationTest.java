@@ -67,6 +67,20 @@ class WebUiIntegrationTest extends IntegrationTestSupport {
     }
 
     @Test
+    @DisplayName("정적 파일: 화면에는 내용 해시가 붙은 주소로 나가고 1년 캐시, 화면(HTML)은 캐시하지 않는다")
+    void staticResourcesAreVersionedAndCached() throws Exception {
+        String html = mockMvc.perform(get("/")).andReturn().getResponse().getContentAsString();
+        assertThat(html)
+                .containsPattern("/css/dpms-[0-9a-f]{32}\\.css")
+                .containsPattern("/js/dpms-[0-9a-f]{32}\\.js");
+        mockMvc.perform(get("/css/dpms.css"))
+                .andExpect(header().string("Cache-Control", containsString("max-age=31536000")));
+
+        // 로그인 사용자의 화면이 공용 PC 브라우저에 남지 않도록 HTML 은 계속 no-store
+        mockMvc.perform(get("/")).andExpect(header().string("Cache-Control", containsString("no-store")));
+    }
+
+    @Test
     @DisplayName("모든 주요 화면: 한국어 lang, 본문 바로가기, CSP 헤더, 인라인 스크립트·이벤트·개발 주석·외부 CDN 없음")
     void layoutAndCspOnEveryPage() throws Exception {
         for (Map.Entry<String, RequestPostProcessor> page : PAGES.entrySet()) {
@@ -97,7 +111,7 @@ class WebUiIntegrationTest extends IntegrationTestSupport {
                 .andExpect(status().isNotFound())
                 .andExpect(content().string(containsString("페이지를 찾을 수 없습니다")))
                 .andExpect(content().string(containsString("존재하지 않는 공고입니다.")))
-                .andExpect(content().string(containsString("/css/dpms.css")));
+                .andExpect(content().string(containsString("/css/dpms-")));
     }
 
     @Test

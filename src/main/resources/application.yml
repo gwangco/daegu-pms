@@ -59,7 +59,23 @@ spring:
     # 이미 적용한 파일이 바뀌었으면 기동을 멈춘다 (적용된 마이그레이션은 고치지 않고 새 버전을 추가한다)
     validate-on-migrate: true
 
-  # 정적 리소스 및 Thymeleaf 뷰 템플릿 설정
+  # 정적 리소스: 브라우저에 1년 동안 캐시한다. 대신 주소에 파일 내용 해시를 붙여(dpms-3f2a….css)
+  # 파일이 바뀌면 주소도 바뀌게 한다. 화면의 @{/css/dpms.css} 는 Spring 이 해시 주소로 바꿔 출력한다.
+  # (설정 전에는 Spring Security 기본값 no-store 때문에 Bootstrap·글꼴을 화면을 옮길 때마다 다시 받았다)
+  # /favicon.svg 는 주소가 고정이어야 해서(보안 설정의 허용 경로) 해시 대상에서 뺀다
+  web:
+    resources:
+      cache:
+        cachecontrol:
+          max-age: 365d
+          cache-public: true
+      chain:
+        strategy:
+          content:
+            enabled: true
+            paths: /css/**, /js/**, /fonts/**, /images/**, /webjars/**
+
+  # Thymeleaf 뷰 템플릿 설정
   thymeleaf:
     cache: false
     prefix: classpath:/templates/
