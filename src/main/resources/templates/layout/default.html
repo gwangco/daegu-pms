@@ -61,6 +61,11 @@
                            th:classappend="${currentMenu == 'evaluation'} ? 'active'"
                            th:attr="aria-current=${currentMenu == 'evaluation'} ? 'page' : null">내 평가과제</a>
                     </li>
+                    <li class="nav-item" sec:authorize="hasAnyRole('MANAGER', 'ADMIN')">
+                        <a class="nav-link" th:href="@{/settlements/review}"
+                           th:classappend="${currentMenu == 'settlement'} ? 'active'"
+                           th:attr="aria-current=${currentMenu == 'settlement'} ? 'page' : null">정산 검수</a>
+                    </li>
                     <li class="nav-item dropdown" sec:authorize="hasRole('ADMIN')">
                         <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"
                            th:classappend="${currentMenu == 'admin'} ? 'active'">시스템 관리</a>

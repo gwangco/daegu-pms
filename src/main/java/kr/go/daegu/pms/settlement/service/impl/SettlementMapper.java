@@ -1,15 +1,23 @@
 package kr.go.daegu.pms.settlement.service.impl;
 
+import kr.go.daegu.pms.settlement.service.SettlementHistoryVO;
+import kr.go.daegu.pms.settlement.service.SettlementSearchVO;
 import kr.go.daegu.pms.settlement.service.SettlementVO;
 import org.apache.ibatis.annotations.Param;
 import org.egovframe.rte.psl.dataaccess.mapper.EgovMapper;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
 @EgovMapper
 public interface SettlementMapper {
-    List<SettlementVO> selectSettlementList(@Param("applicationId") Long applicationId);
+    List<SettlementVO> selectSettlementList(SettlementSearchVO searchVO);
+    int selectSettlementListTotCnt(SettlementSearchVO searchVO);
+
+    /** 담당자 검수함 (전체 과제) */
+    List<SettlementVO> selectSettlementReviewList(SettlementSearchVO searchVO);
+
     Optional<SettlementVO> selectSettlement(@Param("settlementId") Long settlementId);
     int insertSettlement(SettlementVO settlement);
 
@@ -19,9 +27,16 @@ public interface SettlementMapper {
                                @Param("rejectReason") String rejectReason,
                                @Param("reviewedBy") String reviewedBy);
 
+    /** 보완 후 재요청. REJECTED 상태일 때만 갱신되므로 반환값 0 이면 이미 재요청했거나 반려 건이 아님 */
+    int updateSettlementResubmit(SettlementVO settlement);
+
     /** 승인 완료된 누적 집행액 */
     Long selectApprovedAmount(@Param("applicationId") Long applicationId);
 
     /** 예산 소진액 (승인 + 검수대기). 반려 건은 제외 */
     Long selectUsedAmount(@Param("applicationId") Long applicationId);
+
+    int insertSettlementHistory(SettlementHistoryVO history);
+
+    List<SettlementHistoryVO> selectSettlementHistoryList(@Param("settlementIds") Collection<Long> settlementIds);
 }

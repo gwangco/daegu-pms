@@ -159,6 +159,7 @@ CREATE TABLE IF NOT EXISTS settlement (
     receipt_file_id BIGINT,           -- 증빙(세금계산서/영수증) 첨부파일 (com_file FK)
     status VARCHAR(20) DEFAULT 'REQUESTED' NOT NULL, -- REQUESTED, APPROVED, REJECTED
     reject_reason VARCHAR(255),
+    resubmit_count INT DEFAULT 0 NOT NULL, -- 보완 후 재요청 횟수
     reviewed_by VARCHAR(50),          -- 검수 처리자 (감사 추적용)
     reviewed_at TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
@@ -170,6 +171,20 @@ CREATE TABLE IF NOT EXISTS settlement (
     FOREIGN KEY (reviewed_by) REFERENCES users(user_id)
 );
 CREATE INDEX IF NOT EXISTS idx_settlement_application ON settlement (application_id, status);
+CREATE INDEX IF NOT EXISTS idx_settlement_status ON settlement (status, created_at);
+
+-- 8-1. 정산 처리 이력 (등록 → 승인/반려 → 보완 재요청). 정산 행은 최신 상태만 갖고 지난 반려 사유는 여기에 남는다
+CREATE TABLE IF NOT EXISTS settlement_history (
+    history_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    settlement_id BIGINT NOT NULL,
+    action_code VARCHAR(20) NOT NULL,          -- REQUESTED, APPROVED, REJECTED, RESUBMITTED
+    total_amount BIGINT NOT NULL,              -- 처리 시점의 집행 금액 (재요청으로 금액이 바뀔 수 있음)
+    memo VARCHAR(255),                         -- 보완 요청 사유
+    actor_id VARCHAR(50) NOT NULL,
+    acted_at TIMESTAMP NOT NULL,
+    FOREIGN KEY (settlement_id) REFERENCES settlement(settlement_id)
+);
+CREATE INDEX IF NOT EXISTS idx_settlement_history ON settlement_history (settlement_id, acted_at);
 
 -- 9. 공지사항 (eGovFrame VS Code 확장 CRUD 코드 생성기 입력 DDL: docs/egov-codegen/notice.ddl.sql)
 CREATE TABLE IF NOT EXISTS notice (

@@ -116,6 +116,12 @@ INSERT INTO settlement (application_id, item_code, expense_date, vendor_name, su
 (1, 'EXP02', '2026-10-16', '(주)대구센서테크', 15000000, 1500000, 16500000, '센서 테스트보드 PCB 및 칩셋 샘플 구입', 'APPROVED', 'manager1', '2026-10-17 11:00:00'),
 (1, 'EXP03', '2026-10-18', '북성로정밀금형', 22000000, 2200000, 24200000, '센서 외장 알루미늄 케이스 정밀 밀링 가공', 'REQUESTED', NULL, NULL);
 
+-- 7-1. 정산 처리 이력 (정산 1: 등록 → 승인 / 정산 2: 등록)
+INSERT INTO settlement_history (settlement_id, action_code, total_amount, memo, actor_id, acted_at) VALUES
+(1, 'REQUESTED', 16500000, NULL, 'company1', '2026-10-16 18:00:00'),
+(1, 'APPROVED', 16500000, NULL, 'manager1', '2026-10-17 11:00:00'),
+(2, 'REQUESTED', 24200000, NULL, 'company1', '2026-10-18 17:00:00');
+
 -- 8. 공지사항 샘플
 INSERT INTO notice (notice_id, title, content, important_yn, view_count, use_yn, writer_id, created_at) VALUES
 ('NTC_0000000001', '[필독] D-PMS 지원사업 포털 이용 안내',

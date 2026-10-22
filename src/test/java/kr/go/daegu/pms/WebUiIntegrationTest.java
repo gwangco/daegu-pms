@@ -45,6 +45,7 @@ class WebUiIntegrationTest extends IntegrationTestSupport {
             Map.entry("/evaluator/evaluations/3", user("evaluator1").roles("EVALUATOR")),
             Map.entry("/admin/users", user("admin").roles("ADMIN")),
             Map.entry("/mypage", user("company1").roles("COMPANY")),
+            Map.entry("/settlements/review", user("manager1").roles("MANAGER")),
             Map.entry("/admin/login-history", user("admin").roles("ADMIN")));
 
     @Test

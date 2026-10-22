@@ -65,35 +65,62 @@
             </button>
         </div>
 
+        <form id="searchForm" th:action="@{/settlements/application/{id}(id=${app.applicationId})}" th:object="${searchVO}"
+              method="get" class="search-box" role="search">
+            <div class="row g-2 align-items-end">
+                <input type="hidden" th:field="*{pageIndex}">
+                <div class="col-md-3">
+                    <label for="status" class="form-label">검수상태</label>
+                    <select th:field="*{status}" class="form-select">
+                        <option value="">전체</option>
+                        <option value="REQUESTED">검수요청</option>
+                        <option value="APPROVED">승인완료</option>
+                        <option value="REJECTED">보완요청(반려)</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-secondary w-100"><i class="bi bi-funnel me-1" aria-hidden="true"></i>조회</button>
+                </div>
+            </div>
+        </form>
+
+        <th:block th:replace="~{fragments/common :: resultCount(${paginationInfo})}"></th:block>
+
         <div class="panel">
             <div class="table-responsive">
                 <table class="table">
                     <caption class="visually-hidden">사업비 집행 내역: 비목, 집행일자, 거래처, 집행내용, 금액, 증빙, 검수상태</caption>
                     <thead>
                     <tr>
-                        <th scope="col">비목</th>
+                        <th scope="col" class="d-none d-md-table-cell">비목</th>
                         <th scope="col" class="col-date">집행일자</th>
                         <th scope="col">거래처</th>
-                        <th scope="col">집행내용</th>
+                        <th scope="col" class="d-none d-md-table-cell">집행내용</th>
                         <th scope="col" class="text-end">금액(부가세 포함)</th>
-                        <th scope="col" class="text-center">증빙</th>
+                        <th scope="col" class="text-center d-none d-md-table-cell">증빙</th>
                         <th scope="col" class="text-center col-status">검수상태</th>
                         <th scope="col" class="text-center" sec:authorize="hasAnyRole('MANAGER', 'ADMIN')">검수</th>
+                        <th scope="col" class="text-center col-action" sec:authorize="hasRole('COMPANY')">보완</th>
                     </tr>
                     </thead>
                     <tbody>
-                    <tr th:each="s : ${settlements}">
-                        <td><span class="status status-neutral" th:text="${s.itemName}">직접재료비</span></td>
+                    <th:block th:each="s : ${settlements}">
+                    <tr>
+                        <td class="d-none d-md-table-cell"><span class="status status-neutral" th:text="${s.itemName}">직접재료비</span></td>
                         <td class="small text-nowrap" th:text="${s.expenseDate}">2026-10-16</td>
                         <td class="fw-semibold" th:text="${s.vendorName}">(주)대구센서테크</td>
-                        <td class="small">
+                        <td class="small d-none d-md-table-cell">
                             <span th:text="${s.description}">집행 내용</span>
                             <div th:if="${s.status == 'REJECTED'}" class="text-danger small mt-1">
                                 <i class="bi bi-exclamation-circle" aria-hidden="true"></i> 보완 요청 사유: <span th:text="${s.rejectReason}">사유</span>
                             </div>
+                            <button type="button" class="btn btn-link btn-sm p-0 mt-1" data-bs-toggle="collapse" aria-expanded="false"
+                                    th:attr="data-bs-target=${'#history' + s.settlementId}, aria-controls=${'history' + s.settlementId}">
+                                처리 이력<span th:if="${s.resubmitCount > 0}" th:text="${' (재요청 ' + s.resubmitCount + '회)'}"></span>
+                            </button>
                         </td>
                         <td class="text-end fw-semibold text-nowrap" th:text="${#numbers.formatInteger(s.totalAmount, 0, 'COMMA')} + '원'">16,500,000원</td>
-                        <td class="text-center small">
+                        <td class="text-center small d-none d-md-table-cell">
                             <a th:if="${s.receiptFileId != null}" th:href="@{/files/{id}(id=${s.receiptFileId})}">
                                 <i class="bi bi-download me-1" aria-hidden="true"></i><span th:text="${s.receiptFileName}">invoice.pdf</span>
                             </a>
@@ -110,22 +137,45 @@
                                 <form th:action="@{/settlements/{sid}/review(sid=${s.settlementId})}" method="post" class="input-group input-group-sm m-0">
                                     <input type="hidden" name="applicationId" th:value="${app.applicationId}">
                                     <input type="hidden" name="status" value="REJECTED">
-                                    <label class="visually-hidden" th:for="'rejectReason' + ${s.settlementId}">보완 요청 사유</label>
-                                    <input type="text" th:id="'rejectReason' + ${s.settlementId}" name="rejectReason" class="form-control"
+                                    <label class="visually-hidden" th:for="${'rejectReason' + s.settlementId}">보완 요청 사유</label>
+                                    <input type="text" th:id="${'rejectReason' + s.settlementId}" name="rejectReason" class="form-control"
                                            placeholder="보완 요청 사유" maxlength="255" required>
                                     <button type="submit" class="btn btn-outline-danger">반려</button>
                                 </form>
                             </div>
                             <div th:unless="${s.status == 'REQUESTED'}" class="text-center text-sub small">처리 완료</div>
                         </td>
+                        <td class="text-center" sec:authorize="hasRole('COMPANY')">
+                            <button th:if="${s.status == 'REJECTED'}" type="button" class="btn btn-sm btn-outline-primary"
+                                    data-bs-toggle="modal" data-bs-target="#resubmitModal" data-fill-target="#resubmitModal"
+                                    th:attr="data-form-action=@{/settlements/{sid}/resubmit(sid=${s.settlementId})},data-fill-item-code=${s.itemCode},data-fill-expense-date=${s.expenseDate},data-fill-vendor-name=${s.vendorName},data-fill-supply-amount=${s.supplyAmount},data-fill-description=${s.description}">수정 후 재요청</button>
+                            <span th:unless="${s.status == 'REJECTED'}" class="text-sub small">-</span>
+                        </td>
                     </tr>
+                    <tr class="collapse" th:id="${'history' + s.settlementId}">
+                        <td colspan="9" class="bg-light">
+                            <ol class="timeline">
+                                <li th:each="h : ${histories.get(s.settlementId)}">
+                                    <strong th:text="${h.actionLabel}">검수 요청</strong>
+                                    · <span th:text="${#temporals.format(h.actedAt, 'yyyy-MM-dd HH:mm')}">2026-10-16 18:00</span>
+                                    · <span th:text="${h.actorName != null} ? ${h.actorName} : ${h.actorId}">이대표</span>
+                                    · <span th:text="${#numbers.formatInteger(h.totalAmount, 0, 'COMMA')} + '원'">16,500,000원</span>
+                                    <div th:if="${h.memo != null}" class="text-danger" th:text="${'사유: ' + h.memo}">사유</div>
+                                </li>
+                                <li th:if="${histories.get(s.settlementId) == null}" class="text-sub">이력이 없습니다.</li>
+                            </ol>
+                        </td>
+                    </tr>
+                    </th:block>
                     <tr th:if="${#lists.isEmpty(settlements)}">
-                        <td colspan="8" class="empty-row">등록된 사업비 집행 내역이 없습니다.</td>
+                        <td colspan="9" class="empty-row">조건에 맞는 사업비 집행 내역이 없습니다.</td>
                     </tr>
                     </tbody>
                 </table>
             </div>
         </div>
+
+        <th:block th:replace="~{fragments/common :: pagination(${paginationInfo})}"></th:block>
 
         <div class="form-actions">
             <a th:href="@{/applications/{id}(id=${app.applicationId})}" class="btn btn-outline-secondary">과제 상세로</a>
@@ -183,6 +233,63 @@
                     <div class="modal-footer">
                         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">닫기</button>
                         <button type="submit" class="btn btn-primary">등록(검수 요청)</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!--/* 보완 후 재요청 (기업): 버튼의 data-fill-* 값으로 기존 내용을 채우고 data-form-action 으로 대상 정산 건을 정한다 */-->
+    <div class="modal fade" id="resubmitModal" tabindex="-1" aria-labelledby="resubmitModalTitle" aria-hidden="true" sec:authorize="hasRole('COMPANY')">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form method="post" enctype="multipart/form-data" th:action="@{/settlements/0/resubmit}">
+                    <div class="modal-header">
+                        <h2 class="modal-title fs-5 fw-bold" id="resubmitModalTitle">보완 후 재요청</h2>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="닫기"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" name="applicationId" th:value="${app.applicationId}">
+                        <div class="mb-3">
+                            <label for="reItemCode" class="form-label">비목</label>
+                            <select id="reItemCode" name="itemCode" class="form-select" required>
+                                <option th:each="code : ${expItems}" th:value="${code.codeId}" th:text="${code.codeName}">비목</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="reExpenseDate" class="form-label">집행일자</label>
+                            <input type="date" id="reExpenseDate" name="expenseDate" class="form-control" required th:max="${today}">
+                        </div>
+                        <div class="mb-3">
+                            <label for="reVendorName" class="form-label">거래처(공급자)</label>
+                            <input type="text" id="reVendorName" name="vendorName" class="form-control" maxlength="100" required>
+                        </div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <label for="reSupplyAmount" class="form-label">공급가액(원)</label>
+                                <input type="number" id="reSupplyAmount" name="supplyAmount" class="form-control" min="1"
+                                       data-calc="vat" data-vat-target="reVatPreview" required>
+                            </div>
+                            <div class="col-6">
+                                <label for="reVatPreview" class="form-label">부가세(10%, 자동)</label>
+                                <input type="number" id="reVatPreview" class="form-control bg-light" readonly>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="reDescription" class="form-label">집행 내용</label>
+                            <input type="text" id="reDescription" name="description" class="form-control" maxlength="255" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="reReceiptFile" class="form-label">새 증빙 (선택)</label>
+                            <input type="file" id="reReceiptFile" name="receiptFile" class="form-control" accept=".pdf,.jpg,.jpeg,.png"
+                                   aria-describedby="reReceiptHelp">
+                            <div id="reReceiptHelp" class="form-text">올리지 않으면 기존 증빙을 그대로 씁니다.</div>
+                        </div>
+                        <p class="small text-sub mb-0">등록 가능 잔액 <strong th:text="${#numbers.formatInteger(remaining, 0, 'COMMA')} + '원'">0원</strong> 안에서 다시 요청할 수 있습니다.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">닫기</button>
+                        <button type="submit" class="btn btn-primary">다시 검수 요청</button>
                     </div>
                 </form>
             </div>
