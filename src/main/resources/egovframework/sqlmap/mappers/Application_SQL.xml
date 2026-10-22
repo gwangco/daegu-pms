@@ -22,10 +22,10 @@
             app.request_grant,
             app.self_funding,
             app.summary,
-            app.plan_file_id,
-            f.original_name AS plan_file_name,
+            app.plan_atch_file_id,
+            f.ORIGNL_FILE_NM AS plan_file_name,
             app.status,
-            c.code_name AS status_name,
+            c.CODE_NM AS status_name,
             app.submitted_at,
             app.created_at,
             (SELECT ROUND(AVG(e.total_score), 1)
@@ -38,8 +38,8 @@
         FROM application app
         INNER JOIN announcement a ON app.announcement_id = a.announcement_id
         INNER JOIN users u ON app.company_user_id = u.user_id
-        LEFT JOIN com_code_detail c ON app.status = c.code_id AND c.group_id = 'APP_STATUS'
-        LEFT JOIN com_file f ON app.plan_file_id = f.file_id
+        LEFT JOIN COMTCCMMNDETAILCODE c ON c.CODE_ID = 'DPM002' AND c.CODE = app.status
+        LEFT JOIN COMTNFILEDETAIL f ON f.ATCH_FILE_ID = app.plan_atch_file_id AND f.FILE_SN = 0
     </sql>
 
     <sql id="searchCondition">
@@ -108,9 +108,9 @@
 
     <insert id="insertApplication" parameterType="applicationVO" useGeneratedKeys="true" keyProperty="applicationId">
         INSERT INTO application (
-            receipt_no, announcement_id, company_user_id, project_name, total_budget, request_grant, self_funding, summary, plan_file_id, status, submitted_at
+            receipt_no, announcement_id, company_user_id, project_name, total_budget, request_grant, self_funding, summary, plan_atch_file_id, status, submitted_at
         ) VALUES (
-            #{receiptNo}, #{announcementId}, #{companyUserId}, #{projectName}, #{totalBudget}, #{requestGrant}, #{selfFunding}, #{summary}, #{planFileId}, #{status}, CURRENT_TIMESTAMP
+            #{receiptNo}, #{announcementId}, #{companyUserId}, #{projectName}, #{totalBudget}, #{requestGrant}, #{selfFunding}, #{summary}, #{planAtchFileId}, #{status}, CURRENT_TIMESTAMP
         )
     </insert>
 

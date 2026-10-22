@@ -1,7 +1,8 @@
 package kr.go.daegu.pms.notice.service.impl;
 
-import jakarta.annotation.Resource;
-import kr.go.daegu.pms.cmm.exception.NotFoundException;
+import egovframework.com.cop.bbs.service.Board;
+import egovframework.com.cop.bbs.service.BoardVO;
+import egovframework.com.cop.bbs.service.EgovArticleService;
 import kr.go.daegu.pms.cmm.message.AppMessages;
 import kr.go.daegu.pms.cmm.util.SecurityUtil;
 import kr.go.daegu.pms.notice.service.NoticeService;
@@ -9,86 +10,104 @@ import kr.go.daegu.pms.notice.service.NoticeVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.egovframe.rte.fdl.cmmn.EgovAbstractServiceImpl;
-import org.egovframe.rte.fdl.cmmn.exception.BaseRuntimeException;
-import org.egovframe.rte.fdl.cmmn.exception.FdlException;
-import org.egovframe.rte.fdl.idgnr.EgovIdGnrService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 
 /**
- * 공지사항 서비스 구현 (eGovFrame CRUD 코드 생성기 결과를 바탕으로 수정).
+ * 공지사항 서비스 구현.
  *
- * 생성기 원본 대비 보완 사항 (원본: docs/egov-codegen/notice-generated)
- *  1. 쓰기 작업에 권한 검사 추가 (원본은 누구나 등록/수정/삭제 가능)
- *  2. 상세 조회 결과가 없으면 NotFoundException (원본은 null 반환 → NPE)
- *  3. 작성자/조회수/사용여부는 화면 값이 아니라 서버가 결정
- *  4. 물리 삭제 → 논리 삭제
+ * 공통컴포넌트 게시판(EgovArticleService)을 호출하기 전에 D-PMS 업무 규칙을 적용한다.
+ *  1. 게시판 ID 는 항상 공지사항 게시판으로 고정 (검색 파라미터로 다른 게시판 글을 조회·수정하는 것 방지)
+ *  2. 등록·수정·삭제는 담당자/관리자만 (컨트롤러 @PreAuthorize 와 별도로 서비스에서도 검사)
+ *  3. 화면 값 중 제목·내용·중요여부만 옮겨 담는다 (작성자·조회수·비밀글 같은 컬럼은 서버가 정함)
+ *  4. 없거나 이미 삭제된 글은 NotFoundException (404)
  */
 @Slf4j
 @Service("noticeService")
 @RequiredArgsConstructor
 public class NoticeServiceImpl extends EgovAbstractServiceImpl implements NoticeService {
 
-    private final NoticeMapper noticeMapper;
+    /** 공통컴포넌트 게시판 서비스 */
+    private final EgovArticleService articleService;
     private final AppMessages messages;
 
-    /** 공지 ID 채번 (EgovConfigIdGeneration 의 noticeIdGnrService). 생성기 템플릿과 같은 eGov 방식 */
-    @Resource(name = "noticeIdGnrService")
-    private EgovIdGnrService noticeIdGnrService;
-
     @Override
-    public List<NoticeVO> selectNoticeList(NoticeVO searchVO) {
-        return noticeMapper.selectNoticeList(searchVO);
+    public Map<String, Object> selectNoticeList(BoardVO searchVO) {
+        searchVO.setBbsId(BBS_ID);
+        return articleService.selectArticleList(searchVO);
     }
 
     @Override
-    public int selectNoticeListTotCnt(NoticeVO searchVO) {
-        return noticeMapper.selectNoticeListTotCnt(searchVO);
+    @SuppressWarnings("unchecked")
+    public List<BoardVO> selectRecentNoticeList(int count) {
+        BoardVO searchVO = new BoardVO();
+        searchVO.setBbsId(BBS_ID);
+        searchVO.setFirstIndex(0);
+        searchVO.setRecordCountPerPage(count);
+        return (List<BoardVO>) articleService.selectArticleList(searchVO).get("resultList");
     }
 
     @Override
-    public NoticeVO selectNotice(String noticeId) {
-        return noticeMapper.selectNotice(noticeId)
-                .orElseThrow(() -> messages.notFound("notice.notFound"));
-    }
-
-    @Override
-    public void updateNoticeViewCount(String noticeId) {
-        noticeMapper.updateNoticeViewCount(noticeId);
-    }
-
-    @Override
-    public String insertNotice(NoticeVO notice) {
-        requireStaff();
-        try {
-            notice.setNoticeId(noticeIdGnrService.getNextStringId());
-        } catch (FdlException e) {
-            throw new BaseRuntimeException("공지 ID 채번에 실패했습니다.", e);
+    public BoardVO selectNotice(long nttId) {
+        BoardVO notice = articleService.selectArticleDetailNoCount(key(nttId));
+        if (notice == null) {
+            throw messages.notFound("notice.notFound");
         }
-        notice.setWriterId(SecurityUtil.getCurrentUserId());
-        notice.setImportantYn(normalizeYn(notice.getImportantYn()));
-        noticeMapper.insertNotice(notice);
-        log.info("[공지 등록] noticeId={}, by={}", notice.getNoticeId(), notice.getWriterId());
-        return notice.getNoticeId();
+        return notice;
+    }
+
+    @Override
+    public void updateNoticeViewCount(long nttId) {
+        articleService.increaseInqireCo(key(nttId));
+    }
+
+    @Override
+    public long insertNotice(NoticeVO notice) {
+        requireStaff();
+        Board board = new Board();
+        board.setBbsId(BBS_ID);
+        board.setNttSj(notice.getNttSj());
+        board.setNttCn(notice.getNttCn());
+        board.setNoticeAt(normalizeYn(notice.getNoticeAt()));
+        articleService.insertArticle(board);
+        log.info("[공지 등록] nttId={}, by={}", board.getNttId(), SecurityUtil.getCurrentUserId());
+        return board.getNttId();
     }
 
     @Override
     public void updateNotice(NoticeVO notice) {
         requireStaff();
-        selectNotice(notice.getNoticeId());   // 존재·삭제 여부 확인
-        notice.setImportantYn(normalizeYn(notice.getImportantYn()));
-        noticeMapper.updateNotice(notice);
-        log.info("[공지 수정] noticeId={}, by={}", notice.getNoticeId(), SecurityUtil.getCurrentUserId());
+        Board board = new Board();
+        board.setBbsId(BBS_ID);
+        board.setNttId(notice.getNttId());
+        board.setNttSj(notice.getNttSj());
+        board.setNttCn(notice.getNttCn());
+        board.setNoticeAt(normalizeYn(notice.getNoticeAt()));
+        if (articleService.updateArticle(board) == 0) {
+            throw messages.notFound("notice.notFound");
+        }
+        log.info("[공지 수정] nttId={}, by={}", notice.getNttId(), SecurityUtil.getCurrentUserId());
     }
 
     @Override
-    public void deleteNotice(String noticeId) {
+    public void deleteNotice(long nttId) {
         requireStaff();
-        if (noticeMapper.deleteNotice(noticeId) == 0) {
+        Board board = new Board();
+        board.setBbsId(BBS_ID);
+        board.setNttId(nttId);
+        if (articleService.deleteArticle(board) == 0) {
             throw messages.notFound("notice.delete.notFound");
         }
-        log.info("[공지 삭제] noticeId={}, by={}", noticeId, SecurityUtil.getCurrentUserId());
+        log.info("[공지 삭제] nttId={}, by={}", nttId, SecurityUtil.getCurrentUserId());
+    }
+
+    private static BoardVO key(long nttId) {
+        BoardVO key = new BoardVO();
+        key.setBbsId(BBS_ID);
+        key.setNttId(nttId);
+        return key;
     }
 
     private static String normalizeYn(String value) {

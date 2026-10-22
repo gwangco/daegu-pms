@@ -30,22 +30,22 @@
     </div>
 
     <div class="container medium">
-        <!--/* 분류 탭: 공통코드 FAQ_CATEGORY 중 사용 중인 코드만 나온다 */-->
+        <!--/* 분류 탭: 공통코드 DPM005(FAQ 분류) 중 사용 중인 코드만 나온다 */-->
         <nav class="faq-tabs" aria-label="FAQ 분류">
-            <a th:href="@{/faqs}" th:classappend="${#strings.isEmpty(searchVO.categoryCode)} ? 'active'"
-               th:attr="aria-current=${#strings.isEmpty(searchVO.categoryCode)} ? 'page' : null">전체</a>
-            <a th:each="c : ${categories}" th:href="@{/faqs(categoryCode=${c.codeId})}" th:text="${c.codeName}"
-               th:classappend="${c.codeId == searchVO.categoryCode} ? 'active'"
-               th:attr="aria-current=${c.codeId == searchVO.categoryCode} ? 'page' : null">신청·접수</a>
+            <a th:href="@{/faqs}" th:classappend="${#strings.isEmpty(searchVO.faqClCode)} ? 'active'"
+               th:attr="aria-current=${#strings.isEmpty(searchVO.faqClCode)} ? 'page' : null">전체</a>
+            <a th:each="c : ${categories}" th:href="@{/faqs(faqClCode=${c.code})}" th:text="${c.codeNm}"
+               th:classappend="${c.code == searchVO.faqClCode} ? 'active'"
+               th:attr="aria-current=${c.code == searchVO.faqClCode} ? 'page' : null">신청·접수</a>
         </nav>
 
         <form id="searchForm" th:action="@{/faqs}" th:object="${searchVO}" method="get" class="search-box" role="search">
             <input type="hidden" th:field="*{pageIndex}">
-            <input type="hidden" th:field="*{categoryCode}">
+            <input type="hidden" th:field="*{faqClCode}">
             <div class="row g-2 align-items-end">
                 <div class="col-md-10">
-                    <label for="searchKeyword" class="form-label">질문·답변 검색</label>
-                    <input type="search" th:field="*{searchKeyword}" class="form-control" maxlength="50" placeholder="예: 접수번호, 반려, 잠금">
+                    <label for="searchWrd" class="form-label">질문·답변 검색</label>
+                    <input type="search" th:field="*{searchWrd}" class="form-control" maxlength="50" placeholder="예: 접수번호, 반려, 잠금">
                 </div>
                 <div class="col-md-2">
                     <button type="submit" class="btn btn-secondary w-100"><i class="bi bi-search me-1" aria-hidden="true"></i>검색</button>
@@ -61,18 +61,18 @@
                      th:open="${f.faqId == openFaqId}">
                 <summary>
                     <span class="faq-mark" aria-hidden="true">Q</span>
-                    <span class="faq-question" th:text="${f.question}">질문</span>
-                    <span class="faq-category" th:text="${f.categoryName}">신청·접수</span>
+                    <span class="faq-question" th:text="${f.qestnSj}">질문</span>
+                    <span class="faq-category" th:text="${f.faqClCodeNm}">신청·접수</span>
                 </summary>
                 <div class="faq-answer">
                     <span class="faq-mark is-answer" aria-hidden="true">A</span>
                     <!--/* th:text 는 HTML 특수문자를 이스케이프한다. 줄바꿈은 CSS(pre-line)로 표시 */-->
-                    <div class="prewrap" th:text="${f.answer}">답변</div>
+                    <div class="prewrap" th:text="${f.answerCn}">답변</div>
                 </div>
                 <div sec:authorize="hasAnyRole('MANAGER', 'ADMIN')" class="faq-admin">
                     <span class="text-sub small">
-                        표시 순서 <span th:text="${f.sortOrder}">1</span>
-                        · 최종 수정 <span th:text="${#temporals.format(f.updatedAt ?: f.createdAt, 'yyyy-MM-dd')}">2026-10-21</span>
+                        표시 순서 <span th:text="${f.sortOrdr}">1</span>
+                        · 최종 수정 <span th:text="${f.lastUpdusrPnttm}">2026-10-21</span>
                     </span>
                     <div class="d-flex gap-2">
                         <a th:href="@{/faqs/{id}/edit(id=${f.faqId})}" class="btn btn-outline-primary btn-sm">수정</a>

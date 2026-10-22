@@ -116,7 +116,7 @@ public class SettlementServiceImpl extends EgovAbstractServiceImpl implements Se
         checkBudget(locked, settlement.getTotalAmount());
 
         // 4) 증빙 파일 저장 후 등록
-        settlement.setReceiptFileId(fileService.storeFile(receiptFile).getFileId());
+        settlement.setReceiptAtchFileId(fileService.storeFile(receiptFile).getAtchFileId());
         settlement.setStatus(SettlementVO.STATUS_REQUESTED);
         settlementMapper.insertSettlement(settlement);
         recordHistory(settlement.getSettlementId(), SettlementHistoryVO.ACTION_REQUESTED, settlement.getTotalAmount(), null);
@@ -179,7 +179,7 @@ public class SettlementServiceImpl extends EgovAbstractServiceImpl implements Se
         checkBudget(locked, input.getTotalAmount());
 
         boolean hasNewFile = newReceiptFile != null && !newReceiptFile.isEmpty();
-        input.setReceiptFileId(hasNewFile ? fileService.storeFile(newReceiptFile).getFileId() : current.getReceiptFileId());
+        input.setReceiptAtchFileId(hasNewFile ? fileService.storeFile(newReceiptFile).getAtchFileId() : current.getReceiptAtchFileId());
         if (settlementMapper.updateSettlementResubmit(input) == 0) {
             throw messages.business("settlement.resubmit.invalidStatus");
         }
@@ -207,7 +207,7 @@ public class SettlementServiceImpl extends EgovAbstractServiceImpl implements Se
      * 화면 값을 믿지 않고 @Valid 를 거치지 않는 서비스 호출도 방어하며, long 오버플로로 음수 집행액이 저장되지 않게 한다.
      */
     private void validateAndCalculate(SettlementVO settlement) {
-        if (!commonCodeService.isValidCode(CommonCodeService.GROUP_EXP_ITEM, settlement.getItemCode())) {
+        if (!commonCodeService.isValidCode(CommonCodeService.EXP_ITEM, settlement.getItemCode())) {
             throw messages.business("settlement.item.invalid");
         }
         if (settlement.getExpenseDate() == null) {

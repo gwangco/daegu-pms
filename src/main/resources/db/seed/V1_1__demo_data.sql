@@ -1,55 +1,12 @@
--- D-PMS Initial Seed Data
--- ※ AUTO_INCREMENT PK는 직접 지정하지 않는다.
---   PK를 직접 넣으면 H2/MariaDB의 자동증가 시퀀스가 따라오지 않아
---   화면에서 신규 등록 시 "PK 중복" 오류가 발생할 수 있기 때문이다.
---   대신 INSERT 순서대로 1, 2, 3 ... 이 부여되는 것을 전제로 FK를 참조한다.
+-- =====================================================================
+-- 데모 데이터 (local·test 프로필에서만 적용: spring.flyway.locations 에 db/seed 가 있을 때)
+-- 운영 환경에는 들어가지 않는다. 기준 데이터(공통코드·채번 시작값)는 db/migration/V1 에 있다.
+--
+-- AUTO_INCREMENT PK 는 직접 지정하지 않는다. 빈 테이블에 INSERT 순서대로 1, 2, 3 ... 이 붙는 것을 전제로 FK 를 참조한다.
+-- (PK 를 직접 넣으면 자동 증가 값과 어긋나 화면에서 새로 등록할 때 PK 중복이 날 수 있다)
+-- =====================================================================
 
--- 1. 공통코드 그룹
-INSERT INTO com_code_group (group_id, group_name, description, use_yn) VALUES
-('FIELD', '지원 분야', '대구 신산업 R&D 및 기술지원 5대 전략 분야', 'Y'),
-('APP_STATUS', '신청서 진행상태', '지원사업 신청부터 협약까지의 상태머신', 'Y'),
-('EXP_ITEM', '사업비 비목분류', '보조금 관리규정에 따른 사업비 집행 비목', 'Y'),
-('SETTLE_STATUS', '정산 검수상태', '사업비 영수증 검수 상태', 'Y'),
-('FAQ_CATEGORY', 'FAQ 분류', '자주 묻는 질문 분류 탭', 'Y');
-
--- 1-1. 채번 테이블 초기값: seed 신청서가 접수번호 1~3 을 사용하므로 다음 발급 번호는 4
-INSERT INTO ids (table_name, next_id) VALUES ('APPLICATION_RECEIPT', 4);
--- 공지 ID: seed 공지 1~3 사용, 다음 발급 번호 4
-INSERT INTO ids (table_name, next_id) VALUES ('NOTICE', 4);
--- FAQ ID: seed FAQ 1~8 사용, 다음 발급 번호 9
-INSERT INTO ids (table_name, next_id) VALUES ('FAQ', 9);
-
--- 2. 공통코드 상세
-INSERT INTO com_code_detail (group_id, code_id, code_name, sort_order, use_yn) VALUES
-('FIELD', 'MOBILITY', '미래 모빌리티/부품', 1, 'Y'),
-('FIELD', 'ROBOT', '첨단 로봇/자동화', 2, 'Y'),
-('FIELD', 'AI_SW', '인공지능(AI)·빅데이터', 3, 'Y'),
-('FIELD', 'HEALTH', '디지털 헬스케어', 4, 'Y'),
-('FIELD', 'SMART_FAB', '스마트 제조/공구금형', 5, 'Y'),
-
-('APP_STATUS', 'TEMP_SAVED', '임시저장', 1, 'Y'),
-('APP_STATUS', 'SUBMITTED', '접수완료', 2, 'Y'),
-('APP_STATUS', 'DOCUMENT_PASSED', '서류적격통과', 3, 'Y'),
-('APP_STATUS', 'EVALUATING', '전문가심사중', 4, 'Y'),
-('APP_STATUS', 'SELECTED', '최종선정(협약)', 5, 'Y'),
-('APP_STATUS', 'REJECTED', '심사탈락', 6, 'Y'),
-
-('EXP_ITEM', 'EXP01', '인건비 (연구원/개발자)', 1, 'Y'),
-('EXP_ITEM', 'EXP02', '직접재료비 및 시약구입비', 2, 'Y'),
-('EXP_ITEM', 'EXP03', '시제품 제작 및 가공비', 3, 'Y'),
-('EXP_ITEM', 'EXP04', '연구활동비 (출장/여비)', 4, 'Y'),
-('EXP_ITEM', 'EXP05', '위탁정산 및 수수료', 5, 'Y'),
-
-('SETTLE_STATUS', 'REQUESTED', '검수요청', 1, 'Y'),
-('SETTLE_STATUS', 'APPROVED', '검수승인', 2, 'Y'),
-('SETTLE_STATUS', 'REJECTED', '보완(반려)', 3, 'Y'),
-
-('FAQ_CATEGORY', 'APPLY', '신청·접수', 1, 'Y'),
-('FAQ_CATEGORY', 'REVIEW', '심사·선정', 2, 'Y'),
-('FAQ_CATEGORY', 'SETTLE', '사업비 정산', 3, 'Y'),
-('FAQ_CATEGORY', 'ACCOUNT', '회원·계정', 4, 'Y');
-
--- 3. 테스트 계정
+-- 1. 테스트 계정
 --    비밀번호는 BCrypt 단방향 해시로 저장 (원문: admin1234 / manager1234 / eval1234 / company1234)
 --    이메일·전화번호는 실제 기관·개인에게 닿지 않도록 예약 도메인(example.com)과 가상 번호만 쓴다
 --    {bcrypt} 접두어는 DelegatingPasswordEncoder가 어떤 알고리즘으로 검증할지 판단하는 표식
@@ -61,7 +18,7 @@ INSERT INTO users (user_id, password, user_name, email, phone, company_name, bus
 ('company1', '{bcrypt}$2a$10$UmRKKM8Acu97mqwuicfeTOLiFYLPrTFCyY2dob86qY7IzzPvANZk.', '이대표', 'ceo@mobility.example.com', '010-0000-4001', '(주)대구모빌리티솔루션', '504-81-98765', 'ROLE_COMPANY', TRUE),
 ('company2', '{bcrypt}$2a$10$UmRKKM8Acu97mqwuicfeTOLiFYLPrTFCyY2dob86qY7IzzPvANZk.', '최기술', 'cto@robotics.example.com', '010-0000-4002', '(주)수성AI로보틱스', '504-86-54321', 'ROLE_COMPANY', TRUE);
 
--- 4. 지원사업 공고 샘플
+-- 2. 지원사업 공고 샘플
 --    (1~11) 지난 공고 이력 (페이징 확인용) / (12~16) 현재 공고
 INSERT INTO announcement (title, field_code, total_budget, max_grant, start_date, end_date, content, status, view_count, writer_id, created_at) VALUES
 ('2025년 대구 자율주행 실증 부품 시험인증 지원사업', 'MOBILITY', 700000000, 50000000, '2025-03-02', '2025-03-31', '자율주행 부품 기업의 KC·ISO 26262 시험인증 비용을 지원합니다.', 'CLOSED', 410, 'manager1', '2025-02-20 09:00:00'),
@@ -96,7 +53,7 @@ INSERT INTO announcement (title, field_code, total_budget, max_grant, start_date
 '제조 현장에 비전 AI 기반 자동 품질검사 시스템을 도입하는 기업을 지원합니다.',
 'OPEN', 64, 'manager1', '2026-10-08 09:00:00');
 
--- 5. 신청서 샘플 (announcement 13 = 모빌리티 R&D, 14 = AI·SW 바우처)
+-- 3. 신청서 샘플 (announcement 13 = 모빌리티 R&D, 14 = AI·SW 바우처)
 --    seed 계획서 파일은 물리 파일이 없으므로 plan_file_id 는 NULL
 INSERT INTO application (receipt_no, announcement_id, company_user_id, project_name, total_budget, request_grant, self_funding, summary, status, submitted_at) VALUES
 ('DPMS-00000001', 13, 'company1', '도심형 PBV 자율주행용 고정밀 조향센서 모듈 국산화 개발', 125000000, 100000000, 25000000,
@@ -111,7 +68,7 @@ INSERT INTO application (receipt_no, announcement_id, company_user_id, project_n
 '모빌리티 부품 생산라인의 외관검사 이미지를 축적·학습하여 불량 발생을 사전 예측하는 AI 솔루션 개발.',
 'SUBMITTED', '2026-10-20 10:05:00');
 
--- 6. 평가 샘플
+-- 4. 평가 샘플
 --    과제 1: 평가위원 2명 평가 완료 (평균 88.5점) / 과제 2: 2명 배정, 채점 대기
 INSERT INTO evaluation (application_id, evaluator_user_id, quantitative_score, qualitative_score, total_score, eval_comment, status, assigned_at, evaluated_at) VALUES
 (1, 'evaluator1', 38, 54, 92, '기술적 차별성과 대구 모빌리티 밸류체인과의 연계성이 매우 우수함. 사업화 성공 가능성이 높아 지원 타당함.', 'COMPLETED', '2026-10-16 09:00:00', '2026-10-19 16:00:00'),
@@ -119,18 +76,18 @@ INSERT INTO evaluation (application_id, evaluator_user_id, quantitative_score, q
 (2, 'evaluator1', 0, 0, 0, NULL, 'ASSIGNED', '2026-10-19 10:00:00', NULL),
 (2, 'evaluator2', 0, 0, 0, NULL, 'ASSIGNED', '2026-10-19 10:00:00', NULL);
 
--- 7. 사업비 정산 내역 샘플 (과제 1)
+-- 5. 사업비 정산 내역 샘플 (과제 1)
 INSERT INTO settlement (application_id, item_code, expense_date, vendor_name, supply_amount, vat_amount, total_amount, description, status, reviewed_by, reviewed_at) VALUES
 (1, 'EXP02', '2026-10-16', '(주)대구센서테크', 15000000, 1500000, 16500000, '센서 테스트보드 PCB 및 칩셋 샘플 구입', 'APPROVED', 'manager1', '2026-10-17 11:00:00'),
 (1, 'EXP03', '2026-10-18', '북성로정밀금형', 22000000, 2200000, 24200000, '센서 외장 알루미늄 케이스 정밀 밀링 가공', 'REQUESTED', NULL, NULL);
 
--- 7-1. 정산 처리 이력 (정산 1: 등록 → 승인 / 정산 2: 등록)
+-- 5-1. 정산 처리 이력 (정산 1: 등록 → 승인 / 정산 2: 등록)
 INSERT INTO settlement_history (settlement_id, action_code, total_amount, memo, actor_id, acted_at) VALUES
 (1, 'REQUESTED', 16500000, NULL, 'company1', '2026-10-16 18:00:00'),
 (1, 'APPROVED', 16500000, NULL, 'manager1', '2026-10-17 11:00:00'),
 (2, 'REQUESTED', 24200000, NULL, 'company1', '2026-10-18 17:00:00');
 
--- 8. 공지사항 샘플
+-- 6. 공지사항 샘플
 INSERT INTO notice (notice_id, title, content, important_yn, view_count, use_yn, writer_id, created_at) VALUES
 ('NTC_0000000001', '[필독] D-PMS 지원사업 포털 이용 안내',
 'D-PMS 지원사업 포털은 공고 확인 → 온라인 신청 → 심사 → 선정 → 사업비 e-정산까지 한 곳에서 처리합니다.
@@ -141,7 +98,7 @@ INSERT INTO notice (notice_id, title, content, important_yn, view_count, use_yn,
 ('NTC_0000000003', '시스템 정기 점검 안내 (10/25 02:00~04:00)',
 '안정적인 서비스 제공을 위해 10월 25일(토) 02:00~04:00 정기 점검을 실시합니다. 점검 시간에는 접속이 제한됩니다.', 'N', 21, 'Y', 'admin', '2026-10-18 15:00:00');
 
--- 9. 자주 묻는 질문 샘플 (분류: 공통코드 FAQ_CATEGORY)
+-- 7. 자주 묻는 질문 샘플 (분류: 공통코드 FAQ_CATEGORY)
 INSERT INTO faq (faq_id, category_code, question, answer, sort_order, use_yn, writer_id, created_at) VALUES
 ('FAQ_0000000001', 'APPLY', '한 공고에 여러 과제를 신청할 수 있나요?',
 '한 기업은 한 공고에 1건만 신청할 수 있습니다.
@@ -167,3 +124,8 @@ INSERT INTO faq (faq_id, category_code, question, answer, sort_order, use_yn, wr
 ('FAQ_0000000008', 'ACCOUNT', '비밀번호를 여러 번 틀려 로그인이 되지 않습니다.',
 '비밀번호를 5회 연속 잘못 입력하면 계정이 30분 동안 잠깁니다.
 잠금 시간이 지나면 다시 로그인할 수 있고, 급한 경우 총괄관리자에게 잠금 해제를 요청하세요.', 1, 'Y', 'admin', '2026-10-06 11:00:00');
+
+-- 채번 이어서 시작: 데모 신청서가 접수번호 1~3, 공지 1~3, FAQ 1~8 을 이미 사용
+UPDATE ids SET next_id = 4 WHERE table_name = 'APPLICATION_RECEIPT';
+UPDATE ids SET next_id = 4 WHERE table_name = 'NOTICE';
+UPDATE ids SET next_id = 9 WHERE table_name = 'FAQ';

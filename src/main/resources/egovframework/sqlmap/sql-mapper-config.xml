@@ -32,10 +32,13 @@
         <typeAlias alias="userSearchVO" type="kr.go.daegu.pms.user.service.UserSearchVO"/>
         <typeAlias alias="loginHistoryVO" type="kr.go.daegu.pms.user.service.LoginHistoryVO"/>
         <typeAlias alias="loginHistorySearchVO" type="kr.go.daegu.pms.user.service.LoginHistorySearchVO"/>
-        <typeAlias alias="commonCodeVO" type="kr.go.daegu.pms.cmm.service.CommonCodeVO"/>
         <typeAlias alias="dashboardCountVO" type="kr.go.daegu.pms.cmm.service.DashboardCountVO"/>
-        <typeAlias alias="fileVO" type="kr.go.daegu.pms.cmm.service.FileVO"/>
-        <typeAlias alias="noticeVO" type="kr.go.daegu.pms.notice.service.NoticeVO"/>
-        <typeAlias alias="faqVO" type="kr.go.daegu.pms.faq.service.FaqVO"/>
+
+        <!-- 전자정부 공통컴포넌트 SQL 이 쓰는 별칭 (공통컴포넌트 mapper-config.xml 과 같은 이름).
+             MyBatis 별칭은 대소문자를 구분하지 않으므로 업무 VO 에 같은 이름(fileVO 등)을 다시 쓰면 기동 시 충돌한다 -->
+        <typeAlias alias="egovMap" type="org.egovframe.rte.psl.dataaccess.util.EgovMap"/>
+        <typeAlias alias="FileVO" type="egovframework.com.cmm.service.FileVO"/>
+        <typeAlias alias="ComDefaultCodeVO" type="egovframework.com.cmm.ComDefaultCodeVO"/>
+        <typeAlias alias="comDefaultVO" type="egovframework.com.cmm.ComDefaultVO"/>
     </typeAliases>
 </configuration>

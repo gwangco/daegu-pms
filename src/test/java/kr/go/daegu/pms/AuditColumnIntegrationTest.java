@@ -36,7 +36,7 @@ class AuditColumnIntegrationTest extends IntegrationTestSupport {
 
         Map<String, Object> row = jdbc.queryForMap("SELECT updated_by, updated_at FROM application WHERE application_id = 3");
         assertThat(row.get("updated_by")).isEqualTo("manager1");
-        assertThat(((java.sql.Timestamp) row.get("updated_at")).toLocalDateTime()).isEqualTo(NOW);
+        assertThat(row.get("updated_at")).isEqualTo(NOW);   // MySQL 드라이버는 DATETIME 을 LocalDateTime 으로 준다
     }
 
     @Test

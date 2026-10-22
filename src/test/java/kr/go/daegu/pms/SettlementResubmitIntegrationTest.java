@@ -93,10 +93,10 @@ class SettlementResubmitIntegrationTest extends IntegrationTestSupport {
         mockMvc.perform(resubmitRequest(2, "1000").file(pdf("receiptFile", "재발행_세금계산서.pdf"))
                         .with(user("company1").roles("COMPANY")))
                 .andExpect(flash().attributeExists("successMessage"));
-        Long fileId = jdbc.queryForObject("SELECT receipt_file_id FROM settlement WHERE settlement_id = 2", Long.class);
-        assertThat(fileId).isNotNull();
-        mockMvc.perform(get("/files/" + fileId).with(user("company1").roles("COMPANY"))).andExpect(status().isOk());
-        mockMvc.perform(get("/files/" + fileId).with(user("company2").roles("COMPANY"))).andExpect(status().isForbidden());
+        String atchFileId = jdbc.queryForObject("SELECT receipt_atch_file_id FROM settlement WHERE settlement_id = 2", String.class);
+        assertThat(atchFileId).matches("FILE_\\d{15}");
+        mockMvc.perform(get("/files/" + atchFileId + "/0").with(user("company1").roles("COMPANY"))).andExpect(status().isOk());
+        mockMvc.perform(get("/files/" + atchFileId + "/0").with(user("company2").roles("COMPANY"))).andExpect(status().isForbidden());
     }
 
     @Test

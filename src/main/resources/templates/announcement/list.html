@@ -36,7 +36,7 @@
                     <label for="fieldCode" class="form-label">지원 분야</label>
                     <select th:field="*{fieldCode}" class="form-select">
                         <option value="">전체</option>
-                        <option th:each="code : ${fieldCodes}" th:value="${code.codeId}" th:text="${code.codeName}">분야</option>
+                        <option th:each="code : ${fieldCodes}" th:value="${code.code}" th:text="${code.codeNm}">분야</option>
                     </select>
                 </div>
                 <div class="col-md-2">

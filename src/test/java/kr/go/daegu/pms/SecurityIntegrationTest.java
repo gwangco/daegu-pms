@@ -48,10 +48,19 @@ class SecurityIntegrationTest extends IntegrationTestSupport {
     }
 
     @Test
-    @DisplayName("H2 콘솔은 총괄관리자 외 접근 불가")
+    @DisplayName("첨부파일 주소는 공통컴포넌트 형식(/files/FILE_ + 15자리/순번)만 받는다: 옛 숫자 주소·형식이 다른 값·없는 파일은 404")
     @WithUserDetails("manager1")
-    void h2ConsoleAdminOnly() throws Exception {
-        mockMvc.perform(get("/h2-console/")).andExpect(status().isForbidden());
+    void fileUrlFormat() throws Exception {
+        mockMvc.perform(get("/files/1")).andExpect(status().isNotFound());
+        mockMvc.perform(get("/files/FILE_000000000000001/abc")).andExpect(status().isNotFound());
+        mockMvc.perform(get("/files/FILE_999999999999999/0")).andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("H2 웹 콘솔은 MySQL 전환과 함께 제거되어 총괄관리자도 열 수 없다")
+    @WithUserDetails("admin")
+    void h2ConsoleRemoved() throws Exception {
+        mockMvc.perform(get("/h2-console/")).andExpect(status().isNotFound());
     }
 
     // ───────────── IDOR: 신청서 ─────────────

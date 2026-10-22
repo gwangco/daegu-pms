@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?><!--
+	수정일                 수정자                          수정내용
+  =========     =======    =================================================
+  2011.9.5   	정진오     	 	selectFaqList에 Alias 추가
+  							FRST_REGIST_PNTTM ->  	FRST_REGISTER_PNTTM
+							LAST_UPDT_PNTTM -> 		LAST_UPDUSR_PNTTM
+							RDCNT ->				INQIRE_CO
+  2011.09.26        서준식		selectFaqList 문의 FRST_REGIST_PNTTM, LAST_UPDT_PNTTM 컬럼에  DATE_FORMAT 함수 적용
+  2026.10.22        gwangco		D-PMS 적용 (공통컴포넌트 v5.0.7 원본 대비)
+  							- 추가 컬럼: FAQ_CL_CODE(분류, 공통코드 DPM005), SORT_ORDR(표시 순서), USE_AT(사용 여부)
+  							- 목록: 삭제글 제외, 분류 탭 필터, 질문·답변 검색, 분류 순서 → 표시 순서 정렬
+  							        (원본은 searchCnd == 0 숫자 비교라 ?searchCnd=abc 같은 값에서 OGNL 변환 오류로 500)
+  							- 등록·수정: 작성자·수정자·일시는 감사 값(#{audit.userId}, #{audit.now})으로 저장
+  							         첨부파일 ID 는 화면 값을 받지 않음 (원본은 다른 사람 파일 ID 를 FAQ 에 연결할 수 있었음)
+  							- 수정: PK(FAQ_ID) 를 다시 SET 하던 부분 제거, 삭제된 글은 수정 불가
+  							- 삭제: DELETE → USE_AT = 'N' (이력 보존)
+  							- 조회수 증가(updateFaqInqireCo) 제거: D-PMS FAQ 는 목록에서 답변을 펼쳐 보여 준다
+-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="FaqManage">
+
+	<resultMap id="FaqManage" type="egovframework.com.uss.olh.faq.service.FaqVO">
+		<result property="faqId" column="FAQ_ID"/>
+		<result property="qestnSj" column="QESTN_SJ"/>
+		<result property="qestnCn" column="QESTN_CN"/>
+		<result property="answerCn" column="ANSWER_CN"/>
+		<result property="inqireCo" column="RDCNT"/>
+		<result property="atchFileId" column="ATCH_FILE_ID"/>
+		<result property="frstRegisterPnttm" column="FRST_REGIST_PNTTM"/>
+		<result property="frstRegisterId" column="FRST_REGISTER_ID"/>
+		<result property="lastUpdusrPnttm" column="LAST_UPDT_PNTTM"/>
+		<result property="lastUpdusrId" column="LAST_UPDUSR_ID"/>
+		<result property="faqClCode" column="FAQ_CL_CODE"/>
+		<result property="faqClCodeNm" column="FAQ_CL_CODE_NM"/>
+		<result property="sortOrdr" column="SORT_ORDR"/>
+		<result property="useAt" column="USE_AT"/>
+	</resultMap>
+
+	<sql id="selectColumns">
+			f.FAQ_ID,
+			f.QESTN_SJ,
+			f.QESTN_CN,
+			f.ANSWER_CN,
+			f.RDCNT,
+			f.ATCH_FILE_ID,
+			DATE_FORMAT(f.FRST_REGIST_PNTTM,'%Y-%m-%d') 	FRST_REGIST_PNTTM,
+			f.FRST_REGISTER_ID,
+			DATE_FORMAT(f.LAST_UPDT_PNTTM,'%Y-%m-%d') 	LAST_UPDT_PNTTM,
+			f.LAST_UPDUSR_ID,
+			f.FAQ_CL_CODE,
+			c.CODE_NM 	FAQ_CL_CODE_NM,
+			f.SORT_ORDR,
+			f.USE_AT
+	</sql>
+
+	<!-- FAQ 분류명은 공통코드(COMTCCMMNDETAILCODE)의 DPM005 에서 가져온다 -->
+	<sql id="joinCategory">
+			LEFT OUTER JOIN COMTCCMMNDETAILCODE c
+			ON c.CODE_ID = 'DPM005' AND c.CODE = f.FAQ_CL_CODE
+	</sql>
+
+	<sql id="searchCondition">
+			WHERE	f.USE_AT = 'Y'
+			<if test="faqClCode != null and faqClCode != ''">
+			AND		f.FAQ_CL_CODE = #{faqClCode}
+			</if>
+			<if test="searchWrd != null and searchWrd != ''">
+				<bind name="searchPattern" value="'%' + searchWrd + '%'"/>
+			AND		(f.QESTN_SJ LIKE #{searchPattern} OR f.ANSWER_CN LIKE #{searchPattern})
+			</if>
+	</sql>
+
+	<select id="selectFaqDetail" parameterType="egovframework.com.uss.olh.faq.service.FaqVO" resultMap="FaqManage">
+
+			SELECT 	<include refid="selectColumns"/>
+			FROM	COMTNFAQINFO f
+			<include refid="joinCategory"/>
+			WHERE	f.FAQ_ID = #{faqId}
+			AND		f.USE_AT = 'Y'
+
+	</select>
+
+	<select id="selectFaqList" parameterType="egovframework.com.uss.olh.faq.service.FaqVO" resultMap="FaqManage">
+
+			SELECT	<include refid="selectColumns"/>
+			FROM	COMTNFAQINFO f
+			<include refid="joinCategory"/>
+			<include refid="searchCondition"/>
+			ORDER BY c.SORT_ORDR, f.SORT_ORDR, f.FAQ_ID
+			<if test="recordCountPerPage > 0">
+			LIMIT  #{recordCountPerPage} OFFSET #{firstIndex}
+			</if>
+	</select>
+
+	<select id="selectFaqListCnt" parameterType="egovframework.com.uss.olh.faq.service.FaqVO" resultType="int">
+
+			SELECT 	COUNT(*) totcnt
+			FROM 	COMTNFAQINFO f
+			<include refid="searchCondition"/>
+	</select>
+
+	<insert id="insertFaq" parameterType="egovframework.com.uss.olh.faq.service.FaqVO">
+
+			INSERT INTO COMTNFAQINFO
+				   (FAQ_ID
+				  , QESTN_SJ
+				  , QESTN_CN
+				  , ANSWER_CN
+				  , RDCNT
+				  , ATCH_FILE_ID
+				  , FRST_REGIST_PNTTM
+				  , FRST_REGISTER_ID
+				  , LAST_UPDT_PNTTM
+				  , LAST_UPDUSR_ID
+				  , FAQ_CL_CODE
+				  , SORT_ORDR
+				  , USE_AT)
+			VALUES ( #{faqId}
+				  , #{qestnSj}
+				  , #{qestnCn}
+				  , #{answerCn}
+				  , 0
+				  , NULL
+				  , #{audit.now}
+				  , #{audit.userId}
+				  , #{audit.now}
+				  , #{audit.userId}
+				  , #{faqClCode}
+				  , #{sortOrdr}
+				  , 'Y' )
+
+	</insert>
+
+	<update id="updateFaq" parameterType="egovframework.com.uss.olh.faq.service.FaqVO">
+
+			UPDATE	COMTNFAQINFO	SET
+				    QESTN_SJ=#{qestnSj}
+				  , ANSWER_CN=#{answerCn}
+				  , FAQ_CL_CODE=#{faqClCode}
+				  , SORT_ORDR=#{sortOrdr}
+				  , LAST_UPDT_PNTTM=#{audit.now}
+				  , LAST_UPDUSR_ID=#{audit.userId}
+ 			WHERE  FAQ_ID=#{faqId}
+ 			AND    USE_AT = 'Y'
+
+	</update>
+
+	<update id="deleteFaq" parameterType="egovframework.com.uss.olh.faq.service.FaqVO">
+
+			UPDATE	COMTNFAQINFO	SET
+				    USE_AT = 'N'
+				  , LAST_UPDT_PNTTM=#{audit.now}
+				  , LAST_UPDUSR_ID=#{audit.userId}
+			WHERE  FAQ_ID=#{faqId}
+			AND    USE_AT = 'Y'
+
+	</update>
+
+</mapper>

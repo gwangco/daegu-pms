@@ -74,16 +74,16 @@ class DashboardAndCodeIntegrationTest extends IntegrationTestSupport {
     }
 
     @Test
-    @DisplayName("[1부 실습] 공통코드를 사용 안 함(use_yn='N')으로 바꾸면 선택 목록에서 빠지고 서버 검증도 거부한다")
+    @DisplayName("[1부 실습] 공통코드(공통컴포넌트 COMTCCMMNDETAILCODE)를 사용 안 함(USE_AT='N')으로 바꾸면 선택 목록에서 빠지고 서버 검증도 거부한다")
     @WithUserDetails("manager1")
     void unusedCommonCodeDisappears() throws Exception {
-        assertThat(commonCodeService.isValidCode(CommonCodeService.GROUP_FIELD, "HEALTH")).isTrue();
-        jdbc.update("UPDATE com_code_detail SET use_yn = 'N' WHERE group_id = 'FIELD' AND code_id = 'HEALTH'");
+        assertThat(commonCodeService.isValidCode(CommonCodeService.FIELD, "HEALTH")).isTrue();
+        jdbc.update("UPDATE COMTCCMMNDETAILCODE SET USE_AT = 'N' WHERE CODE_ID = 'DPM001' AND CODE = 'HEALTH'");
 
         mockMvc.perform(get("/announcements/new"))
                 .andExpect(content().string(not(containsString("value=\"HEALTH\""))))
                 .andExpect(content().string(containsString("value=\"ROBOT\"")));
-        assertThat(commonCodeService.isValidCode(CommonCodeService.GROUP_FIELD, "HEALTH")).isFalse();
+        assertThat(commonCodeService.isValidCode(CommonCodeService.FIELD, "HEALTH")).isFalse();
         // 화면을 우회해 사용 안 하는 코드로 등록해도 서비스가 거부한다
         mockMvc.perform(post("/announcements/new").with(csrf())
                         .param("title", "중지 분야 공고").param("fieldCode", "HEALTH")

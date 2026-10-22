@@ -1,13 +1,13 @@
 package kr.go.daegu.pms.faq.web;
 
+import egovframework.com.cmm.service.CmmnDetailCode;
+import egovframework.com.uss.olh.faq.service.FaqVO;
 import jakarta.validation.Valid;
 import kr.go.daegu.pms.cmm.exception.BusinessException;
 import kr.go.daegu.pms.cmm.message.AppMessages;
 import kr.go.daegu.pms.cmm.pagination.PagingHelper;
 import kr.go.daegu.pms.cmm.service.CommonCodeService;
-import kr.go.daegu.pms.cmm.service.CommonCodeVO;
 import kr.go.daegu.pms.faq.service.FaqService;
-import kr.go.daegu.pms.faq.service.FaqVO;
 import lombok.RequiredArgsConstructor;
 import org.egovframe.rte.ptl.mvc.tags.ui.pagination.PaginationInfo;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -24,7 +24,10 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.util.List;
 
 /**
- * 자주 묻는 질문 컨트롤러 (eGovFrame CRUD 코드 생성기 결과를 바탕으로 수정).
+ * 자주 묻는 질문 컨트롤러 (전자정부 공통컴포넌트 FAQ uss.olh.faq 사용).
+ *
+ * 처음에는 eGovFrame CRUD 코드 생성기로 만들었고, 6차 스프린트에서 저장소를 공통컴포넌트 FAQ(COMTNFAQINFO)로 바꿨다.
+ * 화면·URL 은 그대로 두고 VO 만 공통컴포넌트 FaqVO 로 교체했다 (faqClCode, qestnSj, answerCn, sortOrdr).
  *
  * 생성기 원본 대비:
  *  - URL: /faq/faqList.do, 등록·수정 화면을 POST 로 여는 방식 → /faqs, /faqs/new, /faqs/{faqId}/edit (화면 조회는 GET)
@@ -45,8 +48,8 @@ public class FaqController {
 
     /** 분류 탭과 등록 화면 선택지 (사용 중인 공통코드만) */
     @ModelAttribute("categories")
-    public List<CommonCodeVO> categories() {
-        return commonCodeService.selectCodeList(CommonCodeService.GROUP_FAQ_CATEGORY);
+    public List<CmmnDetailCode> categories() {
+        return commonCodeService.selectCodeList(CommonCodeService.FAQ_CATEGORY);
     }
 
     @GetMapping
@@ -63,7 +66,7 @@ public class FaqController {
     @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     public String addFaqView(Model model) {
         FaqVO faq = new FaqVO();
-        faq.setSortOrder(1);
+        faq.setSortOrdr(1);
         model.addAttribute("faq", faq);
         return "faq/form";
     }
@@ -75,7 +78,7 @@ public class FaqController {
         if (!bindingResult.hasErrors()) {
             try {
                 String faqId = faqService.insertFaq(faq);
-                return redirectToSaved(faqId, faq.getCategoryCode(), messages.text("faq.created"), redirectAttributes);
+                return redirectToSaved(faqId, faq.getFaqClCode(), messages.text("faq.created"), redirectAttributes);
             } catch (BusinessException e) {
                 bindingResult.reject("business", e.getMessage());   // 입력값을 유지한 채 폼에 안내
             }
@@ -99,7 +102,7 @@ public class FaqController {
         if (!bindingResult.hasErrors()) {
             try {
                 faqService.updateFaq(faq);
-                return redirectToSaved(faqId, faq.getCategoryCode(), messages.text("faq.updated"), redirectAttributes);
+                return redirectToSaved(faqId, faq.getFaqClCode(), messages.text("faq.updated"), redirectAttributes);
             } catch (BusinessException e) {
                 bindingResult.reject("business", e.getMessage());
             }
@@ -116,9 +119,9 @@ public class FaqController {
     }
 
     /** 저장한 FAQ 의 분류 목록으로 돌아가 해당 질문을 펼친 상태로 보여 준다 */
-    private String redirectToSaved(String faqId, String categoryCode, String successMessage,
+    private String redirectToSaved(String faqId, String faqClCode, String successMessage,
                                    RedirectAttributes redirectAttributes) {
-        redirectAttributes.addAttribute("categoryCode", categoryCode);
+        redirectAttributes.addAttribute("faqClCode", faqClCode);
         redirectAttributes.addFlashAttribute("openFaqId", faqId);
         redirectAttributes.addFlashAttribute("successMessage", successMessage);
         return "redirect:/faqs#faq-" + faqId;

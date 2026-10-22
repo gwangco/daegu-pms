@@ -4,6 +4,41 @@
 
 ---
 
+## [0.6.0] 6차 스프린트 — MySQL 전환·전자정부 공통컴포넌트 도입 (2026-10-22)
+브랜치: `feature/sprint6-common-components-mysql` · 상세: [docs/SPRINT6_MYSQL_COMMON_COMPONENTS.md](docs/SPRINT6_MYSQL_COMMON_COMPONENTS.md)
+
+### 추가 (Added)
+- 전자정부 공통컴포넌트 v5.0.7: 공통코드(`EgovCmmUseService`), 첨부파일(`EgovFileMngService`), 게시판(`EgovArticleService`), FAQ(`EgovFaqService`) — [사용 내역과 원본 대비 변경점](docs/COMMON_COMPONENTS.md)
+- Flyway 스키마 이력 관리: `V1` 기본 스키마, `V2` 공통컴포넌트 전환(기존 데이터 이전), 데모 데이터는 local·test 프로필에서만
+- 로컬 MySQL 준비 스크립트 `scripts/setup-local-mysql.ps1` (DB·계정 생성, 무작위 비밀번호 파일)
+- Eclipse 공유 실행 설정 `eclipse/` (로컬 실행·디버깅, Maven `clean verify`)와 [설정 안내](docs/ECLIPSE_SETUP.md)
+- 테스트 153건 (+9): 공통컴포넌트 구성·트랜잭션 규칙·V2 마이그레이션 결과, 첨부파일 주소 형식, 공지 검색 조건, 업무 시간대
+
+### 변경 (Changed)
+- DB: H2 인메모리 → **MySQL 8** (CI 는 8.4 LTS 컨테이너), 시간 컬럼 DATETIME, 컬럼 COMMENT
+- Flyway 11.7.2(Spring Boot 기본) → 11.20.3: 11.7.2 는 MySQL 8.1 까지만 검증 범위라 CI(8.4)에서 미검증 경고
+- 공지사항·FAQ: 코드 생성기로 만든 테이블 → 공통컴포넌트 `COMTNBBS`, `COMTNFAQINFO` (공지 주소 `/notices/{번호}`)
+- 첨부파일: `com_file` → `COMTNFILE`/`COMTNFILEDETAIL`, 다운로드 주소 `/files/{FILE_ID}/{순번}`
+- 공통코드 그룹 ID → 공통컴포넌트 코드 ID `DPM001`~`DPM005`, 채번 테이블 `ids` → `COMTECOPSEQ`
+- 테스트는 MySQL 테스트 전용 DB(`dpms_test`)를 실행마다 다시 만들고, 동시성 테스트는 `performance_schema.data_lock_waits` 로 잠금 대기 확인
+- 개발 도구 VS Code → Eclipse, Eclipse 컴파일러 경고 3건 정리
+
+### 보안 (Security)
+- DB 계정 분리: 테이블 변경(`dpms_owner`)과 실행(`dpms_app`, 조회·등록·수정·삭제만)
+- DB 비밀번호를 저장소에 두지 않음: 로컬은 Git 제외 파일, CI 는 실행마다 무작위 생성 후 로그 마스킹, 기본값 없음(없으면 기동 실패)
+- H2 웹 콘솔 제거와 함께 콘솔용 CSRF 예외·iframe 허용·CSP 예외 제거, `frame-ancestors 'none'`
+- 공통컴포넌트 원본 보완: 작성자·첨부파일 ID 를 화면 값으로 저장하지 않음, 게시물 비밀번호 컬럼 미조회, 파일 저장 경로를 업로드 루트 기준으로 검증
+- CI MySQL 이미지 digest 고정, GitHub Actions 를 Node.js 24 실행 버전으로 올림 (checkout v7.0.1, setup-java v6.0.1, upload-artifact v7.0.2, 커밋 SHA 고정)
+
+### 수정 (Fixed)
+- 공통컴포넌트 게시판·FAQ 의 "조회 + 조회수 증가" 메서드가 읽기 전용 트랜잭션에서 MySQL 에 거부되는 구조 → 나눠 호출
+- 공통컴포넌트 검색 SQL 의 숫자 비교(`searchCnd == 0`)로 문자 값이 오면 500 이 나던 문제
+- 조회수 동시 증가 누락(읽고 쓰기 2단계 → SQL 한 번), 삭제 시 제목 덮어쓰기
+- 공통컴포넌트 DAO 에 `@Repository` 예외 변환 CGLIB 프록시가 붙어 생기던 기동 경고
+- 업무 Clock·공고 마감 배치가 서버 기본 시간대를 따르던 문제 → 한국 시간(Asia/Seoul) 고정 (UTC 서버에서 배치가 오전 9시에 돌 수 있었음)
+
+---
+
 ## [0.5.0] 5차 스프린트 — 계정 보안·개인정보 보호·화면 개선 (2026-10-22)
 브랜치: `feature/sprint5-account-privacy-ui` · 상세: [docs/SPRINT5_ACCOUNT_PRIVACY_UI.md](docs/SPRINT5_ACCOUNT_PRIVACY_UI.md)
 

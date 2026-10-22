@@ -97,13 +97,14 @@ class WorkflowIntegrationTest extends IntegrationTestSupport {
         assertThat(saved.getPlanFileName()).isEqualTo("사업계획서.pdf");
 
         // 본인은 업로드한 파일 다운로드 가능, 타 기업은 불가, 담당자는 가능
-        mockMvc.perform(get("/files/" + saved.getPlanFileId()))
+        String fileUrl = "/files/" + saved.getPlanAtchFileId() + "/0";   // 공통컴포넌트 첨부파일 ID + 순번
+        mockMvc.perform(get(fileUrl))
                 .andExpect(status().isOk())
                 .andExpect(header().string("Content-Type", containsString("application/octet-stream")))
                 .andExpect(header().string("Content-Disposition", containsString("filename*=UTF-8''")));
-        mockMvc.perform(get("/files/" + saved.getPlanFileId()).with(user("company2").roles("COMPANY")))
+        mockMvc.perform(get(fileUrl).with(user("company2").roles("COMPANY")))
                 .andExpect(status().isForbidden());
-        mockMvc.perform(get("/files/" + saved.getPlanFileId()).with(user("manager1").roles("MANAGER")))
+        mockMvc.perform(get(fileUrl).with(user("manager1").roles("MANAGER")))
                 .andExpect(status().isOk());
     }
 

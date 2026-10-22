@@ -44,7 +44,7 @@ public class ApplicationVO {
     @Size(max = 4000, message = "사업계획 요약은 4000자 이내로 입력하세요.")
     private String summary;
 
-    private Long planFileId;          // 사업계획서 첨부파일 ID
+    private String planAtchFileId;    // 사업계획서 첨부파일 ID (공통컴포넌트 COMTNFILE)
     private String planFileName;      // 조인용 (첨부파일 원본명)
     private String status; // TEMP_SAVED, SUBMITTED, DOCUMENT_PASSED, EVALUATING, SELECTED, REJECTED
     private String statusName; // 조인용

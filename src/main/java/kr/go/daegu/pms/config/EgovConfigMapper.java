@@ -9,18 +9,24 @@ import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 
 import javax.sql.DataSource;
 import java.io.IOException;
 import java.time.Clock;
+import java.util.Arrays;
+import java.util.stream.Stream;
 
 /**
  * MyBatis 설정 (전자정부 표준프레임워크 context-mapper.xml 의 Java Config 버전).
  *
  * - sql-mapper-config.xml : MyBatis 전역 설정(언더스코어→카멜 변환, 타입 별칭 등)
- * - mappers/*_SQL.xml     : 업무별 SQL
+ * - mappers/*_SQL.xml     : 업무별 SQL (@EgovMapper 인터페이스와 짝)
+ * - mapper/com 아래 *_mysql.xml : 전자정부 공통컴포넌트 SQL. 공통컴포넌트는 DB 종류별 파일(_mysql, _oracle ...)을 두고
+ *                           globals.properties 의 Globals.DbType 으로 고르는데, D-PMS 는 MySQL 만 쓰므로 _mysql 만 읽는다
  * - @MapperScan           : @EgovMapper 가 붙은 인터페이스를 찾아 구현체(프록시)를 Bean 으로 등록
+ *                           (공통컴포넌트 DAO 는 인터페이스가 아니라 EgovComAbstractDAO 를 상속한 클래스라 컴포넌트 스캔으로 등록)
  * - 플러그인               : AuditParameterInterceptor 가 #{audit.userId}, #{audit.now} 값을 채운다
  *
  * ※ @EgovMapper("noticeMapper") 처럼 이름을 직접 주면 Spring 6.1+ 에서 "convention-based @Component names" 폐기 경고가 난다.
@@ -35,14 +41,21 @@ public class EgovConfigMapper {
         return new AuditParameterInterceptor(clock);
     }
 
-    @Bean
+    /**
+     * 공통컴포넌트 DAO(EgovComAbstractDAO)는 이 팩토리를 "egov.sqlSession" 이라는 이름으로 주입받는다.
+     * 같은 팩토리에 두 이름을 붙여 업무 Mapper 와 공통컴포넌트 DAO 가 같은 트랜잭션·감사 인터셉터를 쓰게 한다.
+     */
+    @Bean(name = {"sqlSessionFactory", "egov.sqlSession"})
     public SqlSessionFactoryBean sqlSessionFactory(@Qualifier("dataSource") DataSource dataSource,
                                                    AuditParameterInterceptor auditParameterInterceptor) throws IOException {
         PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
         SqlSessionFactoryBean factoryBean = new SqlSessionFactoryBean();
         factoryBean.setDataSource(dataSource);
         factoryBean.setConfigLocation(resolver.getResource("classpath:/egovframework/sqlmap/sql-mapper-config.xml"));
-        factoryBean.setMapperLocations(resolver.getResources("classpath:/egovframework/sqlmap/mappers/**/*_SQL.xml"));
+        Resource[] businessMappers = resolver.getResources("classpath:/egovframework/sqlmap/mappers/**/*_SQL.xml");
+        Resource[] commonComponentMappers = resolver.getResources("classpath:/egovframework/mapper/com/**/*_mysql.xml");
+        factoryBean.setMapperLocations(Stream.concat(Arrays.stream(businessMappers), Arrays.stream(commonComponentMappers))
+                .toArray(Resource[]::new));
         factoryBean.setPlugins(auditParameterInterceptor);
         return factoryBean;
     }

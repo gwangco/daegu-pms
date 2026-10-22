@@ -1,52 +1,43 @@
 package kr.go.daegu.pms.notice.service;
 
+import egovframework.com.cop.bbs.service.BoardVO;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
-import kr.go.daegu.pms.cmm.service.ComDefaultVO;
-import lombok.Getter;
-import lombok.Setter;
-
-import java.time.LocalDateTime;
 
 /**
- * 공지사항 VO.
+ * 공지사항 등록·수정 화면 VO.
  *
- * eGovFrame VS Code 확장의 CRUD 코드 생성기(DDL: docs/egov-codegen/notice.ddl.sql)로 만든 NoticeVO 를 바탕으로 수정했다.
- * - 생성기의 NoticeDefaultVO(검색/페이징 필드) 대신 프로젝트 공통 ComDefaultVO 를 상속 (중복 제거)
- * - java.util.Date → java.time.LocalDateTime
- * - ptl-reactive 모듈의 @EgovNullCheck 대신 Bean Validation(@NotBlank 등) 사용
- * - Lombok 으로 getter/setter 대체
+ * 전자정부 공통컴포넌트 게시판(cop.bbs)의 게시물 VO(BoardVO)를 그대로 상속하고, 공지 화면에 필요한 입력 검증만 덧붙인다.
+ * (공통컴포넌트 원본은 ptl-reactive 모듈의 @EgovNullCheck 를 쓰지만 D-PMS 는 Bean Validation 과 안내 문구를 쓴다)
+ *
+ * 검증 어노테이션을 getter 에 단 이유: 검사할 필드(nttSj, nttCn)가 부모 클래스(Board)에 private 으로 선언되어 있어서
+ * 필드에 직접 달 수 없기 때문이다. getter 에 단 제약도 같은 이름(nttSj)의 입력 오류로 화면에 표시된다.
  */
-@Getter
-@Setter
-public class NoticeVO extends ComDefaultVO {
-
-    private static final long serialVersionUID = 1L;
+@SuppressWarnings("serial")
+public class NoticeVO extends BoardVO {
 
     public static final String YES = "Y";
     public static final String NO = "N";
 
-    /** 공지 ID (eGov IdGnr 채번: NTC_0000000001) */
-    private String noticeId;
-
+    @Override
     @NotBlank(message = "제목을 입력하세요.")
     @Size(max = 200, message = "제목은 200자 이내로 입력하세요.")
-    private String title;
+    public String getNttSj() {
+        return super.getNttSj();
+    }
 
+    @Override
     @NotBlank(message = "내용을 입력하세요.")
     @Size(max = 4000, message = "내용은 4000자 이내로 입력하세요.")
-    private String content;
+    public String getNttCn() {
+        return super.getNttCn();
+    }
 
-    /** 중요 공지 여부 (Y: 목록 상단 고정) */
+    /** 중요 공지 여부 (Y: 목록 상단 고정). 체크하지 않으면 값이 오지 않아 null */
+    @Override
     @Pattern(regexp = "[YN]", message = "중요 공지 여부 값이 올바르지 않습니다.")
-    private String importantYn;
-
-    private int viewCount;
-    private String useYn;          // 논리 삭제 플래그 (N 이면 삭제된 글)
-    private String writerId;
-    private String writerName;     // 조인용
-    private LocalDateTime createdAt;
-    private String updatedBy;
-    private LocalDateTime updatedAt;
+    public String getNoticeAt() {
+        return super.getNoticeAt();
+    }
 }

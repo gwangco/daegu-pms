@@ -51,7 +51,7 @@ public class SettlementVO {
     @Size(max = 255, message = "집행 내용은 255자 이내로 입력하세요.")
     private String description;
 
-    private Long receiptFileId;      // 증빙 첨부파일 ID
+    private String receiptAtchFileId; // 증빙 첨부파일 ID (공통컴포넌트 COMTNFILE)
     private String receiptFileName;  // 조인용 (첨부파일 원본명)
     private String status;           // REQUESTED, APPROVED, REJECTED
     private String rejectReason;

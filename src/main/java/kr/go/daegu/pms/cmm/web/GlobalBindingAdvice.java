@@ -24,8 +24,11 @@ public class GlobalBindingAdvice {
                 "companyUserId", "evaluatorUserId", "writerId",           // 소유자 (로그인 정보로 결정)
                 "createdBy", "reviewedBy", "viewCount",                   // 감사/집계 컬럼
                 "updatedBy", "updatedAt", "createdAt", "useYn",           // 감사/논리삭제 컬럼
-                "noticeId", "faqId",                                      // 공지·FAQ ID (eGov IdGnr 채번 / URL 경로로만 지정)
-                "planFileId", "receiptFileId",                            // 파일 ID (업로드 결과로 결정)
+                "nttId", "bbsId", "faqId",                                // 게시물·게시판·FAQ ID (채번 또는 URL·서버 고정값으로만 지정)
+                "atchFileId", "planAtchFileId", "receiptAtchFileId",      // 첨부파일 ID (업로드 결과로 결정, 남의 파일 연결 방지)
+                "frstRegisterId", "frstRegisterNm", "frstRegisterPnttm",  // 공통컴포넌트 감사 컬럼 (SQL 에서 #{audit.*} 로 기록)
+                "lastUpdusrId", "lastUpdusrPnttm", "inqireCo", "useAt",   //   〃 , 조회수, 사용여부(논리 삭제)
+                "ntcrId", "ntcrNm", "password", "secretAt", "replyAt",    // 게시판 작성자·비밀번호·비밀글·답글 (D-PMS 미사용)
                 "receiptNo",                                              // 접수번호 (eGov IdGnr 채번)
                 "totalAmount", "selfFunding", "totalScore",               // 서버 재계산 금액/점수
                 "lockedSince", "lockedAt", "loginFailCount",              // 계정 잠금 (서버 판단)

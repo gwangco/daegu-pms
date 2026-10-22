@@ -53,10 +53,10 @@
                         <td th:text="${#numbers.formatInteger(app.selfFunding, 0, 'COMMA')} + '원'">25,000,000원</td>
                         <th scope="row">사업계획서</th>
                         <td>
-                            <a th:if="${app.planFileId != null}" th:href="@{/files/{id}(id=${app.planFileId})}">
+                            <a th:if="${app.planAtchFileId != null}" th:href="@{/files/{id}/{sn}(id=${app.planAtchFileId}, sn=0)}">
                                 <i class="bi bi-download me-1" aria-hidden="true"></i><span th:text="${app.planFileName}">plan.pdf</span>
                             </a>
-                            <span th:if="${app.planFileId == null}" class="text-sub small">첨부 없음 (샘플 데이터)</span>
+                            <span th:if="${app.planAtchFileId == null}" class="text-sub small">첨부 없음 (샘플 데이터)</span>
                         </td>
                     </tr>
                     <tr>

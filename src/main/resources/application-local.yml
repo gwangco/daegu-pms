@@ -1,13 +1,8 @@
 # 로컬 개발 전용 설정 (spring.profiles.active=local 일 때만 적용)
-# 운영 환경에서는 이 파일이 적용되지 않으므로 H2 콘솔이 자동으로 꺼진다.
 spring:
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
-      settings:
-        # 다른 PC 에서의 원격 접속 차단 (localhost 만 허용)
-        web-allow-others: false
+  flyway:
+    # 로컬은 기준 스키마(db/migration) 위에 데모 데이터(db/seed)를 함께 적용한다. 운영에는 데모 데이터가 들어가지 않는다
+    locations: classpath:db/migration,classpath:db/seed
 
 # 로컬 데모 전용 암호화 키 (실제 운영 키가 아님). 환경변수 DPMS_CRYPTO_KEY / DPMS_CRYPTO_KEY_HASH 가 있으면 그 값을 쓴다
 org:
