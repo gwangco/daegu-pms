@@ -1,40 +1,35 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="kr.go.daegu.pms.user.service.impl.UserMapper">
 
-    <select id="findByUserId" resultType="userVO">
-        SELECT 
-            user_id, password, user_name, email, phone, company_name, business_no, role, enabled, created_at
+    <!-- 비밀번호 해시는 인증 쿼리(selectUserForLogin)에서만 조회한다 -->
+    <sql id="userColumns">
+            user_id, user_name, email, phone, company_name, business_no, role, enabled, created_at
+    </sql>
+
+    <select id="selectUserForLogin" resultType="userVO">
+        SELECT
+            <include refid="userColumns"/>,
+            password
         FROM users
         WHERE user_id = #{userId}
     </select>
 
-    <select id="findByRole" resultType="userVO">
-        SELECT 
-            user_id, password, user_name, email, phone, company_name, business_no, role, enabled, created_at
+    <select id="selectUser" resultType="userVO">
+        SELECT
+            <include refid="userColumns"/>
+        FROM users
+        WHERE user_id = #{userId}
+    </select>
+
+    <select id="selectUserListByRole" resultType="userVO">
+        SELECT
+            <include refid="userColumns"/>
         FROM users
         WHERE role = #{role}
         ORDER BY user_name ASC
     </select>
-
-    <insert id="insertUser">
-        INSERT INTO users (
-            user_id, password, user_name, email, phone, company_name, business_no, role, enabled
-        ) VALUES (
-            #{userId}, #{password}, #{userName}, #{email}, #{phone}, #{companyName}, #{businessNo}, #{role}, #{enabled}
-        )
-    </insert>
-
-    <update id="updateUser">
-        UPDATE users
-        SET user_name = #{userName},
-            email = #{email},
-            phone = #{phone},
-            company_name = #{companyName},
-            business_no = #{businessNo}
-        WHERE user_id = #{userId}
-    </update>
 
 </mapper>

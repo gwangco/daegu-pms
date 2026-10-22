@@ -43,14 +43,15 @@ INSERT INTO com_code_detail (group_id, code_id, code_name, sort_order, use_yn) V
 
 -- 3. 테스트 계정
 --    비밀번호는 BCrypt 단방향 해시로 저장 (원문: admin1234 / manager1234 / eval1234 / company1234)
+--    이메일·전화번호는 실제 기관·개인에게 닿지 않도록 예약 도메인(example.com)과 가상 번호만 쓴다
 --    {bcrypt} 접두어는 DelegatingPasswordEncoder가 어떤 알고리즘으로 검증할지 판단하는 표식
 INSERT INTO users (user_id, password, user_name, email, phone, company_name, business_no, role, enabled) VALUES
-('admin', '{bcrypt}$2a$10$Sb920P3ksKEDtwLIDYUloud/EMTbsGI8Dby4TFSk1k1K03A3Y4M0C', '총괄관리자', 'admin@daegu.go.kr', '053-803-1000', '대구광역시청 미래혁신성장실', '504-83-00001', 'ROLE_ADMIN', TRUE),
-('manager1', '{bcrypt}$2a$10$E6.EeqgkNrLM8NfUpmPgwOVb1VQEA4FEzrmhaLuq08fN0L7bRoRMG', '김담당', 'manager1@dpg.or.kr', '053-602-1700', '대구디지털혁신진흥원(DIP)', '504-82-12345', 'ROLE_MANAGER', TRUE),
-('evaluator1', '{bcrypt}$2a$10$GXAEa62sLir/mJ0UESxhZudL1OHDmNhEefybuuvFOFDmHzJWYErhi', '박심사', 'eval1@knu.ac.kr', '053-950-5555', '경북대학교 IT대학(평가위원)', '502-83-99999', 'ROLE_EVALUATOR', TRUE),
-('evaluator2', '{bcrypt}$2a$10$GXAEa62sLir/mJ0UESxhZudL1OHDmNhEefybuuvFOFDmHzJWYErhi', '정평가', 'eval2@kmu.ac.kr', '053-580-5114', '계명대학교 공과대학(평가위원)', '502-82-88888', 'ROLE_EVALUATOR', TRUE),
-('company1', '{bcrypt}$2a$10$UmRKKM8Acu97mqwuicfeTOLiFYLPrTFCyY2dob86qY7IzzPvANZk.', '이대표', 'ceo@daegumobility.kr', '053-740-1234', '(주)대구모빌리티솔루션', '504-81-98765', 'ROLE_COMPANY', TRUE),
-('company2', '{bcrypt}$2a$10$UmRKKM8Acu97mqwuicfeTOLiFYLPrTFCyY2dob86qY7IzzPvANZk.', '최기술', 'cto@suseongrobot.com', '053-750-5678', '(주)수성AI로보틱스', '504-86-54321', 'ROLE_COMPANY', TRUE);
+('admin', '{bcrypt}$2a$10$Sb920P3ksKEDtwLIDYUloud/EMTbsGI8Dby4TFSk1k1K03A3Y4M0C', '총괄관리자', 'admin@example.com', '010-0000-1001', '대구광역시청 미래혁신성장실', '504-83-00001', 'ROLE_ADMIN', TRUE),
+('manager1', '{bcrypt}$2a$10$E6.EeqgkNrLM8NfUpmPgwOVb1VQEA4FEzrmhaLuq08fN0L7bRoRMG', '김담당', 'manager1@example.com', '010-0000-2001', '대구디지털혁신진흥원(DIP)', '504-82-12345', 'ROLE_MANAGER', TRUE),
+('evaluator1', '{bcrypt}$2a$10$GXAEa62sLir/mJ0UESxhZudL1OHDmNhEefybuuvFOFDmHzJWYErhi', '박심사', 'evaluator1@example.com', '010-0000-3001', '지역대학 IT융합학과(평가위원)', '502-83-99999', 'ROLE_EVALUATOR', TRUE),
+('evaluator2', '{bcrypt}$2a$10$GXAEa62sLir/mJ0UESxhZudL1OHDmNhEefybuuvFOFDmHzJWYErhi', '정평가', 'evaluator2@example.com', '010-0000-3002', '지역대학 기계공학과(평가위원)', '502-82-88888', 'ROLE_EVALUATOR', TRUE),
+('company1', '{bcrypt}$2a$10$UmRKKM8Acu97mqwuicfeTOLiFYLPrTFCyY2dob86qY7IzzPvANZk.', '이대표', 'ceo@mobility.example.com', '010-0000-4001', '(주)대구모빌리티솔루션', '504-81-98765', 'ROLE_COMPANY', TRUE),
+('company2', '{bcrypt}$2a$10$UmRKKM8Acu97mqwuicfeTOLiFYLPrTFCyY2dob86qY7IzzPvANZk.', '최기술', 'cto@robotics.example.com', '010-0000-4002', '(주)수성AI로보틱스', '504-86-54321', 'ROLE_COMPANY', TRUE);
 
 -- 4. 지원사업 공고 샘플
 --    (1~11) 지난 공고 이력 (페이징 확인용) / (12~16) 현재 공고

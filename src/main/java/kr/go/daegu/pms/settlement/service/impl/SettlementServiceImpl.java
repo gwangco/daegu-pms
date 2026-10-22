@@ -1,20 +1,19 @@
 package kr.go.daegu.pms.settlement.service.impl;
 
-import kr.go.daegu.pms.cmm.message.AppMessages;
-
-import org.egovframe.rte.fdl.cmmn.EgovAbstractServiceImpl;
-import kr.go.daegu.pms.cmm.util.SecurityUtil;
-import kr.go.daegu.pms.application.service.ApplicationVO;
-import kr.go.daegu.pms.application.service.ApplicationStatus;
-import kr.go.daegu.pms.cmm.service.FileVO;
-import kr.go.daegu.pms.settlement.service.SettlementVO;
-import kr.go.daegu.pms.application.service.impl.ApplicationMapper;
 import kr.go.daegu.pms.application.service.ApplicationAccessChecker;
+import kr.go.daegu.pms.application.service.ApplicationStatus;
+import kr.go.daegu.pms.application.service.ApplicationVO;
+import kr.go.daegu.pms.application.service.impl.ApplicationMapper;
+import kr.go.daegu.pms.cmm.message.AppMessages;
 import kr.go.daegu.pms.cmm.service.CommonCodeService;
 import kr.go.daegu.pms.cmm.service.FileService;
+import kr.go.daegu.pms.cmm.service.FileVO;
+import kr.go.daegu.pms.cmm.util.SecurityUtil;
 import kr.go.daegu.pms.settlement.service.SettlementService;
+import kr.go.daegu.pms.settlement.service.SettlementVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.egovframe.rte.fdl.cmmn.EgovAbstractServiceImpl;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -27,11 +26,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SettlementServiceImpl extends EgovAbstractServiceImpl implements SettlementService {
 
-    private final AppMessages messages;
-
-    public static final String STATUS_REQUESTED = "REQUESTED";
-    public static final String STATUS_APPROVED = "APPROVED";
-    public static final String STATUS_REJECTED = "REJECTED";
     private static final int MAX_REJECT_REASON_LENGTH = 255;
 
     private final SettlementMapper settlementMapper;
@@ -40,6 +34,7 @@ public class SettlementServiceImpl extends EgovAbstractServiceImpl implements Se
     private final CommonCodeService commonCodeService;
     private final FileService fileService;
     private final Clock clock;
+    private final AppMessages messages;
 
     @Override
     public ApplicationVO selectSettlementApplication(Long applicationId) {
@@ -118,7 +113,7 @@ public class SettlementServiceImpl extends EgovAbstractServiceImpl implements Se
         // 5) 증빙 파일 저장 후 등록
         FileVO file = fileService.storeFile(receiptFile);
         settlement.setReceiptFileId(file.getFileId());
-        settlement.setStatus(STATUS_REQUESTED);
+        settlement.setStatus(SettlementVO.STATUS_REQUESTED);
         settlementMapper.insertSettlement(settlement);
         log.info("[사업비 집행 등록] settlementId={}, applicationId={}, total={}",
                 settlement.getSettlementId(), settlement.getApplicationId(), total);
@@ -130,14 +125,14 @@ public class SettlementServiceImpl extends EgovAbstractServiceImpl implements Se
         if (!SecurityUtil.isStaff()) {
             throw messages.denied("settlement.review.denied");
         }
-        if (!STATUS_APPROVED.equals(statusCode) && !STATUS_REJECTED.equals(statusCode)) {
+        if (!SettlementVO.STATUS_APPROVED.equals(statusCode) && !SettlementVO.STATUS_REJECTED.equals(statusCode)) {
             throw messages.business("settlement.review.invalid");
         }
         SettlementVO settlement = settlementMapper.selectSettlement(settlementId)
                 .orElseThrow(() -> messages.notFound("settlement.notFound"));
 
         String reason = null;
-        if (STATUS_REJECTED.equals(statusCode)) {
+        if (SettlementVO.STATUS_REJECTED.equals(statusCode)) {
             if (rejectReason == null || rejectReason.isBlank()) {
                 throw messages.business("settlement.rejectReason.required");
             }

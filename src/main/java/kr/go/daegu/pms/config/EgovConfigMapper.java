@@ -1,9 +1,9 @@
 package kr.go.daegu.pms.config;
 
 import org.apache.ibatis.session.SqlSessionFactory;
+import org.egovframe.rte.psl.dataaccess.mapper.EgovMapper;
 import org.mybatis.spring.SqlSessionFactoryBean;
 import org.mybatis.spring.SqlSessionTemplate;
-import org.egovframe.rte.psl.dataaccess.mapper.EgovMapper;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;

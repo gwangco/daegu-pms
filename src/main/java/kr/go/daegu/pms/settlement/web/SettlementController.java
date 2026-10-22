@@ -1,13 +1,12 @@
 package kr.go.daegu.pms.settlement.web;
 
-import kr.go.daegu.pms.cmm.message.AppMessages;
-
 import jakarta.validation.Valid;
-import kr.go.daegu.pms.cmm.exception.BusinessException;
 import kr.go.daegu.pms.application.service.ApplicationVO;
-import kr.go.daegu.pms.settlement.service.SettlementVO;
+import kr.go.daegu.pms.cmm.exception.BusinessException;
+import kr.go.daegu.pms.cmm.message.AppMessages;
 import kr.go.daegu.pms.cmm.service.CommonCodeService;
 import kr.go.daegu.pms.settlement.service.SettlementService;
+import kr.go.daegu.pms.settlement.service.SettlementVO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
@@ -25,11 +24,10 @@ import java.time.LocalDate;
 @RequiredArgsConstructor
 public class SettlementController {
 
-    private final AppMessages messages;
-
     private final SettlementService settlementService;
     private final CommonCodeService commonCodeService;
     private final Clock clock;
+    private final AppMessages messages;
 
     // 특정 협약 과제의 사업비 정산 내역 조회 (담당자 또는 과제 수행 기업 본인)
     @GetMapping("/application/{applicationId}")

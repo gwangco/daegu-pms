@@ -18,6 +18,12 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SettlementVO {
+
+    /** 검수 상태: 검수요청 / 승인 / 반려(보완 요청) */
+    public static final String STATUS_REQUESTED = "REQUESTED";
+    public static final String STATUS_APPROVED = "APPROVED";
+    public static final String STATUS_REJECTED = "REJECTED";
+
     private Long settlementId;
 
     @NotNull(message = "과제 정보가 없습니다.")

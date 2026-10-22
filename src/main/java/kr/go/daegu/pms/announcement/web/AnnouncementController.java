@@ -1,16 +1,15 @@
 package kr.go.daegu.pms.announcement.web;
 
-import kr.go.daegu.pms.cmm.message.AppMessages;
-
 import jakarta.validation.Valid;
-import kr.go.daegu.pms.cmm.exception.BusinessException;
-import org.egovframe.rte.ptl.mvc.tags.ui.pagination.PaginationInfo;
-import kr.go.daegu.pms.cmm.pagination.PagingHelper;
-import kr.go.daegu.pms.announcement.service.AnnouncementVO;
 import kr.go.daegu.pms.announcement.service.AnnouncementSearchVO;
 import kr.go.daegu.pms.announcement.service.AnnouncementService;
+import kr.go.daegu.pms.announcement.service.AnnouncementVO;
+import kr.go.daegu.pms.cmm.exception.BusinessException;
+import kr.go.daegu.pms.cmm.message.AppMessages;
+import kr.go.daegu.pms.cmm.pagination.PagingHelper;
 import kr.go.daegu.pms.cmm.service.CommonCodeService;
 import lombok.RequiredArgsConstructor;
+import org.egovframe.rte.ptl.mvc.tags.ui.pagination.PaginationInfo;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -23,11 +22,10 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @RequiredArgsConstructor
 public class AnnouncementController {
 
-    private final AppMessages messages;
-
     private final AnnouncementService announcementService;
     private final CommonCodeService commonCodeService;
     private final PagingHelper pagingHelper;
+    private final AppMessages messages;
 
     @GetMapping
     public String list(@ModelAttribute("searchVO") AnnouncementSearchVO searchVO, Model model) {

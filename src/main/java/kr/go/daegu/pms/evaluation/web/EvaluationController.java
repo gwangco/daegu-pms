@@ -1,11 +1,10 @@
 package kr.go.daegu.pms.evaluation.web;
 
-import kr.go.daegu.pms.cmm.message.AppMessages;
-
-import kr.go.daegu.pms.cmm.exception.BusinessException;
-import kr.go.daegu.pms.evaluation.service.EvaluationVO;
 import kr.go.daegu.pms.application.service.ApplicationService;
+import kr.go.daegu.pms.cmm.exception.BusinessException;
+import kr.go.daegu.pms.cmm.message.AppMessages;
 import kr.go.daegu.pms.evaluation.service.EvaluationService;
+import kr.go.daegu.pms.evaluation.service.EvaluationVO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
@@ -22,10 +21,9 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @RequiredArgsConstructor
 public class EvaluationController {
 
-    private final AppMessages messages;
-
     private final EvaluationService evaluationService;
     private final ApplicationService applicationService;
+    private final AppMessages messages;
 
     @GetMapping
     public String list(Model model) {

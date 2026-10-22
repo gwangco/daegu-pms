@@ -1,7 +1,6 @@
 package kr.go.daegu.pms.application.service.impl;
 
-import kr.go.daegu.pms.cmm.message.AppMessages;
-
+import jakarta.annotation.Resource;
 import kr.go.daegu.pms.announcement.service.AnnouncementService;
 import kr.go.daegu.pms.announcement.service.AnnouncementVO;
 import kr.go.daegu.pms.application.service.ApplicationAccessChecker;
@@ -9,11 +8,11 @@ import kr.go.daegu.pms.application.service.ApplicationSearchVO;
 import kr.go.daegu.pms.application.service.ApplicationService;
 import kr.go.daegu.pms.application.service.ApplicationStatus;
 import kr.go.daegu.pms.application.service.ApplicationVO;
+import kr.go.daegu.pms.cmm.message.AppMessages;
 import kr.go.daegu.pms.cmm.service.FileService;
 import kr.go.daegu.pms.cmm.service.FileVO;
 import kr.go.daegu.pms.cmm.util.SecurityUtil;
 import kr.go.daegu.pms.evaluation.service.impl.EvaluationMapper;
-import jakarta.annotation.Resource;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.egovframe.rte.fdl.cmmn.EgovAbstractServiceImpl;
@@ -33,14 +32,13 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ApplicationServiceImpl extends EgovAbstractServiceImpl implements ApplicationService {
 
-    private final AppMessages messages;
-
     private final ApplicationMapper applicationMapper;
     private final EvaluationMapper evaluationMapper;
     private final AnnouncementService announcementService;
     private final FileService fileService;
     private final ApplicationAccessChecker accessChecker;
     private final Clock clock;
+    private final AppMessages messages;
 
     /**
      * 접수번호 채번 서비스 (EgovConfigIdGeneration 의 receiptNoIdGnrService).

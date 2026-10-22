@@ -6,7 +6,7 @@ import java.util.List;
 
 /**
  * application.yml 의 app.* 설정을 타입 안전하게 바인딩하는 클래스.
- * (전자정부 프레임워크의 EgovPropertyService 역할을 Spring Boot 방식으로 대체)
+ * 페이징 값은 EgovConfigProperties 가 이 값을 읽어 EgovPropertyService(pageUnit/pageSize)로 제공한다.
  */
 @ConfigurationProperties(prefix = "app")
 public record AppProperties(File file, Paging paging, Batch batch) {

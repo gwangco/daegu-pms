@@ -1,9 +1,8 @@
 package kr.go.daegu.pms.application.service;
 
-import kr.go.daegu.pms.cmm.message.AppMessages;
-
-import kr.go.daegu.pms.cmm.util.SecurityUtil;
 import kr.go.daegu.pms.application.service.impl.ApplicationMapper;
+import kr.go.daegu.pms.cmm.message.AppMessages;
+import kr.go.daegu.pms.cmm.util.SecurityUtil;
 import kr.go.daegu.pms.evaluation.service.impl.EvaluationMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -22,10 +21,9 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class ApplicationAccessChecker {
 
-    private final AppMessages messages;
-
     private final ApplicationMapper applicationMapper;
     private final EvaluationMapper evaluationMapper;
+    private final AppMessages messages;
 
     /**
      * 신청서 열람 권한: 담당자/관리자 = 전체, 기업 = 본인 신청서, 평가위원 = 배정받은 과제
