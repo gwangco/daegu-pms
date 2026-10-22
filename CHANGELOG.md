@@ -28,7 +28,7 @@
 - DB 비밀번호를 저장소에 두지 않음: 로컬은 Git 제외 파일, CI 는 실행마다 무작위 생성 후 로그 마스킹, 기본값 없음(없으면 기동 실패)
 - H2 웹 콘솔 제거와 함께 콘솔용 CSRF 예외·iframe 허용·CSP 예외 제거, `frame-ancestors 'none'`
 - 공통컴포넌트 원본 보완: 작성자·첨부파일 ID 를 화면 값으로 저장하지 않음, 게시물 비밀번호 컬럼 미조회, 파일 저장 경로를 업로드 루트 기준으로 검증
-- CI MySQL 이미지 digest 고정
+- CI MySQL 이미지 digest 고정, GitHub Actions 를 Node.js 24 실행 버전으로 올림 (checkout v7.0.1, setup-java v6.0.1, upload-artifact v7.0.2, 커밋 SHA 고정)
 
 ### 수정 (Fixed)
 - 공통컴포넌트 게시판·FAQ 의 "조회 + 조회수 증가" 메서드가 읽기 전용 트랜잭션에서 MySQL 에 거부되는 구조 → 나눠 호출

@@ -26,7 +26,7 @@
 | FAQ | 코드 생성기로 만든 `faq` | `EgovFaqService` + `COMTNFAQINFO` (분류·순서·사용여부 추가) | `FaqIntegrationTest` |
 | 채번 | `ids` | `COMTECOPSEQ` (공통컴포넌트와 같은 Bean 이름) | `CommonComponentIntegrationTest` |
 | 보안 헤더 | H2 콘솔 때문에 CSRF·iframe·CSP 예외 | 콘솔 제거와 함께 예외 제거, `frame-ancestors 'none'` | `WebUiIntegrationTest` |
-| CI | JDK 17 | + MySQL 8.4 LTS 컨테이너 (이미지 digest 고정) | GitHub Actions |
+| CI | JDK 17, Node.js 20 기반 Action | + MySQL 8.4 LTS 컨테이너 (이미지 digest 고정), Action 을 Node.js 24 버전으로 (커밋 SHA 고정) | GitHub Actions |
 | 개발 도구 | VS Code | Eclipse 공유 실행 설정, Eclipse 컴파일러 경고 0 | ECJ 컴파일 |
 
 테스트 144건 → 153건.
@@ -112,7 +112,7 @@ NoticeController ─▶ NoticeServiceImpl ─▶ EgovArticleService ─▶ EgovA
 ## 6. 검증
 
 - `./mvnw clean verify` — 153건 성공 (로컬 MySQL 8.0.46, JVM 시간대 KST·UTC 둘 다)
-- GitHub Actions (리눅스, MySQL 8.4 LTS) — 153건 성공, Flyway 경고 0건. 첫 실행의 실패 2건은 트러블슈팅 7번
+- GitHub Actions (리눅스, MySQL 8.4 LTS) — 153건 성공, Flyway 경고·Node.js 20 폐기 안내 0건. 첫 실행의 실패 2건은 트러블슈팅 7번
 - 개발 DB `dpms` 에서 실제 기동 — Flyway 3개 버전 적용 1.0초, 기동 8.4초
 - 내장 브라우저 점검 — 메인, 공지 목록·작성자 검색·상세·등록·수정, FAQ 분류 탭·등록, 신청 상세. 콘솔 오류 0건, 공지 본문의 HTML 태그는 글자로 표시
 - 매퍼 전체에서 `${}` 문자열 치환 0건, 비밀번호 파일 Git 제외 확인
