@@ -1,0 +1,58 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "D-PMS: 검증 (verify)",
+      "type": "process",
+      "command": "${workspaceFolder}/mvnw",
+      "args": ["-B", "-ntp", "verify"],
+      "windows": {
+        "command": "${env:ComSpec}",
+        "args": ["/d", "/c", "mvnw.cmd", "-B", "-ntp", "verify"],
+        "options": {
+          "env": {
+            "JAVA_HOME": "${config:terminal.integrated.env.windows.JAVA_HOME}"
+          }
+        }
+      },
+      "options": { "cwd": "${workspaceFolder}" },
+      "group": { "kind": "build", "isDefault": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "D-PMS: 전체 재빌드 (clean verify)",
+      "type": "process",
+      "command": "${workspaceFolder}/mvnw",
+      "args": ["-B", "-ntp", "clean", "verify"],
+      "windows": {
+        "command": "${env:ComSpec}",
+        "args": ["/d", "/c", "mvnw.cmd", "-B", "-ntp", "clean", "verify"],
+        "options": {
+          "env": {
+            "JAVA_HOME": "${config:terminal.integrated.env.windows.JAVA_HOME}"
+          }
+        }
+      },
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    },
+    {
+      "label": "D-PMS: 서버 실행",
+      "type": "process",
+      "command": "${workspaceFolder}/mvnw",
+      "args": ["-ntp", "spring-boot:run"],
+      "windows": {
+        "command": "${env:ComSpec}",
+        "args": ["/d", "/c", "mvnw.cmd", "-ntp", "spring-boot:run"],
+        "options": {
+          "env": {
+            "JAVA_HOME": "${config:terminal.integrated.env.windows.JAVA_HOME}"
+          }
+        }
+      },
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": [],
+      "runOptions": { "instanceLimit": 1 }
+    }
+  ]
+}

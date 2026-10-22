@@ -104,6 +104,8 @@ flowchart LR
 ### 요구사항
 * JDK 17 (Maven·DB·WAS 설치 불필요: Maven Wrapper, 내장 H2, 내장 Tomcat)
 
+VS Code의 확장·JDK 설정과 실행 방법은 [VS Code 개발 환경 안내](docs/VS_CODE_SETUP.md)를 참고하세요.
+
 ```bash
 # 실행 (Windows)
 .\mvnw.cmd spring-boot:run

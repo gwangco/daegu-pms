@@ -7,7 +7,10 @@ build/
 # IDE Configurations
 .idea/
 *.iml
-.vscode/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/tasks.json
 .classpath
 .project
 .settings/
@@ -33,8 +36,7 @@ Thumbs.db
 *.p12
 *.jks
 
-# [Private & Local Agent Context Tracking]
-# 로컬 개발 및 AI 에이전트 인수인계용 파일은 깃에 올리지 않음
+# 개인 작업 메모·학습 노트 (공개 저장소에 올리지 않음)
 PROJECT_CONTEXT.md
 LOCAL_*.md
 NOTION_*.md
