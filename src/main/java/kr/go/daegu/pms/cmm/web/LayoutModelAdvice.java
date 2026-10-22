@@ -19,6 +19,7 @@ public class LayoutModelAdvice {
 
     static {
         MENUS.put("/notices", "notice");
+        MENUS.put("/faqs", "faq");
         MENUS.put("/announcements", "announcement");
         MENUS.put("/applications", "application");
         MENUS.put("/evaluator", "evaluation");

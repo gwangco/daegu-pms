@@ -53,4 +53,16 @@ public class EgovConfigIdGeneration {
         idGnrService.setTableName("NOTICE");
         return idGnrService;
     }
+
+    /** FAQ ID: FAQ_0000000001 형식 (공지 ID 와 같은 방식, ids 테이블의 FAQ 행) */
+    @Bean(destroyMethod = "destroy")
+    public EgovTableIdGnrServiceImpl faqIdGnrService(@Qualifier("dataSource") DataSource dataSource) {
+        EgovTableIdGnrServiceImpl idGnrService = new EgovTableIdGnrServiceImpl();
+        idGnrService.setDataSource(dataSource);
+        idGnrService.setStrategy(new EgovIdGnrStrategyImpl("FAQ_", 10, '0'));
+        idGnrService.setBlockSize(10);
+        idGnrService.setTable("ids");
+        idGnrService.setTableName("FAQ");
+        return idGnrService;
+    }
 }

@@ -202,3 +202,20 @@ CREATE TABLE IF NOT EXISTS notice (
     FOREIGN KEY (updated_by) REFERENCES users(user_id)
 );
 CREATE INDEX IF NOT EXISTS idx_notice_list ON notice (use_yn, important_yn, created_at);
+
+-- 10. 자주 묻는 질문 (eGovFrame VS Code 확장 CRUD 코드 생성기 입력 DDL: docs/egov-codegen/faq.ddl.sql)
+CREATE TABLE IF NOT EXISTS faq (
+    faq_id VARCHAR(20) PRIMARY KEY,           -- eGov IdGnr 채번: FAQ_0000000001
+    category_code VARCHAR(20) NOT NULL,       -- 공통코드 FAQ_CATEGORY
+    question VARCHAR(300) NOT NULL,
+    answer VARCHAR(4000) NOT NULL,            -- 목록에서 답변을 함께 보여 주므로 CLOB 대신 VARCHAR
+    sort_order INT DEFAULT 1 NOT NULL,        -- 같은 분류 안의 표시 순서
+    use_yn CHAR(1) DEFAULT 'Y' NOT NULL,      -- 논리 삭제 플래그
+    writer_id VARCHAR(50) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_by VARCHAR(50),
+    updated_at TIMESTAMP,
+    FOREIGN KEY (writer_id) REFERENCES users(user_id),
+    FOREIGN KEY (updated_by) REFERENCES users(user_id)
+);
+CREATE INDEX IF NOT EXISTS idx_faq_list ON faq (use_yn, category_code, sort_order);

@@ -69,10 +69,12 @@ public class SecurityConfig {
                 .requestMatchers("/announcements/new").hasAnyRole("MANAGER", "ADMIN")
                 // 공지사항 등록/수정/삭제는 담당자/관리자 (아래 공지 조회 허용 규칙보다 먼저)
                 .requestMatchers("/notices/new", "/notices/*/edit", "/notices/*/delete").hasAnyRole("MANAGER", "ADMIN")
+                .requestMatchers("/faqs/new", "/faqs/*/edit", "/faqs/*/delete").hasAnyRole("MANAGER", "ADMIN")
                 // 공개 페이지 (메인, 로그인, 공고 목록/상세 조회)
                 .requestMatchers("/", "/login", "/privacy").permitAll()
                 .requestMatchers(HttpMethod.GET, "/announcements", "/announcements/*").permitAll()
                 .requestMatchers(HttpMethod.GET, "/notices", "/notices/*").permitAll()
+                .requestMatchers(HttpMethod.GET, "/faqs").permitAll()
                 // 평가위원 전용 채점 화면
                 .requestMatchers("/evaluator/**").hasRole("EVALUATOR")
                 // 엑셀 다운로드 (개인정보·사업자번호 포함) 는 담당자/관리자만

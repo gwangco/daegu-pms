@@ -9,12 +9,15 @@ INSERT INTO com_code_group (group_id, group_name, description, use_yn) VALUES
 ('FIELD', '지원 분야', '대구 신산업 R&D 및 기술지원 5대 전략 분야', 'Y'),
 ('APP_STATUS', '신청서 진행상태', '지원사업 신청부터 협약까지의 상태머신', 'Y'),
 ('EXP_ITEM', '사업비 비목분류', '보조금 관리규정에 따른 사업비 집행 비목', 'Y'),
-('SETTLE_STATUS', '정산 검수상태', '사업비 영수증 검수 상태', 'Y');
+('SETTLE_STATUS', '정산 검수상태', '사업비 영수증 검수 상태', 'Y'),
+('FAQ_CATEGORY', 'FAQ 분류', '자주 묻는 질문 분류 탭', 'Y');
 
 -- 1-1. 채번 테이블 초기값: seed 신청서가 접수번호 1~3 을 사용하므로 다음 발급 번호는 4
 INSERT INTO ids (table_name, next_id) VALUES ('APPLICATION_RECEIPT', 4);
 -- 공지 ID: seed 공지 1~3 사용, 다음 발급 번호 4
 INSERT INTO ids (table_name, next_id) VALUES ('NOTICE', 4);
+-- FAQ ID: seed FAQ 1~8 사용, 다음 발급 번호 9
+INSERT INTO ids (table_name, next_id) VALUES ('FAQ', 9);
 
 -- 2. 공통코드 상세
 INSERT INTO com_code_detail (group_id, code_id, code_name, sort_order, use_yn) VALUES
@@ -39,7 +42,12 @@ INSERT INTO com_code_detail (group_id, code_id, code_name, sort_order, use_yn) V
 
 ('SETTLE_STATUS', 'REQUESTED', '검수요청', 1, 'Y'),
 ('SETTLE_STATUS', 'APPROVED', '검수승인', 2, 'Y'),
-('SETTLE_STATUS', 'REJECTED', '보완(반려)', 3, 'Y');
+('SETTLE_STATUS', 'REJECTED', '보완(반려)', 3, 'Y'),
+
+('FAQ_CATEGORY', 'APPLY', '신청·접수', 1, 'Y'),
+('FAQ_CATEGORY', 'REVIEW', '심사·선정', 2, 'Y'),
+('FAQ_CATEGORY', 'SETTLE', '사업비 정산', 3, 'Y'),
+('FAQ_CATEGORY', 'ACCOUNT', '회원·계정', 4, 'Y');
 
 -- 3. 테스트 계정
 --    비밀번호는 BCrypt 단방향 해시로 저장 (원문: admin1234 / manager1234 / eval1234 / company1234)
@@ -132,3 +140,30 @@ INSERT INTO notice (notice_id, title, content, important_yn, view_count, use_yn,
 기한 이후 등록분은 다음 연도 정산으로 이월될 수 있습니다.', 'Y', 64, 'Y', 'manager1', '2026-10-10 10:00:00'),
 ('NTC_0000000003', '시스템 정기 점검 안내 (10/25 02:00~04:00)',
 '안정적인 서비스 제공을 위해 10월 25일(토) 02:00~04:00 정기 점검을 실시합니다. 점검 시간에는 접속이 제한됩니다.', 'N', 21, 'Y', 'admin', '2026-10-18 15:00:00');
+
+-- 9. 자주 묻는 질문 샘플 (분류: 공통코드 FAQ_CATEGORY)
+INSERT INTO faq (faq_id, category_code, question, answer, sort_order, use_yn, writer_id, created_at) VALUES
+('FAQ_0000000001', 'APPLY', '한 공고에 여러 과제를 신청할 수 있나요?',
+'한 기업은 한 공고에 1건만 신청할 수 있습니다.
+같은 공고에 다시 제출하면 "이미 신청한 공고입니다" 안내가 나오며, 다른 공고에는 각각 신청할 수 있습니다.', 1, 'Y', 'manager1', '2026-10-02 10:00:00'),
+('FAQ_0000000002', 'APPLY', '접수번호는 언제 발급되나요?',
+'사업계획서를 제출하는 즉시 DPMS-00000001 형식의 접수번호가 발급됩니다.
+문의할 때 접수번호를 알려 주시면 신청 내용을 빠르게 확인할 수 있습니다.', 2, 'Y', 'manager1', '2026-10-02 10:05:00'),
+('FAQ_0000000003', 'APPLY', '첨부할 수 있는 파일 형식과 용량은 어떻게 되나요?',
+'PDF, HWP, HWPX, DOC, DOCX, XLS, XLSX, JPG·JPEG, PNG, ZIP 파일을 파일당 20MB까지 첨부할 수 있습니다.
+확장자만 바꾼 파일은 내용 검사에서 거부되니 원래 형식 그대로 올려 주세요.', 3, 'Y', 'manager1', '2026-10-02 10:10:00'),
+('FAQ_0000000004', 'REVIEW', '심사 진행 상황은 어디에서 확인하나요?',
+'로그인 후 "내 신청 현황"에서 진행상태를 확인할 수 있습니다.
+접수완료 → 서류적격통과 → 전문가심사중 → 최종선정(협약) 또는 심사탈락 순서로 바뀝니다.', 1, 'Y', 'manager1', '2026-10-03 14:00:00'),
+('FAQ_0000000005', 'REVIEW', '평가는 어떤 기준으로 이루어지나요?',
+'서류 검토를 통과한 과제는 배정된 평가위원이 정량(40점)과 정성(60점) 항목을 채점합니다.
+배정된 평가위원이 모두 채점을 마쳐야 최종 선정 여부가 결정됩니다.', 2, 'Y', 'manager1', '2026-10-03 14:05:00'),
+('FAQ_0000000006', 'SETTLE', '정산이 보완 요청(반려)되면 어떻게 하나요?',
+'e-정산 화면에서 보완 요청 사유를 확인한 뒤 "수정 후 재요청" 버튼으로 금액이나 증빙을 고쳐 다시 검수를 요청하면 됩니다.
+새 증빙을 올리지 않으면 기존 증빙이 그대로 유지되고, 처리 이력에서 반려 사유와 재요청 내역을 볼 수 있습니다.', 1, 'Y', 'manager1', '2026-10-05 09:30:00'),
+('FAQ_0000000007', 'SETTLE', '부가세는 어떻게 계산되나요?',
+'공급가액을 입력하면 부가세(공급가액의 10%, 원 단위 미만 절사)가 자동으로 계산됩니다.
+합계 금액이 협약 지원금 잔액을 넘으면 등록되지 않습니다.', 2, 'Y', 'manager1', '2026-10-05 09:35:00'),
+('FAQ_0000000008', 'ACCOUNT', '비밀번호를 여러 번 틀려 로그인이 되지 않습니다.',
+'비밀번호를 5회 연속 잘못 입력하면 계정이 30분 동안 잠깁니다.
+잠금 시간이 지나면 다시 로그인할 수 있고, 급한 경우 총괄관리자에게 잠금 해제를 요청하세요.', 1, 'Y', 'admin', '2026-10-06 11:00:00');

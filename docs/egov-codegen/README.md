@@ -52,3 +52,41 @@ templates/thymeleaf/notice/noticeList.html, noticeRegister.html
 
 > **면접 포인트**: "코드 생성기로 표준 구조의 뼈대를 빠르게 만들고, 보안(권한·CSRF·대량 할당)과
 > 공공 시스템 요건(논리 삭제·감사 컬럼) 관점에서 생성 결과를 검토해 10가지를 보완했습니다."
+
+## 3. 두 번째 생성: 자주 묻는 질문(FAQ)
+
+공지사항에서 정한 10개 기준이 다른 업무에도 통하는지 보려고 새 DDL(`faq.ddl.sql`)로 한 번 더 생성했다.
+생성기 원본은 `faq-generated/`, 보완한 실제 코드는 `src/main/java/kr/go/daegu/pms/faq/`에 있다.
+
+```bash
+EGOV_EXT_DIR=~/.vscode/extensions/egovframework.egovframe-vscode-initializr-5.0.7 \
+  node egov-codegen.mjs faq.ddl.sql kr.go.daegu.pms.faq out
+```
+
+### 3-1. 10개 기준 적용
+
+10개 문제가 FAQ 원본에도 모두 그대로 나왔다. 보완 방법은 공지사항과 같고, FAQ에 맞게 달라진 부분만 적는다.
+
+| # | FAQ에서 달라진 보완 |
+| :-: | :--- |
+| 1 | `@NotBlank`, `@Size`, 표시 순서는 `@Min(1)`·`@Max(999)` |
+| 2 | UPDATE는 분류·질문·답변·표시 순서만. INSERT도 원본은 작성자·작성일·사용여부를 화면 값으로 저장했다 → `#{audit.userId}`, `#{audit.now}`, `'Y'` |
+| 4 | 목록은 분류 순서 → 표시 순서. 질문을 눌러 답을 보는 화면이라 목록에서 답변까지 읽으므로 답변 컬럼은 CLOB 대신 `VARCHAR(4000)` |
+| 6 | 수정·삭제는 UPDATE 건수가 0이면(그 사이 삭제됨) 404 |
+| 10 | `/faqs`, `/faqs/new`, `/faqs/{faqId}/edit`, `/faqs/{faqId}/delete` |
+
+### 3-2. 10개 기준 밖에서 추가로 확인한 것
+
+| # | 생성기 원본 | 문제 | 보완 | 공지 원본에도 있었나 |
+| :-: | :--- | :--- | :--- | :--- |
+| 11 | 검색 조건을 `<when test="searchCondition == 0">`처럼 숫자로 비교 | MyBatis OGNL이 문자열을 숫자로 바꾸려다 실패한다. `?searchCondition=title`만 보내도 `NumberFormatException` → 500. 빈 문자열은 `0`과 같다고 판정 | 분류는 정확히 일치, 검색어는 질문·답변에서 찾는다 | 있었다. 그때는 검색 대상만 바꾸고 원인은 기록하지 않았다 |
+| 12 | 검색 대상이 PK와 두 번째 컬럼 | 템플릿이 컬럼 의미와 관계없이 고른다. 공지는 두 번째가 제목이라 쓸 만했지만 FAQ는 분류코드 | 질문·답변 검색 | 같은 규칙 (공지는 우연히 맞음) |
+| 13 | `@Resource(name = "egovIdGnrService")` | 채번 Bean이 하나라고 가정한다. 이 프로젝트에는 그 이름의 Bean이 없어 기동되지 않는다 | `faqIdGnrService`(FAQ_ + 10자리)를 이름으로 주입 | 있었다 (`noticeIdGnrService`로 고침) |
+| 14 | 분류를 텍스트 입력칸으로 받음 | 아무 값이나 저장된다 | 공통코드 `FAQ_CATEGORY` 선택, 서비스에서 사용 중인 코드인지 다시 확인 | 해당 없음 |
+| 15 | 화면이 인라인 `<script>`와 `th:onclick` 사용 | CSP(`script-src 'self'`)가 막아서 버튼이 동작하지 않는다 | 스크립트 없는 화면. 펼침은 `<details>`/`<summary>` | 있었다. 그때는 CSP 적용 전이라 드러나지 않았다 |
+
+11번은 MyBatis의 `OgnlCache`로 같은 식을 직접 평가해 확인했다(`"0"` → true, `"1"` → false, `"title"` → NumberFormatException, `""` → true).
+보완한 동작은 `FaqIntegrationTest`(9건)와 `WebUiIntegrationTest`의 FAQ 화면 검사로 고정했다.
+
+> **정리**: 생성기 결과는 테이블이 바뀌면 다른 모양으로 깨진다. 10개 기준은 매번 그대로 보고,
+> 생성할 때마다 검색 조건 템플릿·채번 Bean 이름·코드성 컬럼·화면 스크립트를 추가로 확인한다.

@@ -728,6 +728,115 @@ body {
     line-height: 1;
 }
 
+/* ---------- 자주 묻는 질문 ---------- */
+
+.faq-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .375rem;
+    margin-bottom: 1rem;
+}
+
+.faq-tabs a {
+    padding: .375rem .875rem;
+    border: 1px solid var(--dp-line);
+    border-radius: 999px;
+    background: var(--dp-surface);
+    color: var(--dp-text-sub);
+    font-size: .9375rem;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.faq-tabs a:hover {
+    border-color: var(--dp-blue);
+    color: var(--dp-blue-dark);
+}
+
+.faq-tabs a.active {
+    background: var(--dp-blue);
+    border-color: var(--dp-blue);
+    color: #fff;
+}
+
+.faq-list {
+    display: grid;
+    gap: .5rem;
+}
+
+.faq-item {
+    background: var(--dp-surface);
+    border: 1px solid var(--dp-line);
+    border-radius: var(--dp-radius);
+}
+
+.faq-item[open] {
+    border-color: #b9c9ea;
+}
+
+.faq-item summary {
+    display: flex;
+    align-items: baseline;
+    gap: .625rem;
+    padding: 1rem 1.25rem;
+    font-weight: 600;
+    cursor: pointer;
+    list-style: none;
+}
+
+.faq-item summary::-webkit-details-marker {
+    display: none;
+}
+
+/* 펼침 표시 (bootstrap-icons chevron-down) */
+.faq-item summary::after {
+    content: "\f282";
+    font-family: "bootstrap-icons";
+    margin-left: .25rem;
+    color: var(--dp-text-muted);
+}
+
+.faq-item[open] summary::after {
+    transform: rotate(180deg);
+}
+
+.faq-mark {
+    flex: none;
+    font-weight: 800;
+    color: var(--dp-blue);
+}
+
+.faq-mark.is-answer {
+    color: var(--dp-success);
+}
+
+.faq-question {
+    flex: 1;
+}
+
+.faq-category {
+    flex: none;
+    font-size: .8125rem;
+    color: var(--dp-text-muted);
+}
+
+.faq-answer {
+    display: flex;
+    gap: .625rem;
+    padding: 1rem 1.25rem;
+    border-top: 1px solid var(--dp-line-soft);
+}
+
+.faq-admin {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: .5rem;
+    padding: .75rem 1.25rem;
+    border-top: 1px dashed var(--dp-line);
+}
+
 /* ---------- 인쇄 ---------- */
 
 @media print {

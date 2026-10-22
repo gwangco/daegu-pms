@@ -43,6 +43,11 @@
                            th:attr="aria-current=${currentMenu == 'notice'} ? 'page' : null">공지사항</a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" th:href="@{/faqs}"
+                           th:classappend="${currentMenu == 'faq'} ? 'active'"
+                           th:attr="aria-current=${currentMenu == 'faq'} ? 'page' : null">FAQ</a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" th:href="@{/announcements}"
                            th:classappend="${currentMenu == 'announcement'} ? 'active'"
                            th:attr="aria-current=${currentMenu == 'announcement'} ? 'page' : null">사업공고</a>
@@ -115,6 +120,7 @@
         <div class="footer-links mb-2">
             <a class="privacy" th:href="@{/privacy}">개인정보처리방침</a>
             <a th:href="@{/notices}">공지사항</a>
+            <a th:href="@{/faqs}">자주 묻는 질문</a>
             <a th:href="@{/announcements}">사업공고</a>
         </div>
         <p class="mb-1">D-PMS 대구형 공공 R&amp;D·창업 지원사업 통합관리 및 e-정산 시스템</p>

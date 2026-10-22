@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.go.daegu.pms.faq.service.impl.FaqMapper">
+
+	<resultMap id="faq" type="kr.go.daegu.pms.faq.service.FaqVO">
+		<result property="faqId" column="faq_id"/>
+		<result property="categoryCode" column="category_code"/>
+		<result property="question" column="question"/>
+		<result property="answer" column="answer"/>
+		<result property="sortOrder" column="sort_order"/>
+		<result property="useYn" column="use_yn"/>
+		<result property="writerId" column="writer_id"/>
+		<result property="createdAt" column="created_at"/>
+		<result property="updatedBy" column="updated_by"/>
+		<result property="updatedAt" column="updated_at"/>
+	</resultMap>
+
+	<insert id="insertFaq">
+
+			INSERT INTO faq (
+				faq_id
+							, category_code
+							, question
+							, answer
+							, sort_order
+							, use_yn
+							, writer_id
+							, created_at
+							, updated_by
+							, updated_at
+			 )
+			VALUES (
+				#{faqId}
+							, #{categoryCode}
+							, #{question}
+							, #{answer}
+							, #{sortOrder}
+							, #{useYn}
+							, #{writerId}
+							, #{createdAt}
+							, #{updatedBy}
+							, #{updatedAt}
+			 )
+
+	</insert>
+
+	<update id="updateFaq">
+
+			UPDATE faq
+			SET				category_code=#{categoryCode}				, question=#{question}
+				, answer=#{answer}
+				, sort_order=#{sortOrder}
+				, use_yn=#{useYn}
+				, writer_id=#{writerId}
+				, created_at=#{createdAt}
+				, updated_by=#{updatedBy}
+				, updated_at=#{updatedAt}
+			WHERE
+				faq_id=#{faqId}
+
+	</update>
+
+	<delete id="deleteFaq">
+
+			DELETE FROM faq
+			WHERE
+				faq_id=#{faqId}
+
+	</delete>
+
+	<select id="selectFaq" resultMap="faq">
+
+			SELECT
+				faq_id
+				, category_code
+				, question
+				, answer
+				, sort_order
+				, use_yn
+				, writer_id
+				, created_at
+				, updated_by
+				, updated_at
+			FROM faq
+			WHERE
+				faq_id = #{faqId}
+
+	</select>
+
+	<select id="selectFaqList" resultMap="faq">
+
+			SELECT
+				faq_id
+				, category_code
+				, question
+				, answer
+				, sort_order
+				, use_yn
+				, writer_id
+				, created_at
+				, updated_by
+				, updated_at
+			FROM faq
+			WHERE 1=1
+			<if test="searchKeyword != null and searchKeyword != ''">
+				<bind name="searchPattern" value="'%' + searchKeyword + '%'"/>
+		        <choose>
+		            <when test="searchCondition == 0">
+						AND	faq_id LIKE #{searchPattern}
+					</when>
+		            <when test="searchCondition == 1">
+								
+								AND category_code LIKE #{searchPattern}
+								
+								
+								
+								
+								
+								
+								
+								
+					</when>
+				</choose>
+			</if>
+			ORDER BY faq_id DESC
+			LIMIT #{recordCountPerPage} OFFSET #{firstIndex}
+
+	</select>
+
+	<select id="selectFaqListTotCnt" resultType="int">
+
+			SELECT COUNT(*) totcnt
+			FROM faq
+			WHERE 1=1
+			<if test="searchKeyword != null and searchKeyword != ''">
+				<bind name="searchPattern" value="'%' + searchKeyword + '%'"/>
+		        <choose>
+		            <when test="searchCondition == 0">
+						AND faq_id LIKE #{searchPattern}
+					</when>
+		            <when test="searchCondition == 1">
+								
+								
+						AND category_code LIKE #{searchPattern}
+								
+								
+								
+								
+								
+								
+								
+								
+					</when>
+				</choose>
+			</if>
+	</select>
+
+</mapper>

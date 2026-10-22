@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}"
+      th:with="isNew=${#strings.isEmpty(faq.faqId)}">
+<head>
+    <title th:text="${isNew} ? 'FAQ 등록' : 'FAQ 수정'">FAQ 등록</title>
+</head>
+<body>
+<!--/*
+    생성기의 faqRegister.html 처럼 등록/수정을 한 화면에서 처리 (faqId 유무로 구분).
+    원본에 있던 작성자·작성일·사용여부 입력칸은 서버가 정하는 값이라 뺐다.
+*/-->
+<th:block layout:fragment="content">
+    <div class="page-head">
+        <div class="container narrow">
+            <nav aria-label="현재 위치">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a th:href="@{/}">홈</a></li>
+                    <li class="breadcrumb-item"><a th:href="@{/faqs}">자주 묻는 질문</a></li>
+                    <li class="breadcrumb-item active" aria-current="page" th:text="${isNew} ? 'FAQ 등록' : 'FAQ 수정'">FAQ 등록</li>
+                </ol>
+            </nav>
+            <h1 th:text="${isNew} ? 'FAQ 등록' : 'FAQ 수정'">FAQ 등록</h1>
+        </div>
+    </div>
+
+    <div class="container narrow">
+        <!--/* th:action 을 쓰면 Spring Security CSRF 토큰이 hidden 으로 자동 포함된다 */-->
+        <form th:action="${isNew} ? @{/faqs/new} : @{/faqs/{id}/edit(id=${faq.faqId})}"
+              th:object="${faq}" method="post" class="panel panel-body">
+            <div th:if="${#fields.hasGlobalErrors()}" class="alert alert-danger" role="alert">
+                <div th:each="err : ${#fields.globalErrors()}" th:text="${err}">오류</div>
+            </div>
+            <div class="row g-3 mb-3">
+                <div class="col-sm-8">
+                    <label for="categoryCode" class="form-label">분류 <span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden">(필수)</span></label>
+                    <select th:field="*{categoryCode}" class="form-select" th:errorclass="is-invalid" required>
+                        <option value="">선택하세요</option>
+                        <option th:each="c : ${categories}" th:value="${c.codeId}" th:text="${c.codeName}">신청·접수</option>
+                    </select>
+                    <div class="invalid-feedback" th:errors="*{categoryCode}"></div>
+                </div>
+                <div class="col-sm-4">
+                    <label for="sortOrder" class="form-label">표시 순서 <span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden">(필수)</span></label>
+                    <input type="number" th:field="*{sortOrder}" class="form-control" th:errorclass="is-invalid"
+                           min="1" max="999" required aria-describedby="sortOrderHelp">
+                    <div id="sortOrderHelp" class="form-text">같은 분류 안에서 작은 숫자가 위에 나옵니다.</div>
+                    <div class="invalid-feedback" th:errors="*{sortOrder}"></div>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label for="question" class="form-label">질문 <span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden">(필수)</span></label>
+                <input type="text" th:field="*{question}" class="form-control" th:errorclass="is-invalid" maxlength="300" required>
+                <div class="invalid-feedback" th:errors="*{question}"></div>
+            </div>
+            <div class="mb-1">
+                <label for="answer" class="form-label">답변 <span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden">(필수)</span></label>
+                <textarea th:field="*{answer}" class="form-control" th:errorclass="is-invalid" rows="10" maxlength="2000" required></textarea>
+                <div class="invalid-feedback" th:errors="*{answer}"></div>
+            </div>
+            <div class="form-actions">
+                <a th:href="${isNew} ? @{/faqs} : @{/faqs(categoryCode=${faq.categoryCode})}" class="btn btn-outline-secondary">취소</a>
+                <button type="submit" class="btn btn-primary px-4" th:text="${isNew} ? '등록' : '저장'">등록</button>
+            </div>
+        </form>
+    </div>
+</th:block>
+</body>
+</html>
