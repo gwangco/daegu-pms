@@ -220,7 +220,7 @@ a {
     color: #fff;
 }
 
-/* 포커스 표시: 흰 배경 대비 6:1 이상인 진한 파랑. 이전의 노란색(#ffb800)은 흰 배경에서 1.9:1 이라 잘 보이지 않았다 */
+/* 포커스 표시: 흰 배경 대비 6.8:1 인 진한 파랑. 이전의 노란색(#ffb800)은 흰 배경에서 1.7:1 이라 잘 보이지 않았다 */
 :focus-visible,
 .btn:focus-visible,
 .form-check-input:focus-visible,
