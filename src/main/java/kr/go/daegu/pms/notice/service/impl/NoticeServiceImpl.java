@@ -78,15 +78,14 @@ public class NoticeServiceImpl extends EgovAbstractServiceImpl implements Notice
         requireStaff();
         selectNotice(notice.getNoticeId());   // 존재·삭제 여부 확인
         notice.setImportantYn(normalizeYn(notice.getImportantYn()));
-        notice.setUpdatedBy(SecurityUtil.getCurrentUserId());
         noticeMapper.updateNotice(notice);
-        log.info("[공지 수정] noticeId={}, by={}", notice.getNoticeId(), notice.getUpdatedBy());
+        log.info("[공지 수정] noticeId={}, by={}", notice.getNoticeId(), SecurityUtil.getCurrentUserId());
     }
 
     @Override
     public void deleteNotice(String noticeId) {
         requireStaff();
-        if (noticeMapper.deleteNotice(noticeId, SecurityUtil.getCurrentUserId()) == 0) {
+        if (noticeMapper.deleteNotice(noticeId) == 0) {
             throw messages.notFound("notice.delete.notFound");
         }
         log.info("[공지 삭제] noticeId={}, by={}", noticeId, SecurityUtil.getCurrentUserId());

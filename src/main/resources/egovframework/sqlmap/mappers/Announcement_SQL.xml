@@ -100,7 +100,9 @@
     <!-- 배치: 마감일(end_date)이 오늘보다 이전인 접수중 공고를 마감 처리 -->
     <update id="updateExpiredAnnouncementsToClosed">
         UPDATE announcement
-        SET status = 'CLOSED'
+        SET status = 'CLOSED',
+            updated_by = #{audit.userId},
+            updated_at = #{audit.now}
         WHERE status = 'OPEN'
           AND end_date &lt; #{today}
     </update>

@@ -47,9 +47,9 @@
 
     <insert id="insertSettlement" parameterType="settlementVO" useGeneratedKeys="true" keyProperty="settlementId">
         INSERT INTO settlement (
-            application_id, item_code, expense_date, vendor_name, supply_amount, vat_amount, total_amount, description, receipt_file_id, status
+            application_id, item_code, expense_date, vendor_name, supply_amount, vat_amount, total_amount, description, receipt_file_id, status, created_by
         ) VALUES (
-            #{applicationId}, #{itemCode}, #{expenseDate}, #{vendorName}, #{supplyAmount}, #{vatAmount}, #{totalAmount}, #{description}, #{receiptFileId}, #{status}
+            #{applicationId}, #{itemCode}, #{expenseDate}, #{vendorName}, #{supplyAmount}, #{vatAmount}, #{totalAmount}, #{description}, #{receiptFileId}, #{status}, #{audit.userId}
         )
     </insert>
 
@@ -58,7 +58,9 @@
         SET status = #{status},
             reject_reason = #{rejectReason},
             reviewed_by = #{reviewedBy},
-            reviewed_at = CURRENT_TIMESTAMP
+            reviewed_at = CURRENT_TIMESTAMP,
+            updated_by = #{audit.userId},
+            updated_at = #{audit.now}
         WHERE settlement_id = #{settlementId}
           AND status = 'REQUESTED'
     </update>

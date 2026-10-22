@@ -6,6 +6,7 @@
     - 목록: 삭제글(use_yn='N') 제외, 중요 공지 우선 정렬, 본문(CLOB) 제외, 작성자명 조인
     - 검색: searchCondition 을 정해진 값(title/content)만 허용하는 <choose> (그 외 값은 제목+내용 검색)
     - UPDATE: 작성자/작성일/조회수/사용여부는 수정 대상에서 제외 (화면 변조로 바꿀 수 없음)
+    - 수정자/수정일시: AuditParameterInterceptor 가 넣는 #{audit.userId}, #{audit.now} 사용
     - DELETE: 물리 삭제 → 논리 삭제
 -->
 <mapper namespace="kr.go.daegu.pms.notice.service.impl.NoticeMapper">
@@ -84,8 +85,8 @@
         SET title = #{title},
             content = #{content},
             important_yn = #{importantYn},
-            updated_by = #{updatedBy},
-            updated_at = CURRENT_TIMESTAMP
+            updated_by = #{audit.userId},
+            updated_at = #{audit.now}
         WHERE notice_id = #{noticeId}
           AND use_yn = 'Y'
     </update>
@@ -99,8 +100,8 @@
     <update id="deleteNotice">
         UPDATE notice
         SET use_yn = 'N',
-            updated_by = #{updatedBy},
-            updated_at = CURRENT_TIMESTAMP
+            updated_by = #{audit.userId},
+            updated_at = #{audit.now}
         WHERE notice_id = #{noticeId}
           AND use_yn = 'Y'
     </update>

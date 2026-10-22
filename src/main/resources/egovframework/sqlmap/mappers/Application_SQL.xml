@@ -116,7 +116,9 @@
 
     <update id="updateApplicationStatus">
         UPDATE application
-        SET status = #{status}
+        SET status = #{status},
+            updated_by = #{audit.userId},
+            updated_at = #{audit.now}
         WHERE application_id = #{applicationId}
     </update>
 

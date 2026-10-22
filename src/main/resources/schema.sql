@@ -40,7 +40,9 @@ CREATE TABLE IF NOT EXISTS users (
     business_no VARCHAR(20),
     role VARCHAR(30) NOT NULL, -- ROLE_COMPANY, ROLE_EVALUATOR, ROLE_MANAGER, ROLE_ADMIN
     enabled BOOLEAN DEFAULT TRUE NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_by VARCHAR(50),
+    updated_at TIMESTAMP
 );
 
 -- 4. 첨부파일 (전자정부 공통컴포넌트 COMTNFILEDETAIL 단순화 버전)
@@ -71,6 +73,8 @@ CREATE TABLE IF NOT EXISTS announcement (
     view_count INT DEFAULT 0 NOT NULL,
     writer_id VARCHAR(50) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_by VARCHAR(50),                  -- 감사 컬럼: MyBatis 인터셉터가 #{audit.*} 로 채움 (배치는 SYSTEM)
+    updated_at TIMESTAMP,
     FOREIGN KEY (writer_id) REFERENCES users(user_id)
 );
 -- 마감 배치(status + end_date)와 목록 검색에서 사용하는 조회 조건 인덱스
@@ -91,6 +95,8 @@ CREATE TABLE IF NOT EXISTS application (
     status VARCHAR(30) DEFAULT 'SUBMITTED' NOT NULL, -- TEMP_SAVED, SUBMITTED, DOCUMENT_PASSED, EVALUATING, SELECTED, REJECTED
     submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_by VARCHAR(50),
+    updated_at TIMESTAMP,
     FOREIGN KEY (announcement_id) REFERENCES announcement(announcement_id),
     FOREIGN KEY (company_user_id) REFERENCES users(user_id),
     FOREIGN KEY (plan_file_id) REFERENCES com_file(file_id),
@@ -112,6 +118,9 @@ CREATE TABLE IF NOT EXISTS evaluation (
     status VARCHAR(20) DEFAULT 'ASSIGNED' NOT NULL, -- ASSIGNED, COMPLETED
     assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     evaluated_at TIMESTAMP,
+    created_by VARCHAR(50),                  -- 배정한 담당자
+    updated_by VARCHAR(50),
+    updated_at TIMESTAMP,
     FOREIGN KEY (application_id) REFERENCES application(application_id),
     FOREIGN KEY (evaluator_user_id) REFERENCES users(user_id),
     -- 한 과제에 같은 평가위원 중복 배정 금지
@@ -138,6 +147,9 @@ CREATE TABLE IF NOT EXISTS settlement (
     reviewed_by VARCHAR(50),          -- 검수 처리자 (감사 추적용)
     reviewed_at TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    created_by VARCHAR(50),                  -- 등록한 기업 사용자
+    updated_by VARCHAR(50),
+    updated_at TIMESTAMP,
     FOREIGN KEY (application_id) REFERENCES application(application_id),
     FOREIGN KEY (receipt_file_id) REFERENCES com_file(file_id),
     FOREIGN KEY (reviewed_by) REFERENCES users(user_id)
