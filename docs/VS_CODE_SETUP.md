@@ -2,6 +2,8 @@
 
 이 프로젝트는 Java 17과 Maven Wrapper를 사용합니다. Antigravity IDE에서 사용하던 소스와 Git 기록을 같은 폴더에서 이어서 사용할 수 있습니다.
 
+> 6차 스프린트부터 기본 IDE 는 Eclipse 입니다([ECLIPSE_SETUP.md](ECLIPSE_SETUP.md)). 서버와 테스트는 MySQL 이 필요하므로 먼저 `scripts/setup-local-mysql.ps1` 을 한 번 실행합니다(Eclipse 안내 3절).
+
 ## 1. Java 버전 구분
 
 | 용도 | 기준 |
