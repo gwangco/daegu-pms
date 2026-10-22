@@ -103,7 +103,7 @@ JDK 17만 있으면 됩니다. Maven Wrapper, 내장 H2, 내장 Tomcat을 씁니
 
 - 웹: http://localhost:8080
 - H2 콘솔: http://localhost:8080/h2-console (`admin` 로그인 후 `jdbc:h2:mem:daegupms` / `sa` / 비밀번호 없음)
-- VS Code 설정: [개발 환경 안내](docs/VS_CODE_SETUP.md)
+- 개발 환경: [Eclipse](docs/ECLIPSE_SETUP.md) (기본) · [VS Code](docs/VS_CODE_SETUP.md)
 
 테스트 144건: 상태머신·마스킹 단위 테스트, MockMvc 통합 테스트(인가·CSRF·파일 위조·예산 초과·계정 잠금·암호화·FAQ), 별도 스레드와 DB 잠금 대기로 확인하는 동시성 테스트, eGov 실행환경 구성 테스트, 모든 주요 화면의 공통 규칙(CSP·접근성) 테스트. Pull Request마다 GitHub Actions가 실행합니다.
 

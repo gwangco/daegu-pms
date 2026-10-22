@@ -4,6 +4,18 @@
 
 ---
 
+## [미배포] 개발 환경 Eclipse 전환
+브랜치: `chore/eclipse-dev-env` · 상세: [docs/ECLIPSE_SETUP.md](docs/ECLIPSE_SETUP.md)
+
+### 추가 (Added)
+- Eclipse 공유 실행 설정 `eclipse/` (로컬 실행·디버깅, Maven `clean verify`)
+
+### 변경 (Changed)
+- Eclipse 컴파일러 경고 정리: 검색 VO 2개 `serialVersionUID` 누락, 공지 서비스 미사용 import
+- `.gitignore` 에 Eclipse 워크스페이스·Spring Tools 캐시 추가
+
+---
+
 ## [0.5.0] 5차 스프린트 — 계정 보안·개인정보 보호·화면 개선 (2026-10-22)
 브랜치: `feature/sprint5-account-privacy-ui` · 상세: [docs/SPRINT5_ACCOUNT_PRIVACY_UI.md](docs/SPRINT5_ACCOUNT_PRIVACY_UI.md)
 

@@ -15,6 +15,10 @@ build/
 .project
 .settings/
 .factorypath
+# Eclipse 워크스페이스(프로젝트 폴더를 워크스페이스로 잘못 열었을 때 생김)·Spring Tools 캐시
+.metadata/
+.sts4-cache/
+Servers/
 bin/
 out/
 
