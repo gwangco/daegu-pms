@@ -1,7 +1,6 @@
 package kr.go.daegu.pms.notice.service.impl;
 
 import jakarta.annotation.Resource;
-import kr.go.daegu.pms.cmm.exception.NotFoundException;
 import kr.go.daegu.pms.cmm.message.AppMessages;
 import kr.go.daegu.pms.cmm.util.SecurityUtil;
 import kr.go.daegu.pms.notice.service.NoticeService;

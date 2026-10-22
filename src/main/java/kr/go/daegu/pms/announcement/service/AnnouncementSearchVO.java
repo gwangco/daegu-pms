@@ -8,6 +8,9 @@ import lombok.Setter;
 @Getter
 @Setter
 public class AnnouncementSearchVO extends ComDefaultVO {
+
+    private static final long serialVersionUID = 1L;
+
     private String fieldCode;
     private String status;
 }

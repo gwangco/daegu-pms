@@ -12,6 +12,9 @@ import lombok.Setter;
 @Getter
 @Setter
 public class ApplicationSearchVO extends ComDefaultVO {
+
+    private static final long serialVersionUID = 1L;
+
     private Long announcementId;
     private String status;
     private String companyUserId;   // 기업회원: 본인 신청서만
