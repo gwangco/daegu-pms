@@ -9,7 +9,7 @@
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.16-6DB33F?logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
 [![MyBatis](https://img.shields.io/badge/MyBatis-3.5.19-C70D2C)](https://mybatis.org/mybatis-3/)
 [![MySQL](https://img.shields.io/badge/MySQL-8.4%20LTS-4479A1?logo=mysql&logoColor=white)](https://dev.mysql.com/doc/relnotes/mysql/8.4/en/)
-[![Tests](https://img.shields.io/badge/Tests-151%20passed-brightgreen)](#5-실행과-테스트)
+[![Tests](https://img.shields.io/badge/Tests-153%20passed-brightgreen)](#5-실행과-테스트)
 
 > 취업 포트폴리오용 데모입니다. 기관·사업·기업명은 설명을 위한 가상의 예시이며 실제 기관과 관련이 없습니다.
 
@@ -109,7 +109,7 @@ JDK 17 과 MySQL 8.x(8.4 LTS 권장)가 필요합니다. Maven Wrapper 와 내�
 - 스크립트를 쓰지 않을 때는 `config/dpms-secret.example.yml` 을 참고해 같은 계정을 만들거나 환경변수 `DPMS_DB_*` 를 지정합니다.
 - 개발 환경: [Eclipse](docs/ECLIPSE_SETUP.md) (기본) · [VS Code](docs/VS_CODE_SETUP.md)
 
-테스트 151건: 상태머신·마스킹 단위 테스트, MockMvc 통합 테스트(인가·CSRF·파일 위조·예산 초과·계정 잠금·암호화·공지·FAQ), 별도 스레드와 MySQL 행 잠금 대기로 확인하는 동시성 테스트, eGov 실행환경·공통컴포넌트 구성과 V2 마이그레이션 결과 테스트, 모든 주요 화면의 공통 규칙(CSP·접근성) 테스트. Pull Request 마다 GitHub Actions 가 MySQL 8.4 컨테이너로 실행합니다.
+테스트 153건: 상태머신·마스킹·업무 시간대 단위 테스트, MockMvc 통합 테스트(인가·CSRF·파일 위조·예산 초과·계정 잠금·암호화·공지·FAQ), 별도 스레드와 MySQL 행 잠금 대기로 확인하는 동시성 테스트, eGov 실행환경·공통컴포넌트 구성과 V2 마이그레이션 결과 테스트, 모든 주요 화면의 공통 규칙(CSP·접근성) 테스트. Pull Request 마다 GitHub Actions 가 MySQL 8.4 컨테이너로 실행합니다.
 
 공개 샘플 계정을 쓰는 로컬 데모입니다. 회원가입, 개인정보 조회 기록, 공지 첨부파일은 아직 구현하지 않았습니다.
 

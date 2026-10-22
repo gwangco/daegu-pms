@@ -29,7 +29,7 @@
 | CI | JDK 17 | + MySQL 8.4 LTS 컨테이너 (이미지 digest 고정) | GitHub Actions |
 | 개발 도구 | VS Code | Eclipse 공유 실행 설정, Eclipse 컴파일러 경고 0 | ECJ 컴파일 |
 
-테스트 144건 → 151건.
+테스트 144건 → 153건.
 
 ## 3. MySQL 전환
 
@@ -76,6 +76,7 @@ V1 과 V2 를 나눈 이유: 이미 데이터가 쌓인 DB 를 공통컴포넌�
 | 4 | 공통컴포넌트 추가 후 전체 통합 테스트 기동 실패 | 지운 `CommonCode_SQL.xml` 이 `target/classes` 에 남아 없는 별칭을 찾음 | `clean verify` (기존 규칙 재확인) |
 | 5 | 공통컴포넌트 SQL 별칭 `FileVO` 와 업무 별칭 `fileVO` 충돌 | MyBatis 별칭은 대소문자를 구분하지 않는다 | 업무 FileVO 를 지우고 공통컴포넌트 FileVO 사용 |
 | 6 | 기동 시 `CglibAopProxy … final` 경고 4건 | Spring Boot 의 `@Repository` 예외 변환이 공통컴포넌트 DAO 마다 CGLIB 프록시를 만듦 | 예외 변환은 MyBatis 가 이미 하므로 `spring.dao.exceptiontranslation.enabled=false` |
+| 7 | 로컬은 통과, CI(리눅스)에서만 계정 잠금 테스트 2건 실패 (`/login?error=locked` 기대값과 다름) | CI 의 JVM 시간대는 UTC. 테스트가 `Timestamp.valueOf(…)` 로 넣은 잠금 시각을 드라이버가 UTC → KST(접속 시간대)로 9시간 옮겨 저장 | 시간대 변환이 없는 `LocalDateTime` 으로 바인딩. 같은 원인으로 앱 Clock(서버 기본 시간대)과 마감 배치(자정)도 `Asia/Seoul` 로 고정 |
 
 CI 는 리눅스라 MySQL 테이블 이름이 대소문자를 구분한다(`lower_case_table_names=0`). 업무 테이블은 소문자, 공통컴포넌트 테이블은 대문자로 SQL 과 DDL 을 맞췄고 CI 에서 확인한다.
 
@@ -108,7 +109,7 @@ NoticeController ─▶ NoticeServiceImpl ─▶ EgovArticleService ─▶ EgovA
 
 ## 6. 검증
 
-- `./mvnw clean verify` — 151건 성공 (로컬 MySQL 8.0.46)
+- `./mvnw clean verify` — 153건 성공 (로컬 MySQL 8.0.46, JVM 시간대 KST·UTC 둘 다), GitHub Actions(MySQL 8.4 LTS, 리눅스)
 - 개발 DB `dpms` 에서 실제 기동 — Flyway 3개 버전 적용 1.0초, 기동 8.4초
 - 내장 브라우저 점검 — 메인, 공지 목록·작성자 검색·상세·등록·수정, FAQ 분류 탭·등록, 신청 상세. 콘솔 오류 0건, 공지 본문의 HTML 태그는 글자로 표시
 - 매퍼 전체에서 `${}` 문자열 치환 0건, 비밀번호 파일 Git 제외 확인
