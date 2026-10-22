@@ -42,6 +42,12 @@ spring:
       # 커넥션을 얻지 못하면 무한정 기다리지 않고 5초 뒤 오류로 끝낸다
       connection-timeout: 5000
 
+  # @Repository 예외 변환 프록시는 쓰지 않는다. MyBatis(SqlSessionTemplate)가 이미 DB 예외를 DataAccessException 으로 바꾸고,
+  # 켜 두면 공통컴포넌트 DAO(EgovComAbstractDAO 상속 클래스)마다 CGLIB 프록시를 만들다가 final 메서드 경고가 난다
+  dao:
+    exceptiontranslation:
+      enabled: false
+
   # Flyway: db/migration 의 V1, V2 ... 를 순서대로 한 번씩 적용한다
   flyway:
     # 테이블 변경은 별도 계정으로만 (서버 실행 계정에는 DDL 권한이 없다)
