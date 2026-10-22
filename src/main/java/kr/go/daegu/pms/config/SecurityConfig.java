@@ -28,7 +28,7 @@ import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWrite
 public class SecurityConfig {
 
     /**
-     * 콘텐츠 보안 정책(CSP). 스크립트·스타일·글꼴을 같은 출처(/webjars, /js, /css)에서만 받는다.
+     * 콘텐츠 보안 정책(CSP). 스크립트·스타일·글꼴을 같은 출처(/webjars, /js, /css, /fonts)에서만 받는다.
      * 인라인 스크립트와 onclick 같은 인라인 이벤트도 막히므로, XSS 로 HTML 이 끼어들어도 스크립트가 실행되지 않는다.
      * img-src 의 data: 는 Bootstrap CSS 가 아이콘(select 화살표 등)을 data URI 로 쓰기 때문에 허용한다.
      */
@@ -59,7 +59,7 @@ public class SecurityConfig {
         http
             .authorizeHttpRequests(auth -> auth
                 // 정적 리소스 및 오류 페이지 (오류 페이지를 막으면 403/404 대신 로그인 화면으로 튕긴다)
-                .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**", "/favicon.svg", "/favicon.ico", "/error").permitAll()
+                .requestMatchers("/css/**", "/js/**", "/fonts/**", "/images/**", "/webjars/**", "/favicon.svg", "/favicon.ico", "/error").permitAll()
                 // 공고 등록은 담당자/관리자 (아래 공고 조회 허용 규칙보다 먼저 선언해야 함 - 위에서부터 순서대로 매칭)
                 .requestMatchers("/announcements/new").hasAnyRole("MANAGER", "ADMIN")
                 // 공지사항 등록/수정/삭제는 담당자/관리자 (아래 공지 조회 허용 규칙보다 먼저)

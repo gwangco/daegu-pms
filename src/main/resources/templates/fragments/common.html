@@ -1,6 +1,27 @@
 <!DOCTYPE html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <body>
+
+<!--/* 헤더 사용자 영역. PC 는 로고 줄 오른쪽, 모바일은 펼친 메뉴 아래에 같은 내용을 넣는다 */-->
+<th:block th:fragment="userMenu">
+    <a sec:authorize="isAnonymous()" class="btn btn-primary" th:href="@{/login}">
+        <i class="bi bi-box-arrow-in-right me-1" aria-hidden="true"></i>로그인
+    </a>
+    <th:block sec:authorize="isAuthenticated()">
+        <span class="role-chip" sec:authorize="hasRole('ADMIN')">총괄관리자</span>
+        <span class="role-chip" sec:authorize="hasRole('MANAGER')">사업담당자</span>
+        <span class="role-chip" sec:authorize="hasRole('EVALUATOR')">평가위원</span>
+        <span class="role-chip" sec:authorize="hasRole('COMPANY')">기업회원</span>
+        <a th:href="@{/mypage}" class="user-name" title="내 정보"
+           th:attr="aria-current=${currentMenu == 'mypage'} ? 'page' : null">
+            <i class="bi bi-person-circle" aria-hidden="true"></i><span sec:authentication="name">사용자</span>님
+        </a>
+        <form th:action="@{/logout}" method="post" class="m-0">
+            <button type="submit" class="btn btn-outline-secondary btn-sm">로그아웃</button>
+        </form>
+    </th:block>
+</th:block>
 
 <!--/* 신청서 진행상태 */-->
 <th:block th:fragment="appStatus(status)">
@@ -34,6 +55,24 @@
     </span>
 </th:block>
 
+<!--/* 지원 분야 칩. 점 색은 분야 코드(DPM001)마다 CSS 에서 정한다 (field-mobility 등) */-->
+<th:block th:fragment="fieldChip(code, name)">
+    <span class="field-chip" th:classappend="${code != null ? 'field-' + #strings.toLowerCase(code) : ''}" th:text="${name}">미래 모빌리티/부품</span>
+</th:block>
+
+<!--/*
+    접수 마감까지 남은 날 (접수중 공고만). today 는 LayoutModelAdvice 가 업무 Clock(한국 시간)으로 넣는다.
+    화면에는 D-7 처럼 보이고, 화면낭독기는 "마감 7일 전"으로 읽는다
+*/-->
+<th:block th:fragment="dday(endDate, status)">
+    <span th:if="${status == 'OPEN' and endDate != null and today != null}"
+          th:with="left=${endDate.toEpochDay() - today.toEpochDay()}"
+          class="dday" th:classappend="${left <= 7} ? 'is-soon'">
+        <span aria-hidden="true" th:text="${left > 0 ? 'D-' + left : (left == 0 ? 'D-day' : '마감')}">D-7</span>
+        <span class="visually-hidden" th:text="${left > 0 ? '마감 ' + left + '일 전' : (left == 0 ? '오늘 마감' : '마감')}">마감 7일 전</span>
+    </span>
+</th:block>
+
 <!--/*
     전자정부 표준 페이징 바  ([처음] [이전] 1 2 3 ... [다음] [마지막])
     - 계산: org.egovframe.rte.ptl.mvc.tags.ui.pagination.PaginationInfo
@@ -46,7 +85,7 @@
 */-->
 <th:block th:fragment="pagination(paginationInfo)">
     <nav th:if="${paginationInfo.totalRecordCount > 0}" class="mt-4" aria-label="페이지 이동">
-        <ul class="pagination pagination-sm justify-content-center mb-0"
+        <ul class="pagination justify-content-center flex-wrap mb-0"
             th:utext="${#egovPaginationRenderer.renderPagination(paginationInfo, 'fnLinkPage')}"></ul>
     </nav>
 </th:block>

@@ -14,6 +14,7 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -61,7 +62,10 @@ class WebUiIntegrationTest extends IntegrationTestSupport {
                 "/webjars/bootstrap-icons/font/bootstrap-icons.min.css",
                 "/webjars/bootstrap-icons/font/fonts/bootstrap-icons.woff2",
                 "/webjars/chart.js/dist/chart.umd.js",
-                "/css/dpms.css", "/js/dpms.js", "/favicon.svg")) {
+                "/css/dpms.css", "/js/dpms.js", "/favicon.svg", "/images/logo.svg",
+                "/fonts/pretendard-gov/PretendardGOV-Regular.subset.woff2",
+                "/fonts/pretendard-gov/PretendardGOV-Medium.subset.woff2",
+                "/fonts/pretendard-gov/PretendardGOV-Bold.subset.woff2")) {
             mockMvc.perform(get(path)).andExpect(status().isOk());
         }
     }
@@ -72,9 +76,14 @@ class WebUiIntegrationTest extends IntegrationTestSupport {
         String html = mockMvc.perform(get("/")).andReturn().getResponse().getContentAsString();
         assertThat(html)
                 .containsPattern("/css/dpms-[0-9a-f]{32}\\.css")
-                .containsPattern("/js/dpms-[0-9a-f]{32}\\.js");
-        mockMvc.perform(get("/css/dpms.css"))
-                .andExpect(header().string("Cache-Control", containsString("max-age=31536000")));
+                .containsPattern("/js/dpms-[0-9a-f]{32}\\.js")
+                .containsPattern("/fonts/pretendard-gov/PretendardGOV-Regular\\.subset-[0-9a-f]{32}\\.woff2");
+
+        // CSS 안의 글꼴 주소도 해시 주소로 바뀌어야 캐시가 맞는다 (CssLinkResourceTransformer)
+        String css = mockMvc.perform(get("/css/dpms.css"))
+                .andExpect(header().string("Cache-Control", containsString("max-age=31536000")))
+                .andReturn().getResponse().getContentAsString();
+        assertThat(css).containsPattern("PretendardGOV-Bold\\.subset-[0-9a-f]{32}\\.woff2");
 
         // 로그인 사용자의 화면이 공용 PC 브라우저에 남지 않도록 HTML 은 계속 no-store
         mockMvc.perform(get("/")).andExpect(header().string("Cache-Control", containsString("no-store")));
@@ -102,6 +111,10 @@ class WebUiIntegrationTest extends IntegrationTestSupport {
                 .andExpect(content().string(containsString("aria-current=\"page\">공지사항</a>")));
         mockMvc.perform(get("/announcements/13"))
                 .andExpect(content().string(containsString("aria-current=\"page\">사업공고</a>")));
+        // 시스템 관리 아래 하위 메뉴도 지금 화면만 표시한다
+        mockMvc.perform(get("/admin/login-history").with(user("admin").roles("ADMIN")))
+                .andExpect(content().string(containsString("aria-current=\"page\">접속 기록</a>")))
+                .andExpect(content().string(not(containsString("aria-current=\"page\">사용자 관리</a>"))));
     }
 
     @Test

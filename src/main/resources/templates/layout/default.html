@@ -7,6 +7,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title layout:title-pattern="$CONTENT_TITLE | D-PMS">D-PMS 대구 지원사업 통합관리</title>
     <link rel="icon" type="image/svg+xml" th:href="@{/favicon.svg}">
+    <!--/* 본문 글꼴을 CSS 보다 먼저 받기 시작해 기본 글꼴 → 웹 글꼴로 바뀌며 화면이 흔들리는 시간을 줄인다 */-->
+    <link rel="preload" th:href="@{/fonts/pretendard-gov/PretendardGOV-Regular.subset.woff2}" as="font" type="font/woff2" crossorigin>
     <!--/* WebJars: 외부 CDN 없이 JAR 에 포함된 파일을 쓴다 (버전은 pom.xml) */-->
     <link rel="stylesheet" th:href="@{/webjars/bootstrap/dist/css/bootstrap.min.css}">
     <link rel="stylesheet" th:href="@{/webjars/bootstrap-icons/font/bootstrap-icons.min.css}">
@@ -15,38 +17,31 @@
 <body>
 <a class="skip-link" href="#main">본문 바로가기</a>
 
+<!--/* 공공기관 공식 누리집이 아니므로 KRDS 의 공식 배너 대신 데모 안내를 둔다 */-->
 <div class="demo-strip">
-    <div class="container py-1">
-        취업 포트폴리오용 데모 시스템입니다. 실제 기관·사업과 관련이 없으며 실제 개인정보를 입력하지 마세요.
+    <div class="container">
+        <i class="bi bi-info-circle" aria-hidden="true"></i>
+        <span>취업 포트폴리오용 데모 시스템입니다. 실제 기관·사업과 관련이 없으며 실제 개인정보를 입력하지 마세요.</span>
     </div>
 </div>
 
 <header class="site-header">
     <nav class="navbar navbar-expand-lg" aria-label="주 메뉴">
-        <div class="container">
+        <div class="container header-inner">
             <a class="brand" th:href="@{/}">
-                <span class="brand-mark" aria-hidden="true">D</span>
+                <img class="brand-logo" th:src="@{/images/logo.svg}" alt="" width="40" height="40">
                 <span>
                     <span class="brand-name">D-PMS</span>
                     <span class="brand-sub">대구 지원사업 통합관리·e-정산</span>
                 </span>
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#gnb"
-                    aria-controls="gnb" aria-expanded="false" aria-label="메뉴 열기">
-                <span class="navbar-toggler-icon"></span>
+            <div class="header-util d-none d-lg-flex" th:insert="~{fragments/common :: userMenu}"></div>
+            <button class="navbar-toggler gnb-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#gnb"
+                    aria-controls="gnb" aria-expanded="false">
+                <i class="bi bi-list" aria-hidden="true"></i><span>메뉴</span>
             </button>
-            <div class="collapse navbar-collapse" id="gnb">
-                <ul class="navbar-nav gnb ms-lg-4 me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" th:href="@{/notices}"
-                           th:classappend="${currentMenu == 'notice'} ? 'active'"
-                           th:attr="aria-current=${currentMenu == 'notice'} ? 'page' : null">공지사항</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" th:href="@{/faqs}"
-                           th:classappend="${currentMenu == 'faq'} ? 'active'"
-                           th:attr="aria-current=${currentMenu == 'faq'} ? 'page' : null">FAQ</a>
-                    </li>
+            <div class="collapse navbar-collapse gnb-wrap" id="gnb">
+                <ul class="navbar-nav gnb">
                     <li class="nav-item">
                         <a class="nav-link" th:href="@{/announcements}"
                            th:classappend="${currentMenu == 'announcement'} ? 'active'"
@@ -71,32 +66,30 @@
                            th:classappend="${currentMenu == 'settlement'} ? 'active'"
                            th:attr="aria-current=${currentMenu == 'settlement'} ? 'page' : null">정산 검수</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/notices}"
+                           th:classappend="${currentMenu == 'notice'} ? 'active'"
+                           th:attr="aria-current=${currentMenu == 'notice'} ? 'page' : null">공지사항</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/faqs}"
+                           th:classappend="${currentMenu == 'faq'} ? 'active'"
+                           th:attr="aria-current=${currentMenu == 'faq'} ? 'page' : null">자주 묻는 질문</a>
+                    </li>
                     <li class="nav-item dropdown" sec:authorize="hasRole('ADMIN')">
                         <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"
                            th:classappend="${currentMenu == 'admin'} ? 'active'">시스템 관리</a>
                         <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" th:href="@{/admin/users}">사용자 관리</a></li>
-                            <li><a class="dropdown-item" th:href="@{/admin/login-history}">접속 기록</a></li>
+                            <li><a class="dropdown-item" th:href="@{/admin/users}"
+                                   th:classappend="${currentPath == '/admin/users'} ? 'active'"
+                                   th:attr="aria-current=${currentPath == '/admin/users'} ? 'page' : null">사용자 관리</a></li>
+                            <li><a class="dropdown-item" th:href="@{/admin/login-history}"
+                                   th:classappend="${currentPath == '/admin/login-history'} ? 'active'"
+                                   th:attr="aria-current=${currentPath == '/admin/login-history'} ? 'page' : null">접속 기록</a></li>
                         </ul>
                     </li>
                 </ul>
-
-                <div class="user-box" sec:authorize="isAnonymous()">
-                    <a class="btn btn-primary btn-sm" th:href="@{/login}"><i class="bi bi-box-arrow-in-right me-1" aria-hidden="true"></i>로그인</a>
-                </div>
-                <div class="user-box" sec:authorize="isAuthenticated()">
-                    <span class="role-chip" sec:authorize="hasRole('ADMIN')">총괄관리자</span>
-                    <span class="role-chip" sec:authorize="hasRole('MANAGER')">사업담당자</span>
-                    <span class="role-chip" sec:authorize="hasRole('EVALUATOR')">평가위원</span>
-                    <span class="role-chip" sec:authorize="hasRole('COMPANY')">기업회원</span>
-                    <a th:href="@{/mypage}" class="fw-semibold text-body text-decoration-none"
-                       th:classappend="${currentMenu == 'mypage'} ? 'text-primary'"
-                       th:attr="aria-current=${currentMenu == 'mypage'} ? 'page' : null"
-                       title="내 정보"><span sec:authentication="name">사용자</span>님</a>
-                    <form th:action="@{/logout}" method="post" class="m-0">
-                        <button type="submit" class="btn btn-outline-secondary btn-sm">로그아웃</button>
-                    </form>
-                </div>
+                <div class="header-util header-util-mobile d-lg-none" th:insert="~{fragments/common :: userMenu}"></div>
             </div>
         </div>
     </nav>
@@ -104,11 +97,11 @@
 
 <main id="main" tabindex="-1">
     <div class="container" th:if="${successMessage != null or errorMessage != null}">
-        <div th:if="${successMessage}" class="alert alert-success mt-3 mb-0" role="status">
-            <i class="bi bi-check-circle me-1" aria-hidden="true"></i><span th:text="${successMessage}">처리되었습니다.</span>
+        <div th:if="${successMessage}" class="alert alert-success mt-4 mb-0" role="status">
+            <i class="bi bi-check-circle-fill me-1" aria-hidden="true"></i><span th:text="${successMessage}">처리되었습니다.</span>
         </div>
-        <div th:if="${errorMessage}" class="alert alert-danger mt-3 mb-0" role="alert">
-            <i class="bi bi-exclamation-triangle me-1" aria-hidden="true"></i><span th:text="${errorMessage}">오류</span>
+        <div th:if="${errorMessage}" class="alert alert-danger mt-4 mb-0" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-1" aria-hidden="true"></i><span th:text="${errorMessage}">오류</span>
         </div>
     </div>
 
@@ -117,15 +110,25 @@
 
 <footer class="site-footer">
     <div class="container">
-        <div class="footer-links mb-2">
-            <a class="privacy" th:href="@{/privacy}">개인정보처리방침</a>
-            <a th:href="@{/notices}">공지사항</a>
-            <a th:href="@{/faqs}">자주 묻는 질문</a>
-            <a th:href="@{/announcements}">사업공고</a>
+        <div class="footer-top">
+            <span class="footer-brand">
+                <img class="brand-logo" th:src="@{/images/logo.svg}" alt="" width="32" height="32">D-PMS
+            </span>
+            <ul class="footer-links">
+                <li><a class="privacy" th:href="@{/privacy}">개인정보처리방침</a></li>
+                <li><a th:href="@{/announcements}">사업공고</a></li>
+                <li><a th:href="@{/notices}">공지사항</a></li>
+                <li><a th:href="@{/faqs}">자주 묻는 질문</a></li>
+            </ul>
         </div>
-        <p class="mb-1">D-PMS 대구형 공공 R&amp;D·창업 지원사업 통합관리 및 e-정산 시스템</p>
-        <p class="mb-2">등장하는 기관·기업·사업명과 데이터는 설명을 위한 가상의 예시입니다.</p>
-        <span class="egov-badge"><i class="bi bi-boxes" aria-hidden="true"></i>전자정부 표준프레임워크 5.0 기반</span>
+        <div class="footer-info">
+            <p>D-PMS 대구형 공공 R&amp;D·창업 지원사업 통합관리 및 e-정산 시스템 (취업 포트폴리오)</p>
+            <p>등장하는 기관·기업·사업명과 데이터는 설명을 위한 가상의 예시입니다.</p>
+        </div>
+        <div class="footer-meta">
+            <span class="egov-badge"><i class="bi bi-boxes" aria-hidden="true"></i>전자정부 표준프레임워크 5.1 기반</span>
+            <span>화면 기준: KRDS(대한민국 정부 디자인 시스템) 디자인 토큰 · 글꼴: Pretendard GOV</span>
+        </div>
     </div>
 </footer>
 

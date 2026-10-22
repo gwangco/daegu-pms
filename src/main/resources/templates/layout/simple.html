@@ -16,10 +16,11 @@
     <link rel="stylesheet" th:href="@{/css/dpms.css}">
 </head>
 <body>
+<a class="skip-link" href="#main">본문 바로가기</a>
 <header class="site-header">
-    <div class="container py-3">
+    <div class="container">
         <a class="brand" th:href="@{/}">
-            <span class="brand-mark" aria-hidden="true">D</span>
+            <img class="brand-logo" th:src="@{/images/logo.svg}" alt="" width="40" height="40">
             <span>
                 <span class="brand-name">D-PMS</span>
                 <span class="brand-sub">대구 지원사업 통합관리·e-정산</span>
@@ -27,9 +28,14 @@
         </a>
     </div>
 </header>
-<main id="main">
+<main id="main" tabindex="-1">
     <th:block layout:fragment="content"></th:block>
 </main>
+<footer class="site-footer">
+    <div class="container">
+        <p class="mb-0">D-PMS 대구형 공공 R&amp;D·창업 지원사업 통합관리 및 e-정산 시스템 (취업 포트폴리오)</p>
+    </div>
+</footer>
 <script th:src="@{/js/dpms.js}"></script>
 </body>
 </html>
