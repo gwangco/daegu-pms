@@ -1,164 +1,169 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}">
 <head>
-    <meta charset="UTF-8">
-    <title>과제 신청 상세 조회 | D-PMS</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <style>body { background-color: #f8f9fa; }</style>
+    <title th:text="${app.projectName}">신청 과제 상세</title>
 </head>
 <body>
-
-<div th:replace="~{fragments/navbar :: navbar}"></div>
-<div th:replace="~{fragments/navbar :: flash}"></div>
-
-<div class="container py-4" style="max-width: 960px;">
-    <div class="mb-3">
-        <a th:href="@{/applications}" class="text-decoration-none text-muted small">
-            <i class="bi bi-arrow-left"></i> 신청 목록으로 돌아가기
-        </a>
-    </div>
-
-    <div class="card border-0 shadow-sm p-4 bg-white mb-4">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <div>
-                <span class="badge bg-secondary me-1" th:text="'접수번호 ' + ${app.receiptNo}">접수번호 DPMS-00000001</span>
+<th:block layout:fragment="content">
+    <div class="page-head">
+        <div class="container medium">
+            <nav aria-label="현재 위치">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a th:href="@{/}">홈</a></li>
+                    <li class="breadcrumb-item"><a th:href="@{/applications}">신청·심사 현황</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">신청 과제 상세</li>
+                </ol>
+            </nav>
+            <div class="d-flex flex-wrap gap-2 mt-2 mb-1">
+                <span class="status status-neutral" th:text="'접수번호 ' + ${app.receiptNo}">접수번호 DPMS-00000001</span>
                 <th:block th:replace="~{fragments/common :: appStatus(${app.status})}"></th:block>
             </div>
-            <div class="text-muted small">
-                제출일시: <span th:text="${#temporals.format(app.submittedAt, 'yyyy-MM-dd HH:mm')}">2026-10-15 14:30</span>
-            </div>
+            <h1 th:text="${app.projectName}">과제명</h1>
+            <p class="lead-sub small">
+                <span th:text="${app.announcementTitle}">공고명</span>
+                · 제출 <span th:text="${#temporals.format(app.submittedAt, 'yyyy-MM-dd HH:mm')}">2026-10-15 14:30</span>
+            </p>
         </div>
+    </div>
 
-        <h4 class="fw-bold text-dark mb-3" th:text="${app.projectName}">과제명</h4>
-        <div class="text-secondary small mb-4">
-            지원사업 공고: <strong class="text-dark" th:text="${app.announcementTitle}">공고명</strong>
-        </div>
-
-        <!-- 신청 정보 테이블 -->
-        <table class="table table-bordered align-middle mb-4">
-            <tbody>
-                <tr>
-                    <th class="table-light text-center" style="width: 20%;">신청 기업명</th>
-                    <td style="width: 30%;" th:text="${app.companyName}">기업명</td>
-                    <th class="table-light text-center" style="width: 20%;">사업자등록번호</th>
-                    <td style="width: 30%;" th:text="${app.businessNo}">504-81-98765</td>
-                </tr>
-                <tr>
-                    <th class="table-light text-center">총 소요 예산</th>
-                    <td class="fw-semibold" th:text="${#numbers.formatInteger(app.totalBudget, 0, 'COMMA')} + '원'">125,000,000원</td>
-                    <th class="table-light text-center">신청 지원금</th>
-                    <td class="fw-semibold text-primary" th:text="${#numbers.formatInteger(app.requestGrant, 0, 'COMMA')} + '원'">100,000,000원</td>
-                </tr>
-                <tr>
-                    <th class="table-light text-center">기업 자부담금</th>
-                    <td th:text="${#numbers.formatInteger(app.selfFunding, 0, 'COMMA')} + '원'">25,000,000원</td>
-                    <th class="table-light text-center">사업계획서</th>
-                    <td>
-                        <a th:if="${app.planFileId != null}" th:href="@{/files/{id}(id=${app.planFileId})}"
-                           class="badge bg-light text-dark border text-decoration-none">
-                            <i class="bi bi-download text-primary me-1"></i>
-                            <span th:text="${app.planFileName}">plan.pdf</span>
-                        </a>
-                        <span th:if="${app.planFileId == null}" class="text-muted small">첨부 없음 (샘플 데이터)</span>
-                    </td>
-                </tr>
-                <tr>
-                    <th class="table-light text-center">평균 평가점수</th>
-                    <td colspan="3">
-                        <strong th:if="${app.avgScore != null}" th:text="${#numbers.formatDecimal(app.avgScore, 1, 1)} + ' / 100점'">88.5</strong>
-                        <span th:if="${app.avgScore == null}" class="text-muted small">평가 완료 전</span>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-
-        <h6 class="fw-bold text-dark mb-2"><i class="bi bi-file-text text-primary me-2"></i>사업계획서 요약 내용</h6>
-        <div class="p-3 bg-light rounded-3 mb-4" style="line-height: 1.8; white-space: pre-line;" th:text="${app.summary}">
-            사업계획 요약 내용...
-        </div>
-
-        <!-- ===================== 담당자/관리자 전용 영역 ===================== -->
-        <th:block sec:authorize="hasAnyRole('MANAGER', 'ADMIN')">
-
-            <!-- 평가위원 배정 및 평가 현황 -->
-            <div class="p-3 rounded-3 border mb-3">
-                <h6 class="fw-bold text-dark mb-3"><i class="bi bi-people text-primary me-1"></i> 평가위원 배정 및 평가 현황</h6>
-                <table class="table table-sm align-middle mb-3">
-                    <thead class="table-light">
-                        <tr>
-                            <th>평가위원</th>
-                            <th class="text-center">정량(40)</th>
-                            <th class="text-center">정성(60)</th>
-                            <th class="text-center">총점</th>
-                            <th class="text-center">상태</th>
-                            <th>종합의견</th>
-                        </tr>
-                    </thead>
+    <div class="container medium">
+        <section class="panel mb-4" aria-labelledby="info-title">
+            <div class="panel-head"><h2 id="info-title">신청 정보</h2></div>
+            <div class="table-responsive">
+                <table class="table table-bordered table-info-grid mb-0">
+                    <caption class="visually-hidden">신청 정보</caption>
                     <tbody>
+                    <tr>
+                        <th scope="row">신청 기업</th>
+                        <td th:text="${app.companyName}">기업명</td>
+                        <th scope="row">사업자등록번호</th>
+                        <td th:text="${app.businessNo}">504-81-98765</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">총 소요 예산</th>
+                        <td th:text="${#numbers.formatInteger(app.totalBudget, 0, 'COMMA')} + '원'">125,000,000원</td>
+                        <th scope="row">신청 지원금</th>
+                        <td class="fw-bold" th:text="${#numbers.formatInteger(app.requestGrant, 0, 'COMMA')} + '원'">100,000,000원</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">기업 자부담금</th>
+                        <td th:text="${#numbers.formatInteger(app.selfFunding, 0, 'COMMA')} + '원'">25,000,000원</td>
+                        <th scope="row">사업계획서</th>
+                        <td>
+                            <a th:if="${app.planFileId != null}" th:href="@{/files/{id}(id=${app.planFileId})}">
+                                <i class="bi bi-download me-1" aria-hidden="true"></i><span th:text="${app.planFileName}">plan.pdf</span>
+                            </a>
+                            <span th:if="${app.planFileId == null}" class="text-sub small">첨부 없음 (샘플 데이터)</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">평균 평가점수</th>
+                        <td colspan="3">
+                            <strong th:if="${app.avgScore != null}" th:text="${#numbers.formatDecimal(app.avgScore, 1, 1)} + ' / 100점'">88.5 / 100점</strong>
+                            <span th:if="${app.avgScore == null}" class="text-sub small">평가 완료 전</span>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="panel mb-4" aria-labelledby="summary-title">
+            <div class="panel-head"><h2 id="summary-title">사업계획 요약</h2></div>
+            <div class="panel-body"><div class="prewrap" th:text="${app.summary}">사업계획 요약</div></div>
+        </section>
+
+        <th:block sec:authorize="hasAnyRole('MANAGER', 'ADMIN')">
+            <section class="panel mb-4" aria-labelledby="eval-title">
+                <div class="panel-head"><h2 id="eval-title">평가위원 배정 및 평가 현황</h2></div>
+                <div class="table-responsive">
+                    <table class="table">
+                        <caption class="visually-hidden">평가위원별 채점 현황</caption>
+                        <thead>
+                        <tr>
+                            <th scope="col">평가위원</th>
+                            <th scope="col" class="text-center">정량(40)</th>
+                            <th scope="col" class="text-center">정성(60)</th>
+                            <th scope="col" class="text-center">총점</th>
+                            <th scope="col" class="text-center">상태</th>
+                            <th scope="col">종합의견</th>
+                        </tr>
+                        </thead>
+                        <tbody>
                         <tr th:each="ev : ${evaluations}">
                             <td th:text="${ev.evaluatorName}">박심사</td>
                             <td class="text-center" th:text="${ev.status == 'COMPLETED'} ? ${ev.quantitativeScore} : '-'">38</td>
                             <td class="text-center" th:text="${ev.status == 'COMPLETED'} ? ${ev.qualitativeScore} : '-'">54</td>
                             <td class="text-center fw-bold" th:text="${ev.status == 'COMPLETED'} ? ${ev.totalScore} : '-'">92</td>
                             <td class="text-center">
-                                <span th:if="${ev.status == 'COMPLETED'}" class="badge bg-success">평가완료</span>
-                                <span th:if="${ev.status == 'ASSIGNED'}" class="badge bg-warning text-dark">채점대기</span>
+                                <span th:if="${ev.status == 'COMPLETED'}" class="status status-success">평가완료</span>
+                                <span th:if="${ev.status == 'ASSIGNED'}" class="status status-warning">채점대기</span>
                             </td>
-                            <td class="small text-muted" th:text="${ev.evalComment}">의견</td>
+                            <td class="small text-sub" th:text="${ev.evalComment}">의견</td>
                         </tr>
                         <tr th:if="${#lists.isEmpty(evaluations)}">
-                            <td colspan="6" class="text-center text-muted small py-3">배정된 평가위원이 없습니다.</td>
+                            <td colspan="6" class="empty-row">배정된 평가위원이 없습니다.</td>
                         </tr>
-                    </tbody>
-                </table>
-
-                <form th:if="${evaluatorAssignable}" th:action="@{/applications/{id}/evaluators(id=${app.applicationId})}"
-                      method="post" class="d-flex align-items-center gap-2">
-                    <select name="evaluatorUserId" class="form-select form-select-sm" style="max-width: 320px;" required>
-                        <option value="">평가위원 선택</option>
-                        <option th:each="u : ${assignableEvaluators}" th:value="${u.userId}"
-                                th:text="${u.userName} + ' (' + ${u.companyName} + ')'">평가위원</option>
-                    </select>
-                    <button type="submit" class="btn btn-sm btn-outline-primary" th:disabled="${#lists.isEmpty(assignableEvaluators)}">배정</button>
-                    <span class="small text-muted">서류적격통과 과제는 배정 즉시 '전문가심사중'으로 전환됩니다.</span>
-                </form>
-                <div th:unless="${evaluatorAssignable}" class="small text-muted">
-                    평가위원 배정은 '서류적격통과' 또는 '전문가심사중' 상태에서만 가능합니다.
+                        </tbody>
+                    </table>
                 </div>
-            </div>
-
-            <!-- 상태머신: 현재 상태에서 이동 가능한 상태만 노출 -->
-            <div class="p-3 bg-light rounded-3 border border-secondary mb-4">
-                <h6 class="fw-bold text-dark mb-2"><i class="bi bi-sliders text-primary me-1"></i> 과제 심사 상태 변경</h6>
-                <form th:unless="${#lists.isEmpty(nextStatuses)}"
-                      th:action="@{/applications/{id}/status(id=${app.applicationId})}" method="post"
-                      class="d-flex align-items-center gap-2">
-                    <select name="status" class="form-select form-select-sm" style="max-width: 260px;" required>
-                        <option value="">변경할 상태 선택</option>
-                        <option th:each="s : ${nextStatuses}" th:value="${s.name()}" th:text="${s.label}">상태</option>
-                    </select>
-                    <button type="submit" class="btn btn-sm btn-dark">상태 변경 저장</button>
-                </form>
-                <div th:if="${#lists.isEmpty(nextStatuses)}" class="small text-muted">
-                    종료된 과제이거나 평가위원 배정이 필요한 단계입니다. (선정/탈락은 변경할 수 없습니다)
+                <div class="panel-body border-top">
+                    <form th:if="${evaluatorAssignable}" th:action="@{/applications/{id}/evaluators(id=${app.applicationId})}"
+                          method="post" class="row g-2 align-items-end">
+                        <div class="col-md-7">
+                            <label for="evaluatorUserId" class="form-label small">평가위원 배정</label>
+                            <select id="evaluatorUserId" name="evaluatorUserId" class="form-select" required>
+                                <option value="">평가위원 선택</option>
+                                <option th:each="u : ${assignableEvaluators}" th:value="${u.userId}"
+                                        th:text="${u.userName} + ' (' + ${u.companyName} + ')'">평가위원</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-outline-primary w-100" th:disabled="${#lists.isEmpty(assignableEvaluators)}">배정</button>
+                        </div>
+                        <p class="col-12 small text-sub mb-0">서류적격통과 과제는 배정하면 '전문가심사중'으로 바뀝니다.</p>
+                    </form>
+                    <p th:unless="${evaluatorAssignable}" class="small text-sub mb-0">
+                        평가위원 배정은 '서류적격통과' 또는 '전문가심사중' 상태에서만 할 수 있습니다.
+                    </p>
                 </div>
-            </div>
+            </section>
+
+            <section class="panel mb-4" aria-labelledby="status-title">
+                <div class="panel-head"><h2 id="status-title">심사 상태 변경</h2></div>
+                <div class="panel-body">
+                    <form th:unless="${#lists.isEmpty(nextStatuses)}" th:action="@{/applications/{id}/status(id=${app.applicationId})}"
+                          method="post" class="row g-2 align-items-end"
+                          data-confirm="진행상태를 변경하시겠습니까? 선정·탈락으로 바꾸면 되돌릴 수 없습니다.">
+                        <div class="col-md-7">
+                            <label for="nextStatus" class="form-label small">변경할 상태</label>
+                            <select id="nextStatus" name="status" class="form-select" required>
+                                <option value="">선택</option>
+                                <option th:each="s : ${nextStatuses}" th:value="${s.name()}" th:text="${s.label}">상태</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <button type="submit" class="btn btn-primary w-100">상태 변경</button>
+                        </div>
+                    </form>
+                    <p th:if="${#lists.isEmpty(nextStatuses)}" class="small text-sub mb-0">
+                        종료된 과제이거나 평가위원 배정이 먼저 필요한 단계입니다. (선정·탈락은 변경할 수 없습니다)
+                    </p>
+                </div>
+            </section>
         </th:block>
 
-        <!-- 하단 액션 버튼 -->
-        <div class="d-flex justify-content-between pt-3 border-top">
+        <div class="form-actions">
             <a th:href="@{/applications}" class="btn btn-outline-secondary">목록</a>
-            <div th:if="${app.status == 'SELECTED'}" sec:authorize="!hasRole('EVALUATOR')">
-                <a th:href="@{/settlements/application/{id}(id=${app.applicationId})}" class="btn btn-success">
-                    <i class="bi bi-receipt me-1"></i> 사업비 e-정산 시스템 바로가기
-                </a>
-            </div>
+            <a th:if="${app.status == 'SELECTED' and settlementAccessible}"
+               th:href="@{/settlements/application/{id}(id=${app.applicationId})}" class="btn btn-primary">
+                <i class="bi bi-receipt me-1" aria-hidden="true"></i>사업비 e-정산
+            </a>
         </div>
     </div>
-</div>
-
-<div th:replace="~{fragments/navbar :: footer}"></div>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</th:block>
 </body>
 </html>

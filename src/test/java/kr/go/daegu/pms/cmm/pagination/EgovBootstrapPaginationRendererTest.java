@@ -25,11 +25,12 @@ class EgovBootstrapPaginationRendererTest {
     void smallList() {
         String html = renderer.renderPagination(info(2, 25), "fnLinkPage");
 
-        assertThat(html).contains("onclick=\"fnLinkPage(1); return false;\">1</a>")
-                .contains("<li class=\"page-item active\" aria-current=\"page\"><span class=\"page-link\">2</span></li>")
-                .contains("fnLinkPage(3)")
-                .doesNotContain("fnLinkPage(4)")
-                .doesNotContain("&laquo;");
+        assertThat(html).contains("data-page=\"1\" aria-label=\"1쪽\">1</a>")
+                .contains("<li class=\"page-item active\"><span class=\"page-link\" aria-current=\"page\">2</span></li>")
+                .contains("data-page=\"3\"")
+                .doesNotContain("data-page=\"4\"")
+                .doesNotContain("&laquo;")
+                .doesNotContain("onclick");   // CSP: 인라인 이벤트 없음
     }
 
     @Test
@@ -37,10 +38,10 @@ class EgovBootstrapPaginationRendererTest {
     void pageBlock() {
         String html = renderer.renderPagination(info(13, 250), "fnLinkPage");
 
-        assertThat(html).contains("fnLinkPage(1); return false;\">&laquo;")
-                .contains("fnLinkPage(10); return false;\">&lsaquo;")
-                .contains("fnLinkPage(21); return false;\">&rsaquo;")
-                .contains("fnLinkPage(25); return false;\">&raquo;")
+        assertThat(html).contains("data-page=\"1\" title=\"처음\" aria-label=\"처음\"><span aria-hidden=\"true\">&laquo;")
+                .contains("data-page=\"10\" title=\"이전\"")
+                .contains("data-page=\"21\" title=\"다음\"")
+                .contains("data-page=\"25\" title=\"마지막\"")
                 .contains(">11</a>").contains(">20</a>")
                 .doesNotContain(">21</a>");
     }
@@ -53,12 +54,12 @@ class EgovBootstrapPaginationRendererTest {
     }
 
     @Test
-    @DisplayName("메시지 번들의 라벨을 버튼 title 로 사용한다")
+    @DisplayName("메시지 번들의 라벨을 버튼 title·aria-label 로 사용한다")
     void labelsFromMessageSource() {
         StaticMessageSource messages = new StaticMessageSource();
         messages.addMessage("page.first", java.util.Locale.getDefault(), "First");
         String html = new EgovBootstrapPaginationRenderer(messages).renderPagination(info(13, 250), "fnLinkPage");
 
-        assertThat(html).contains("title=\"First\"");
+        assertThat(html).contains("title=\"First\" aria-label=\"First\"");
     }
 }

@@ -26,6 +26,10 @@
     <properties>
         <java.version>17</java.version>
         <poi.version>5.4.1</poi.version>
+        <!-- 화면 라이브러리 버전 (WebJars) -->
+        <bootstrap.version>5.3.3</bootstrap.version>
+        <bootstrap-icons.version>1.11.3</bootstrap-icons.version>
+        <chartjs.version>4.4.1</chartjs.version>
     </properties>
 
     <repositories>
@@ -136,6 +140,11 @@
             <groupId>org.thymeleaf.extras</groupId>
             <artifactId>thymeleaf-extras-springsecurity6</artifactId>
         </dependency>
+        <!-- 공통 레이아웃(layout:decorate). 버전은 Spring Boot 가 관리 -->
+        <dependency>
+            <groupId>nz.net.ultraq.thymeleaf</groupId>
+            <artifactId>thymeleaf-layout-dialect</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
@@ -165,6 +174,41 @@
             <groupId>org.mariadb.jdbc</groupId>
             <artifactId>mariadb-java-client</artifactId>
             <scope>runtime</scope>
+        </dependency>
+
+        <!-- ===================== 화면 정적 리소스 (WebJars) ===================== -->
+        <!--
+            외부 CDN 대신 JAR 로 포함해 /webjars/** 로 제공한다.
+            - 인터넷이 막힌 행정망·내부망에서도 화면이 깨지지 않는다
+            - CSP 를 script-src 'self' 로 좁힐 수 있다 (외부 스크립트 출처를 허용하지 않아도 됨)
+            - 버전을 Maven 이 관리하므로 취약점 점검(의존성 검사) 대상에 함께 포함된다
+        -->
+        <!-- 화면에서 버전 없이 /webjars/bootstrap/... 로 참조 (버전은 이 pom.xml 에서만 관리) -->
+        <dependency>
+            <groupId>org.webjars</groupId>
+            <artifactId>webjars-locator-lite</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.webjars.npm</groupId>
+            <artifactId>bootstrap</artifactId>
+            <version>${bootstrap.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.webjars.npm</groupId>
+            <artifactId>bootstrap-icons</artifactId>
+            <version>${bootstrap-icons.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.webjars.npm</groupId>
+            <artifactId>chart.js</artifactId>
+            <version>${chartjs.version}</version>
+            <exclusions>
+                <!-- chart.umd.js 에 이미 포함되어 있고, 버전 범위([0.3.0,0.4)) 의존성이라 빌드마다 결과가 달라질 수 있어 제외 -->
+                <exclusion>
+                    <groupId>org.webjars.npm</groupId>
+                    <artifactId>kurkle__color</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <!-- ===================== Excel ===================== -->

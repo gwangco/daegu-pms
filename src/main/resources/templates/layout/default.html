@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title layout:title-pattern="$CONTENT_TITLE | D-PMS">D-PMS 대구 지원사업 통합관리</title>
+    <link rel="icon" type="image/svg+xml" th:href="@{/favicon.svg}">
+    <!--/* WebJars: 외부 CDN 없이 JAR 에 포함된 파일을 쓴다 (버전은 pom.xml) */-->
+    <link rel="stylesheet" th:href="@{/webjars/bootstrap/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/webjars/bootstrap-icons/font/bootstrap-icons.min.css}">
+    <link rel="stylesheet" th:href="@{/css/dpms.css}">
+</head>
+<body>
+<a class="skip-link" href="#main">본문 바로가기</a>
+
+<div class="demo-strip">
+    <div class="container py-1">
+        취업 포트폴리오용 데모 시스템입니다. 실제 기관·사업과 관련이 없으며 실제 개인정보를 입력하지 마세요.
+    </div>
+</div>
+
+<header class="site-header">
+    <nav class="navbar navbar-expand-lg" aria-label="주 메뉴">
+        <div class="container">
+            <a class="brand" th:href="@{/}">
+                <span class="brand-mark" aria-hidden="true">D</span>
+                <span>
+                    <span class="brand-name">D-PMS</span>
+                    <span class="brand-sub">대구 지원사업 통합관리·e-정산</span>
+                </span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#gnb"
+                    aria-controls="gnb" aria-expanded="false" aria-label="메뉴 열기">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="gnb">
+                <ul class="navbar-nav gnb ms-lg-4 me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/notices}"
+                           th:classappend="${currentMenu == 'notice'} ? 'active'"
+                           th:attr="aria-current=${currentMenu == 'notice'} ? 'page' : null">공지사항</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/announcements}"
+                           th:classappend="${currentMenu == 'announcement'} ? 'active'"
+                           th:attr="aria-current=${currentMenu == 'announcement'} ? 'page' : null">사업공고</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="isAuthenticated()">
+                        <a class="nav-link" th:href="@{/applications}"
+                           th:classappend="${currentMenu == 'application'} ? 'active'"
+                           th:attr="aria-current=${currentMenu == 'application'} ? 'page' : null">
+                            <th:block sec:authorize="hasRole('COMPANY')">내 신청 현황</th:block>
+                            <th:block sec:authorize="hasRole('EVALUATOR')">배정 과제</th:block>
+                            <th:block sec:authorize="hasAnyRole('MANAGER', 'ADMIN')">신청·심사 관리</th:block>
+                        </a>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasRole('EVALUATOR')">
+                        <a class="nav-link" th:href="@{/evaluator/evaluations}"
+                           th:classappend="${currentMenu == 'evaluation'} ? 'active'"
+                           th:attr="aria-current=${currentMenu == 'evaluation'} ? 'page' : null">내 평가과제</a>
+                    </li>
+                </ul>
+
+                <div class="user-box" sec:authorize="isAnonymous()">
+                    <a class="btn btn-primary btn-sm" th:href="@{/login}"><i class="bi bi-box-arrow-in-right me-1" aria-hidden="true"></i>로그인</a>
+                </div>
+                <div class="user-box" sec:authorize="isAuthenticated()">
+                    <span class="role-chip" sec:authorize="hasRole('ADMIN')">총괄관리자</span>
+                    <span class="role-chip" sec:authorize="hasRole('MANAGER')">사업담당자</span>
+                    <span class="role-chip" sec:authorize="hasRole('EVALUATOR')">평가위원</span>
+                    <span class="role-chip" sec:authorize="hasRole('COMPANY')">기업회원</span>
+                    <span class="fw-semibold"><span sec:authentication="name">사용자</span>님</span>
+                    <form th:action="@{/logout}" method="post" class="m-0">
+                        <button type="submit" class="btn btn-outline-secondary btn-sm">로그아웃</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </nav>
+</header>
+
+<main id="main" tabindex="-1">
+    <div class="container" th:if="${successMessage != null or errorMessage != null}">
+        <div th:if="${successMessage}" class="alert alert-success mt-3 mb-0" role="status">
+            <i class="bi bi-check-circle me-1" aria-hidden="true"></i><span th:text="${successMessage}">처리되었습니다.</span>
+        </div>
+        <div th:if="${errorMessage}" class="alert alert-danger mt-3 mb-0" role="alert">
+            <i class="bi bi-exclamation-triangle me-1" aria-hidden="true"></i><span th:text="${errorMessage}">오류</span>
+        </div>
+    </div>
+
+    <th:block layout:fragment="content"></th:block>
+</main>
+
+<footer class="site-footer">
+    <div class="container">
+        <div class="footer-links mb-2">
+            <a class="privacy" th:href="@{/privacy}">개인정보처리방침</a>
+            <a th:href="@{/notices}">공지사항</a>
+            <a th:href="@{/announcements}">사업공고</a>
+        </div>
+        <p class="mb-1">D-PMS 대구형 공공 R&amp;D·창업 지원사업 통합관리 및 e-정산 시스템</p>
+        <p class="mb-2">등장하는 기관·기업·사업명과 데이터는 설명을 위한 가상의 예시입니다.</p>
+        <span class="egov-badge"><i class="bi bi-boxes" aria-hidden="true"></i>전자정부 표준프레임워크 5.0 기반</span>
+    </div>
+</footer>
+
+<script th:src="@{/webjars/bootstrap/dist/js/bootstrap.bundle.min.js}"></script>
+<th:block layout:fragment="scripts"></th:block>
+<script th:src="@{/js/dpms.js}"></script>
+</body>
+</html>

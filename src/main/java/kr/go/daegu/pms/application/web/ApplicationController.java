@@ -44,6 +44,8 @@ public class ApplicationController {
         paginationInfo.setTotalRecordCount(applicationService.selectApplicationListTotCnt(searchVO));
         model.addAttribute("paginationInfo", paginationInfo);
         model.addAttribute("statuses", ApplicationStatus.values());
+        // 평가위원은 정산 정보를 볼 수 없으므로 e-정산 바로가기를 보여주지 않는다 (서비스에서도 거부)
+        model.addAttribute("settlementAccessible", !SecurityUtil.hasRole(SecurityUtil.ROLE_EVALUATOR));
         return "application/list";
     }
 
@@ -83,6 +85,7 @@ public class ApplicationController {
     public String detail(@PathVariable("id") Long id, Model model) {
         ApplicationVO application = applicationService.selectApplication(id);
         model.addAttribute("app", application);
+        model.addAttribute("settlementAccessible", !SecurityUtil.hasRole(SecurityUtil.ROLE_EVALUATOR));
 
         if (SecurityUtil.isStaff()) {
             ApplicationStatus current = ApplicationStatus.fromCode(application.getStatus()).orElse(null);

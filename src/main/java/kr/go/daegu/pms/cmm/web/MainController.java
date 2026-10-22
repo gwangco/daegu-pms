@@ -55,4 +55,9 @@ public class MainController {
         }
         return "login";
     }
+
+    @GetMapping("/privacy")
+    public String privacy() {
+        return "privacy";
+    }
 }

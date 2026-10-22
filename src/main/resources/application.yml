@@ -4,6 +4,15 @@ server:
     encoding:
       charset: UTF-8
       force: true
+    session:
+      # 30분 동안 요청이 없으면 세션 만료 (공공기관 시스템의 일반적인 자동 로그아웃 기준)
+      timeout: 30m
+      # 세션 ID 를 URL(;jsessionid=...)에 붙이지 않는다. 주소 공유·로그·Referer 로 세션이 새는 것을 막는다
+      tracking-modes: cookie
+      cookie:
+        http-only: true
+        same-site: lax
+        # HTTPS 운영에서는 SERVER_SERVLET_SESSION_COOKIE_SECURE=true 로 켠다 (로컬 http 데모라 기본값 false)
   # 에러 화면에 스택트레이스/예외 메시지를 노출하지 않음 (시큐어코딩: 오류 메시지 정보노출 방지)
   error:
     include-stacktrace: never

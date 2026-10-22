@@ -1,205 +1,193 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}">
 <head>
-    <meta charset="UTF-8">
-    <title>사업비 e-정산 관리 | D-PMS</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <style>body { background-color: #f8f9fa; }</style>
+    <title>사업비 e-정산</title>
 </head>
 <body>
-
-<div th:replace="~{fragments/navbar :: navbar}"></div>
-<div th:replace="~{fragments/navbar :: flash}"></div>
-
-<div class="container py-4">
-    <div class="mb-3">
-        <a th:href="@{/applications/{id}(id=${app.applicationId})}" class="text-decoration-none text-muted small"><i class="bi bi-arrow-left"></i> 과제 상세로 돌아가기</a>
-    </div>
-
-    <!-- 상단 과제 기본 정보 및 예산 집행 카드 -->
-    <div class="card border-0 shadow-sm p-4 bg-white mb-4">
-        <div class="d-flex justify-content-between align-items-center mb-2">
-            <span class="badge bg-success">협약체결 과제</span>
-            <span class="text-muted small">접수번호 <span th:text="${app.receiptNo}">DPMS-00000001</span></span>
+<th:block layout:fragment="content">
+    <div class="page-head">
+        <div class="container">
+            <nav aria-label="현재 위치">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a th:href="@{/}">홈</a></li>
+                    <li class="breadcrumb-item"><a th:href="@{/applications}">신청·심사 현황</a></li>
+                    <li class="breadcrumb-item"><a th:href="@{/applications/{id}(id=${app.applicationId})}">과제 상세</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">사업비 e-정산</li>
+                </ol>
+            </nav>
+            <div class="d-flex flex-wrap gap-2 mt-2 mb-1">
+                <span class="status status-success">협약 과제</span>
+                <span class="status status-neutral" th:text="'접수번호 ' + ${app.receiptNo}">접수번호 DPMS-00000001</span>
+            </div>
+            <h1 th:text="${app.projectName}">과제명</h1>
+            <p class="lead-sub small">수행기업 <span th:text="${app.companyName}">기업명</span></p>
         </div>
-        <h4 class="fw-bold text-dark mb-1" th:text="${app.projectName}">과제명</h4>
-        <div class="text-secondary small mb-4">수행기업: <strong class="text-dark" th:text="${app.companyName}">기업명</strong></div>
+    </div>
 
-        <div class="row g-3 text-center mb-2">
-            <div class="col-md-3">
-                <div class="p-3 bg-light rounded-3">
-                    <div class="text-muted small">총 협약 지원금</div>
-                    <div class="fs-5 fw-bold text-dark" th:text="${#numbers.formatInteger(app.requestGrant, 0, 'COMMA')} + '원'">100,000,000원</div>
+    <div class="container">
+        <h2 class="visually-hidden">예산 집행 현황</h2>
+        <div class="row g-3 mb-2">
+            <div class="col-6 col-lg-3">
+                <div class="stat-card">
+                    <div class="label">협약 지원금</div>
+                    <div class="value fs-4" th:text="${#numbers.formatInteger(app.requestGrant, 0, 'COMMA')} + '원'">100,000,000원</div>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="p-3 bg-light rounded-3">
-                    <div class="text-muted small">승인 집행액 (누적)</div>
-                    <div class="fs-5 fw-bold text-primary" th:text="${#numbers.formatInteger(totalApproved, 0, 'COMMA')} + '원'">16,500,000원</div>
+            <div class="col-6 col-lg-3">
+                <div class="stat-card">
+                    <div class="label">승인 집행액(누적)</div>
+                    <div class="value fs-4 text-primary" th:text="${#numbers.formatInteger(totalApproved, 0, 'COMMA')} + '원'">16,500,000원</div>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="p-3 bg-light rounded-3">
-                    <div class="text-muted small">검수 대기액</div>
-                    <div class="fs-5 fw-bold text-warning" th:text="${#numbers.formatInteger(totalPending, 0, 'COMMA')} + '원'">24,200,000원</div>
+            <div class="col-6 col-lg-3">
+                <div class="stat-card">
+                    <div class="label">검수 대기액</div>
+                    <div class="value fs-4" th:text="${#numbers.formatInteger(totalPending, 0, 'COMMA')} + '원'">24,200,000원</div>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="p-3 bg-light rounded-3">
-                    <div class="text-muted small">등록 가능 잔액</div>
-                    <div class="fs-5 fw-bold text-success" th:text="${#numbers.formatInteger(remaining, 0, 'COMMA')} + '원'">59,300,000원</div>
+            <div class="col-6 col-lg-3">
+                <div class="stat-card">
+                    <div class="label">등록 가능 잔액</div>
+                    <div class="value fs-4 text-success" th:text="${#numbers.formatInteger(remaining, 0, 'COMMA')} + '원'">59,300,000원</div>
                 </div>
             </div>
         </div>
-        <div class="small text-muted">※ 등록 가능 잔액 = 협약 지원금 − (승인 집행액 + 검수 대기액). 반려 건은 잔액에서 차감되지 않습니다.</div>
-    </div>
+        <p class="small text-sub mb-4">등록 가능 잔액 = 협약 지원금 − (승인 집행액 + 검수 대기액). 보완요청(반려)된 건은 잔액에서 빼지 않습니다.</p>
 
-    <!-- 집행 내역 테이블 및 집행 등록 버튼 -->
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h5 class="fw-bold text-dark mb-0"><i class="bi bi-receipt text-primary me-2"></i>비목별 사업비 집행 및 증빙 내역</h5>
-        <button sec:authorize="hasRole('COMPANY')" type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#expenseModal">
-            <i class="bi bi-plus-lg me-1"></i> 사업비 집행 등록
-        </button>
-    </div>
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+            <h2 class="section-title mb-0">비목별 집행 및 증빙 내역</h2>
+            <button sec:authorize="hasRole('COMPANY')" type="button" class="btn btn-primary"
+                    data-bs-toggle="modal" data-bs-target="#expenseModal">
+                <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>사업비 집행 등록
+            </button>
+        </div>
 
-    <div class="card border-0 shadow-sm mb-4">
-        <div class="card-body p-0">
+        <div class="panel">
             <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th class="text-center" style="width: 12%">비목</th>
-                            <th style="width: 10%">집행일자</th>
-                            <th style="width: 14%">거래처명</th>
-                            <th>집행내용</th>
-                            <th class="text-end" style="width: 12%">총 집행금액</th>
-                            <th class="text-center" style="width: 12%">증빙서류</th>
-                            <th class="text-center" style="width: 10%">검수상태</th>
-                            <th class="text-center" style="width: 20%" sec:authorize="hasAnyRole('MANAGER', 'ADMIN')">검수관리</th>
-                        </tr>
+                <table class="table">
+                    <caption class="visually-hidden">사업비 집행 내역: 비목, 집행일자, 거래처, 집행내용, 금액, 증빙, 검수상태</caption>
+                    <thead>
+                    <tr>
+                        <th scope="col">비목</th>
+                        <th scope="col" class="col-date">집행일자</th>
+                        <th scope="col">거래처</th>
+                        <th scope="col">집행내용</th>
+                        <th scope="col" class="text-end">금액(부가세 포함)</th>
+                        <th scope="col" class="text-center">증빙</th>
+                        <th scope="col" class="text-center col-status">검수상태</th>
+                        <th scope="col" class="text-center" sec:authorize="hasAnyRole('MANAGER', 'ADMIN')">검수</th>
+                    </tr>
                     </thead>
                     <tbody>
-                        <tr th:each="s : ${settlements}">
-                            <td class="text-center">
-                                <span class="badge bg-secondary text-wrap" th:text="${s.itemName}">직접재료비</span>
-                            </td>
-                            <td class="small" th:text="${s.expenseDate}">2026-10-16</td>
-                            <td class="fw-semibold text-dark" th:text="${s.vendorName}">(주)대구센서테크</td>
-                            <td class="small">
-                                <span th:text="${s.description}">집행 내용</span>
-                                <div th:if="${s.status == 'REJECTED'}" class="text-danger small mt-1">
-                                    <i class="bi bi-exclamation-circle"></i> 반려사유: <span th:text="${s.rejectReason}">사유</span>
-                                </div>
-                            </td>
-                            <td class="text-end fw-bold text-primary" th:text="${#numbers.formatInteger(s.totalAmount, 0, 'COMMA')} + '원'">16,500,000원</td>
-                            <td class="text-center">
-                                <a th:if="${s.receiptFileId != null}" th:href="@{/files/{id}(id=${s.receiptFileId})}"
-                                   class="badge bg-light text-dark border text-decoration-none text-wrap">
-                                    <i class="bi bi-download text-primary me-1"></i><span th:text="${s.receiptFileName}">invoice.pdf</span>
-                                </a>
-                                <span th:if="${s.receiptFileId == null}" class="text-muted small">샘플(파일 없음)</span>
-                            </td>
-                            <td class="text-center">
-                                <th:block th:replace="~{fragments/common :: settleStatus(${s.status})}"></th:block>
-                            </td>
-                            <!-- 사업담당자 전용: 승인 및 반려 (반려 시 사유 필수) -->
-                            <td sec:authorize="hasAnyRole('MANAGER', 'ADMIN')">
-                                <div th:if="${s.status == 'REQUESTED'}">
-                                    <form th:action="@{/settlements/{sid}/review(sid=${s.settlementId})}" method="post" class="mb-1">
-                                        <input type="hidden" name="applicationId" th:value="${app.applicationId}">
-                                        <input type="hidden" name="status" value="APPROVED">
-                                        <button type="submit" class="btn btn-outline-success btn-sm w-100">승인</button>
-                                    </form>
-                                    <form th:action="@{/settlements/{sid}/review(sid=${s.settlementId})}" method="post" class="input-group input-group-sm">
-                                        <input type="hidden" name="applicationId" th:value="${app.applicationId}">
-                                        <input type="hidden" name="status" value="REJECTED">
-                                        <input type="text" name="rejectReason" class="form-control" placeholder="반려 사유" maxlength="255" required>
-                                        <button type="submit" class="btn btn-outline-danger">반려</button>
-                                    </form>
-                                </div>
-                                <div th:unless="${s.status == 'REQUESTED'}" class="text-center text-muted small">처리완료</div>
-                            </td>
-                        </tr>
-                        <tr th:if="${#lists.isEmpty(settlements)}">
-                            <td colspan="8" class="text-center py-4 text-muted">등록된 사업비 집행 내역이 없습니다.</td>
-                        </tr>
+                    <tr th:each="s : ${settlements}">
+                        <td><span class="status status-neutral" th:text="${s.itemName}">직접재료비</span></td>
+                        <td class="small text-nowrap" th:text="${s.expenseDate}">2026-10-16</td>
+                        <td class="fw-semibold" th:text="${s.vendorName}">(주)대구센서테크</td>
+                        <td class="small">
+                            <span th:text="${s.description}">집행 내용</span>
+                            <div th:if="${s.status == 'REJECTED'}" class="text-danger small mt-1">
+                                <i class="bi bi-exclamation-circle" aria-hidden="true"></i> 보완 요청 사유: <span th:text="${s.rejectReason}">사유</span>
+                            </div>
+                        </td>
+                        <td class="text-end fw-semibold text-nowrap" th:text="${#numbers.formatInteger(s.totalAmount, 0, 'COMMA')} + '원'">16,500,000원</td>
+                        <td class="text-center small">
+                            <a th:if="${s.receiptFileId != null}" th:href="@{/files/{id}(id=${s.receiptFileId})}">
+                                <i class="bi bi-download me-1" aria-hidden="true"></i><span th:text="${s.receiptFileName}">invoice.pdf</span>
+                            </a>
+                            <span th:if="${s.receiptFileId == null}" class="text-sub">샘플(파일 없음)</span>
+                        </td>
+                        <td class="text-center"><th:block th:replace="~{fragments/common :: settleStatus(${s.status})}"></th:block></td>
+                        <td sec:authorize="hasAnyRole('MANAGER', 'ADMIN')">
+                            <div th:if="${s.status == 'REQUESTED'}" class="d-grid gap-1">
+                                <form th:action="@{/settlements/{sid}/review(sid=${s.settlementId})}" method="post" class="m-0">
+                                    <input type="hidden" name="applicationId" th:value="${app.applicationId}">
+                                    <input type="hidden" name="status" value="APPROVED">
+                                    <button type="submit" class="btn btn-sm btn-outline-primary w-100">승인</button>
+                                </form>
+                                <form th:action="@{/settlements/{sid}/review(sid=${s.settlementId})}" method="post" class="input-group input-group-sm m-0">
+                                    <input type="hidden" name="applicationId" th:value="${app.applicationId}">
+                                    <input type="hidden" name="status" value="REJECTED">
+                                    <label class="visually-hidden" th:for="'rejectReason' + ${s.settlementId}">보완 요청 사유</label>
+                                    <input type="text" th:id="'rejectReason' + ${s.settlementId}" name="rejectReason" class="form-control"
+                                           placeholder="보완 요청 사유" maxlength="255" required>
+                                    <button type="submit" class="btn btn-outline-danger">반려</button>
+                                </form>
+                            </div>
+                            <div th:unless="${s.status == 'REQUESTED'}" class="text-center text-sub small">처리 완료</div>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(settlements)}">
+                        <td colspan="8" class="empty-row">등록된 사업비 집행 내역이 없습니다.</td>
+                    </tr>
                     </tbody>
                 </table>
             </div>
         </div>
-    </div>
-</div>
 
-<!-- 사업비 집행 등록 모달 (기업) -->
-<div class="modal fade" id="expenseModal" tabindex="-1" sec:authorize="hasRole('COMPANY')">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title fw-bold">사업비 집행 등록</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form th:action="@{/settlements/register}" method="post" enctype="multipart/form-data">
-                <div class="modal-body">
-                    <input type="hidden" name="applicationId" th:value="${app.applicationId}">
-
-                    <div class="mb-3">
-                        <label class="form-label small fw-semibold">비목 선택 <span class="text-danger">*</span></label>
-                        <select name="itemCode" class="form-select form-select-sm" required>
-                            <option th:each="code : ${expItems}" th:value="${code.codeId}" th:text="${code.codeName}">비목</option>
-                        </select>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label small fw-semibold">집행 일자 <span class="text-danger">*</span></label>
-                        <input type="date" name="expenseDate" class="form-control form-control-sm" required th:value="${today}" th:max="${today}">
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label small fw-semibold">거래처명 (공급자) <span class="text-danger">*</span></label>
-                        <input type="text" name="vendorName" class="form-control form-control-sm" maxlength="100" placeholder="예: 북성로정밀가공" required>
-                    </div>
-
-                    <div class="row g-2 mb-3">
-                        <div class="col-6">
-                            <label class="form-label small fw-semibold">공급가액 (원) <span class="text-danger">*</span></label>
-                            <input type="number" id="modalSupply" name="supplyAmount" class="form-control form-control-sm" min="1" placeholder="10000000" required oninput="calcVat()">
-                        </div>
-                        <div class="col-6">
-                            <label class="form-label small fw-semibold">부가세 (10% 자동)</label>
-                            <input type="number" id="modalVat" class="form-control form-control-sm bg-light" readonly placeholder="1000000">
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label small fw-semibold">집행 내용 요약 <span class="text-danger">*</span></label>
-                        <input type="text" name="description" class="form-control form-control-sm" maxlength="255" placeholder="예: 시제품 1차 샘플 금형 가공비" required>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label small fw-semibold">증빙 (세금계산서/영수증) <span class="text-danger">*</span></label>
-                        <input type="file" name="receiptFile" class="form-control form-control-sm" accept=".pdf,.jpg,.jpeg,.png" required>
-                        <div class="form-text small">PDF, JPG, PNG / 최대 20MB</div>
-                    </div>
-                    <div class="small text-muted">등록 가능 잔액: <strong th:text="${#numbers.formatInteger(remaining, 0, 'COMMA')} + '원'">0원</strong> (부가세 포함 금액 기준)</div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">닫기</button>
-                    <button type="submit" class="btn btn-primary btn-sm fw-semibold">집행 등록 (검수요청)</button>
-                </div>
-            </form>
+        <div class="form-actions">
+            <a th:href="@{/applications/{id}(id=${app.applicationId})}" class="btn btn-outline-secondary">과제 상세로</a>
         </div>
     </div>
-</div>
 
-<div th:replace="~{fragments/navbar :: footer}"></div>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-    function calcVat() {
-        const supply = parseInt(document.getElementById('modalSupply').value, 10) || 0;
-        // 서버와 동일하게 원 단위 미만 절사
-        document.getElementById('modalVat').value = Math.floor(supply / 10);
-    }
-</script>
+    <!--/* 사업비 집행 등록 (기업) */-->
+    <div class="modal fade" id="expenseModal" tabindex="-1" aria-labelledby="expenseModalTitle" aria-hidden="true" sec:authorize="hasRole('COMPANY')">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form th:action="@{/settlements/register}" method="post" enctype="multipart/form-data">
+                    <div class="modal-header">
+                        <h2 class="modal-title fs-5 fw-bold" id="expenseModalTitle">사업비 집행 등록</h2>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="닫기"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" name="applicationId" th:value="${app.applicationId}">
+                        <div class="mb-3">
+                            <label for="itemCode" class="form-label">비목</label>
+                            <select id="itemCode" name="itemCode" class="form-select" required>
+                                <option th:each="code : ${expItems}" th:value="${code.codeId}" th:text="${code.codeName}">비목</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="expenseDate" class="form-label">집행일자</label>
+                            <input type="date" id="expenseDate" name="expenseDate" class="form-control" required th:value="${today}" th:max="${today}">
+                        </div>
+                        <div class="mb-3">
+                            <label for="vendorName" class="form-label">거래처(공급자)</label>
+                            <input type="text" id="vendorName" name="vendorName" class="form-control" maxlength="100" required>
+                        </div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <label for="supplyAmount" class="form-label">공급가액(원)</label>
+                                <input type="number" id="supplyAmount" name="supplyAmount" class="form-control" min="1"
+                                       data-calc="vat" data-vat-target="vatPreview" required>
+                            </div>
+                            <div class="col-6">
+                                <label for="vatPreview" class="form-label">부가세(10%, 자동)</label>
+                                <input type="number" id="vatPreview" class="form-control bg-light" readonly>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="description" class="form-label">집행 내용</label>
+                            <input type="text" id="description" name="description" class="form-control" maxlength="255" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="receiptFile" class="form-label">증빙(세금계산서·영수증)</label>
+                            <input type="file" id="receiptFile" name="receiptFile" class="form-control" accept=".pdf,.jpg,.jpeg,.png"
+                                   aria-describedby="receiptHelp" required>
+                            <div id="receiptHelp" class="form-text">PDF·JPG·PNG, 최대 20MB</div>
+                        </div>
+                        <p class="small text-sub mb-0">등록 가능 잔액 <strong th:text="${#numbers.formatInteger(remaining, 0, 'COMMA')} + '원'">0원</strong> (부가세 포함 금액 기준)</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">닫기</button>
+                        <button type="submit" class="btn btn-primary">등록(검수 요청)</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</th:block>
 </body>
 </html>
