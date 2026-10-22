@@ -31,12 +31,14 @@
                     <tr>
                         <th scope="row">신청기업</th>
                         <td th:text="${app.companyName}">기업명</td>
-                        <th scope="row">신청 지원금</th>
-                        <td th:text="${#numbers.formatInteger(app.requestGrant, 0, 'COMMA')} + '원'">0원</td>
+                        <th scope="row">사업자등록번호</th>
+                        <td th:text="${app.businessNo}">504-81-*****</td>
                     </tr>
                     <tr>
+                        <th scope="row">신청 지원금</th>
+                        <td th:text="${#numbers.formatInteger(app.requestGrant, 0, 'COMMA')} + '원'">0원</td>
                         <th scope="row">사업계획서</th>
-                        <td colspan="3">
+                        <td>
                             <a th:if="${app.planFileId != null}" th:href="@{/files/{id}(id=${app.planFileId})}">
                                 <i class="bi bi-download me-1" aria-hidden="true"></i><span th:text="${app.planFileName}">plan.pdf</span>
                             </a>

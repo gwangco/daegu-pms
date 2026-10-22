@@ -8,3 +8,15 @@ spring:
       settings:
         # 다른 PC 에서의 원격 접속 차단 (localhost 만 허용)
         web-allow-others: false
+
+# 로컬 데모 전용 암호화 키 (실제 운영 키가 아님). 환경변수 DPMS_CRYPTO_KEY / DPMS_CRYPTO_KEY_HASH 가 있으면 그 값을 쓴다
+org:
+  egovframe:
+    crypto:
+      algorithm-key: ${DPMS_CRYPTO_KEY:ForYyAZX6C703Hw1PNkHNulacLmMnT0J}
+      algorithm-key-hash: "${DPMS_CRYPTO_KEY_HASH:/LRpUAM7iF0P8JHq5qnblz4qCpiK1cII3uLEYrNeCdA=}"
+
+app:
+  crypto:
+    # 서버 기동 시 평문으로 남은 연락처·이메일을 암호문으로 바꾼다 (seed 데이터가 평문이라 로컬에서만 켬)
+    encrypt-plain-on-startup: true

@@ -99,6 +99,23 @@
         </if>
     </select>
 
+    <!-- 암호화 전환: 표식({ARIA})으로 시작하지 않는 값이 평문이다 -->
+    <select id="selectPlainContactList" resultType="userVO">
+        <bind name="prefixPattern" value="prefix + '%'"/>
+        SELECT user_id, email, phone
+        FROM users
+        WHERE email NOT LIKE #{prefixPattern}
+           OR (phone IS NOT NULL AND phone NOT LIKE #{prefixPattern})
+        ORDER BY user_id
+    </select>
+
+    <update id="updateUserContact">
+        UPDATE users
+        SET email = #{email},
+            phone = #{phone}
+        WHERE user_id = #{userId}
+    </update>
+
     <select id="selectUserListTotCnt" parameterType="userSearchVO" resultType="int">
         SELECT COUNT(*)
         FROM users

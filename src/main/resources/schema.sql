@@ -34,8 +34,8 @@ CREATE TABLE IF NOT EXISTS users (
     user_id VARCHAR(50) PRIMARY KEY,
     password VARCHAR(255) NOT NULL,          -- {bcrypt} 단방향 해시 저장
     user_name VARCHAR(50) NOT NULL,
-    email VARCHAR(100) NOT NULL,
-    phone VARCHAR(20),
+    email VARCHAR(255) NOT NULL,             -- ARIA 암호문 {ARIA}Base64 (평문보다 길어서 넉넉히)
+    phone VARCHAR(100),                      -- ARIA 암호문
     company_name VARCHAR(100),
     business_no VARCHAR(20),
     role VARCHAR(30) NOT NULL, -- ROLE_COMPANY, ROLE_EVALUATOR, ROLE_MANAGER, ROLE_ADMIN

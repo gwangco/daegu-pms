@@ -98,6 +98,11 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <!-- 암호화: EgovARIACryptoService(ARIA 국가표준 블록암호), EgovPasswordEncoder(키 검증) - 개인정보 컬럼 암호화 -->
+        <dependency>
+            <groupId>org.egovframe.boot</groupId>
+            <artifactId>egovframe-boot-starter-crypto</artifactId>
+        </dependency>
         <!-- MVC: PaginationInfo, PaginationRenderer -->
         <dependency>
             <groupId>org.egovframe.rte</groupId>

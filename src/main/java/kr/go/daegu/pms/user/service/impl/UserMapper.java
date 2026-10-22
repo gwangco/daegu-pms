@@ -36,4 +36,9 @@ public interface UserMapper {
     List<UserVO> selectUserList(UserSearchVO searchVO);
 
     int selectUserListTotCnt(UserSearchVO searchVO);
+
+    /** 암호화 전환 대상: 아직 {ARIA} 표식이 없는 연락처·이메일 */
+    List<UserVO> selectPlainContactList(@Param("prefix") String prefix);
+
+    int updateUserContact(@Param("userId") String userId, @Param("email") String email, @Param("phone") String phone);
 }

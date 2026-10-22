@@ -63,6 +63,16 @@ spring:
 
 # MyBatis 설정은 eGovFrame 방식대로 Java Config(EgovConfigMapper) + egovframework/sqlmap/sql-mapper-config.xml 에서 관리
 
+# 전자정부 암호화 서비스 (egovframe-boot-starter-crypto 자동 구성) - 연락처·이메일 컬럼 암호화에 사용
+# 키는 저장소에 두지 않는다. 운영은 환경변수(또는 키 관리 시스템)로 넣고, 값이 없으면 기동하지 않는다.
+org:
+  egovframe:
+    crypto:
+      algorithm: SHA-256                         # 키 검증용 해시 (EgovPasswordEncoder)
+      algorithm-key: ${DPMS_CRYPTO_KEY:}         # ARIA 마스터 키 (영문·숫자 32자)
+      algorithm-key-hash: ${DPMS_CRYPTO_KEY_HASH:}
+      crypto-block-size: 1024
+
 # D-PMS 애플리케이션 전용 설정
 app:
   file:
@@ -82,6 +92,9 @@ app:
     max-failures: 5
     # 잠금 유지 시간. 지나면 다시 로그인할 수 있고, 관리자가 먼저 풀 수도 있다
     lock-duration: 30m
+  crypto:
+    # 평문으로 남아 있는 연락처·이메일을 기동 시 암호화할지 (운영은 별도 전환 작업으로 처리하고 꺼 둔다)
+    encrypt-plain-on-startup: false
 
 # 로깅 레벨
 logging:

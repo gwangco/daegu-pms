@@ -10,7 +10,7 @@ import java.util.List;
  * 페이징 값은 EgovConfigProperties 가 이 값을 읽어 EgovPropertyService(pageUnit/pageSize)로 제공한다.
  */
 @ConfigurationProperties(prefix = "app")
-public record AppProperties(File file, Paging paging, Batch batch, Login login) {
+public record AppProperties(File file, Paging paging, Batch batch, Login login, Crypto crypto) {
 
     /** 첨부파일 저장 경로 및 허용 확장자 */
     public record File(String uploadDir, List<String> allowedExtensions) {}
@@ -23,4 +23,7 @@ public record AppProperties(File file, Paging paging, Batch batch, Login login) 
 
     /** 로그인 실패 잠금 정책 (maxFailures 회 연속 실패 시 lockDuration 동안 잠금) */
     public record Login(int maxFailures, Duration lockDuration) {}
+
+    /** 개인정보 암호화 (키는 org.egovframe.crypto.* 에서 관리). encryptPlainOnStartup: 기동 시 평문 데이터 전환 */
+    public record Crypto(boolean encryptPlainOnStartup) {}
 }

@@ -79,7 +79,10 @@
                     <span class="role-chip" sec:authorize="hasRole('MANAGER')">사업담당자</span>
                     <span class="role-chip" sec:authorize="hasRole('EVALUATOR')">평가위원</span>
                     <span class="role-chip" sec:authorize="hasRole('COMPANY')">기업회원</span>
-                    <span class="fw-semibold"><span sec:authentication="name">사용자</span>님</span>
+                    <a th:href="@{/mypage}" class="fw-semibold text-body text-decoration-none"
+                       th:classappend="${currentMenu == 'mypage'} ? 'text-primary'"
+                       th:attr="aria-current=${currentMenu == 'mypage'} ? 'page' : null"
+                       title="내 정보"><span sec:authentication="name">사용자</span>님</a>
                     <form th:action="@{/logout}" method="post" class="m-0">
                         <button type="submit" class="btn btn-outline-secondary btn-sm">로그아웃</button>
                     </form>
