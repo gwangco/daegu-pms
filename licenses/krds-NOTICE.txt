@@ -1,0 +1,14 @@
+KRDS(대한민국 정부 디자인 시스템) 출처 표기
+
+이 프로젝트의 화면 스타일(src/main/resources/static/css/dpms.css)은 KRDS 디자인 토큰의
+색 단계, 글자 크기, 버튼·입력칸 높이, 표 머리글 색 값을 참고해 옮겨 적었다.
+글꼴 파일(src/main/resources/static/fonts/pretendard-gov)은 같은 배포본에 들어 있는
+Pretendard GOV 서브셋 파일(Regular·Medium·Bold, woff2)을 고치지 않고 그대로 쓴다.
+
+- 출처: KRDS https://www.krds.go.kr
+- 배포본: npm krds-uiux 1.1.0 (2026-01-12 배포, 패키지 SHA-512 무결성 값 확인 후 사용)
+- 이용 조건: 저작권법 제24조의2(공공저작물의 자유이용)에 따라 출처를 표시하고 이용 (KRDS 저작권 안내)
+- Pretendard GOV: Copyright (c) 2023 Kil Hyung-jin, SIL Open Font License 1.1
+  라이선스 전문은 pretendard-gov-OFL-1.1.txt (글꼴 파일 안의 라이선스 정보에도 같은 내용이 들어 있다)
+
+이 시스템은 정부·공공기관의 공식 누리집이 아니므로 KRDS 의 공식 누리집 배너와 정부 상징은 쓰지 않는다.

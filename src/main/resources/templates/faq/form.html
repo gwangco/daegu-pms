@@ -13,7 +13,7 @@
 */-->
 <th:block layout:fragment="content">
     <div class="page-head">
-        <div class="container narrow">
+        <div class="container">
             <nav aria-label="현재 위치">
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a th:href="@{/}">홈</a></li>
@@ -25,45 +25,55 @@
         </div>
     </div>
 
-    <div class="container narrow">
-        <!--/* th:action 을 쓰면 Spring Security CSRF 토큰이 hidden 으로 자동 포함된다 */-->
-        <form th:action="${isNew} ? @{/faqs/new} : @{/faqs/{id}/edit(id=${faq.faqId})}"
-              th:object="${faq}" method="post" class="panel panel-body">
-            <div th:if="${#fields.hasGlobalErrors()}" class="alert alert-danger" role="alert">
-                <div th:each="err : ${#fields.globalErrors()}" th:text="${err}">오류</div>
-            </div>
-            <div class="row g-3 mb-3">
-                <div class="col-sm-8">
-                    <label for="faqClCode" class="form-label">분류 <span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden">(필수)</span></label>
-                    <select th:field="*{faqClCode}" class="form-select" th:errorclass="is-invalid" required>
-                        <option value="">선택하세요</option>
-                        <option th:each="c : ${categories}" th:value="${c.code}" th:text="${c.codeNm}">신청·접수</option>
-                    </select>
-                    <div class="invalid-feedback" th:errors="*{faqClCode}"></div>
+    <div class="container">
+        <div class="detail-layout">
+            <!--/* th:action 을 쓰면 Spring Security CSRF 토큰이 hidden 으로 자동 포함된다 */-->
+            <form th:action="${isNew} ? @{/faqs/new} : @{/faqs/{id}/edit(id=${faq.faqId})}"
+                  th:object="${faq}" method="post" class="panel form-panel">
+                <div th:if="${#fields.hasGlobalErrors()}" class="alert alert-danger" role="alert">
+                    <div th:each="err : ${#fields.globalErrors()}" th:text="${err}">오류</div>
                 </div>
-                <div class="col-sm-4">
-                    <label for="sortOrdr" class="form-label">표시 순서 <span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden">(필수)</span></label>
-                    <input type="number" th:field="*{sortOrdr}" class="form-control" th:errorclass="is-invalid"
-                           min="1" max="999" required aria-describedby="sortOrdrHelp">
-                    <div id="sortOrdrHelp" class="form-text">같은 분류 안에서 작은 숫자가 위에 나옵니다.</div>
-                    <div class="invalid-feedback" th:errors="*{sortOrdr}"></div>
+                <div class="row g-3 mb-3">
+                    <div class="col-sm-8">
+                        <label for="faqClCode" class="form-label">분류 <span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden">(필수)</span></label>
+                        <select th:field="*{faqClCode}" class="form-select" th:errorclass="is-invalid" required>
+                            <option value="">선택하세요</option>
+                            <option th:each="c : ${categories}" th:value="${c.code}" th:text="${c.codeNm}">신청·접수</option>
+                        </select>
+                        <div class="invalid-feedback" th:errors="*{faqClCode}"></div>
+                    </div>
+                    <div class="col-sm-4">
+                        <label for="sortOrdr" class="form-label">표시 순서 <span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden">(필수)</span></label>
+                        <input type="number" th:field="*{sortOrdr}" class="form-control" th:errorclass="is-invalid"
+                               min="1" max="999" required aria-describedby="sortOrdrHelp">
+                        <div id="sortOrdrHelp" class="form-text">같은 분류 안에서 작은 숫자가 위에 나옵니다.</div>
+                        <div class="invalid-feedback" th:errors="*{sortOrdr}"></div>
+                    </div>
                 </div>
-            </div>
-            <div class="mb-3">
-                <label for="qestnSj" class="form-label">질문 <span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden">(필수)</span></label>
-                <input type="text" th:field="*{qestnSj}" class="form-control" th:errorclass="is-invalid" maxlength="255" required>
-                <div class="invalid-feedback" th:errors="*{qestnSj}"></div>
-            </div>
-            <div class="mb-1">
-                <label for="answerCn" class="form-label">답변 <span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden">(필수)</span></label>
-                <textarea th:field="*{answerCn}" class="form-control" th:errorclass="is-invalid" rows="10" maxlength="2500" required></textarea>
-                <div class="invalid-feedback" th:errors="*{answerCn}"></div>
-            </div>
-            <div class="form-actions">
-                <a th:href="${isNew} ? @{/faqs} : @{/faqs(faqClCode=${faq.faqClCode})}" class="btn btn-outline-secondary">취소</a>
-                <button type="submit" class="btn btn-primary px-4" th:text="${isNew} ? '등록' : '저장'">등록</button>
-            </div>
-        </form>
+                <div class="mb-3">
+                    <label for="qestnSj" class="form-label">질문 <span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden">(필수)</span></label>
+                    <input type="text" th:field="*{qestnSj}" class="form-control" th:errorclass="is-invalid" maxlength="255" required>
+                    <div class="invalid-feedback" th:errors="*{qestnSj}"></div>
+                </div>
+                <div>
+                    <label for="answerCn" class="form-label">답변 <span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden">(필수)</span></label>
+                    <textarea th:field="*{answerCn}" class="form-control" th:errorclass="is-invalid" rows="10" maxlength="2500" required></textarea>
+                    <div class="invalid-feedback" th:errors="*{answerCn}"></div>
+                </div>
+                <div class="form-actions">
+                    <a th:href="${isNew} ? @{/faqs} : @{/faqs(faqClCode=${faq.faqClCode})}" class="btn btn-outline-secondary">취소</a>
+                    <button type="submit" class="btn btn-primary" th:text="${isNew} ? '등록' : '저장'">등록</button>
+                </div>
+            </form>
+
+            <aside class="aside-card" aria-labelledby="guide-title">
+                <h2 id="guide-title">작성 안내</h2>
+                <ol class="form-guide">
+                    <li>분류 목록은 공통코드(DPM005, FAQ 분류)에서 사용 중인 코드만 나옵니다.</li>
+                    <li>답변은 입력한 줄바꿈 그대로 보이고, HTML 태그는 글자 그대로 표시됩니다.</li>
+                </ol>
+            </aside>
+        </div>
     </div>
 </th:block>
 </body>

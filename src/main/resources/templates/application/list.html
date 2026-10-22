@@ -13,10 +13,14 @@
             <nav aria-label="현재 위치">
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a th:href="@{/}">홈</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">신청·심사 현황</li>
+                    <li class="breadcrumb-item active" aria-current="page">
+                        <th:block sec:authorize="hasRole('COMPANY')">내 신청 현황</th:block>
+                        <th:block sec:authorize="hasRole('EVALUATOR')">배정 과제</th:block>
+                        <th:block sec:authorize="hasAnyRole('MANAGER', 'ADMIN')">신청·심사 관리</th:block>
+                    </li>
                 </ol>
             </nav>
-            <div class="d-flex flex-wrap justify-content-between align-items-end gap-2">
+            <div class="page-head-row">
                 <div>
                     <h1>
                         <th:block sec:authorize="hasRole('COMPANY')">내 신청 현황</th:block>
@@ -29,32 +33,37 @@
                         <span sec:authorize="hasAnyRole('MANAGER', 'ADMIN')">접수된 전체 과제의 심사 진행 현황입니다.</span>
                     </p>
                 </div>
-                <a sec:authorize="hasAnyRole('MANAGER', 'ADMIN')"
-                   th:href="@{/excel/applications(status=${searchVO.status}, searchKeyword=${searchVO.searchKeyword})}"
-                   class="btn btn-outline-primary">
-                    <i class="bi bi-file-earmark-excel me-1" aria-hidden="true"></i>엑셀 다운로드
-                </a>
+                <div class="page-actions" sec:authorize="hasAnyRole('MANAGER', 'ADMIN')">
+                    <a th:href="@{/excel/applications(status=${searchVO.status}, searchKeyword=${searchVO.searchKeyword})}"
+                       class="btn btn-outline-primary btn-lg">
+                        <i class="bi bi-file-earmark-excel me-1" aria-hidden="true"></i>엑셀 다운로드
+                    </a>
+                </div>
             </div>
         </div>
     </div>
 
     <div class="container">
-        <form id="searchForm" th:action="@{/applications}" th:object="${searchVO}" method="get" class="search-box" role="search">
-            <div class="row g-2 align-items-end">
-                <input type="hidden" th:field="*{pageIndex}">
-                <div class="col-md-3">
+        <form id="searchForm" th:action="@{/applications}" th:object="${searchVO}" method="get" class="search-box" role="search"
+              th:with="filtered=${!#strings.isEmpty(searchVO.status) or !#strings.isEmpty(searchVO.searchKeyword)}">
+            <input type="hidden" th:field="*{pageIndex}">
+            <div class="row g-3 align-items-end">
+                <div class="col-12 col-md-3">
                     <label for="status" class="form-label">진행상태</label>
                     <select th:field="*{status}" class="form-select">
                         <option value="">전체</option>
                         <option th:each="s : ${statuses}" th:value="${s.name()}" th:text="${s.label}">상태</option>
                     </select>
                 </div>
-                <div class="col-md-7">
+                <div class="col-12 col-md">
                     <label for="searchKeyword" class="form-label">검색어</label>
                     <input type="search" th:field="*{searchKeyword}" class="form-control" placeholder="과제명·기업명 또는 접수번호(DPMS-…)" maxlength="50">
                 </div>
-                <div class="col-md-2">
-                    <button type="submit" class="btn btn-secondary w-100"><i class="bi bi-search me-1" aria-hidden="true"></i>검색</button>
+                <div class="col-12 col-md-auto">
+                    <div class="search-actions">
+                        <button type="submit" class="btn btn-secondary"><i class="bi bi-search me-1" aria-hidden="true"></i>검색</button>
+                        <a th:if="${filtered}" th:href="@{/applications}" class="btn btn-outline-secondary">초기화</a>
+                    </div>
                 </div>
             </div>
         </form>
@@ -63,37 +72,38 @@
 
         <div class="panel">
             <div class="table-responsive">
-                <table class="table table-hover">
-                    <caption class="visually-hidden">신청 과제 목록: 접수번호, 공고명, 신청기업, 과제명, 신청 지원금, 평균 점수, 진행상태</caption>
+                <table class="table table-hover table-cards">
+                    <caption class="visually-hidden">신청 과제 목록: 접수번호, 과제명과 공고명, 신청기업, 신청 지원금, 평균 점수, 진행상태</caption>
                     <thead>
                     <tr>
                         <th scope="col" class="text-center">접수번호</th>
-                        <th class="d-none d-md-table-cell" scope="col">공고명</th>
-                        <th scope="col">신청기업</th>
                         <th scope="col">과제명</th>
+                        <th scope="col">신청기업</th>
                         <th scope="col" class="text-end">신청 지원금</th>
-                        <th scope="col" class="d-none d-md-table-cell text-center">평균 점수</th>
+                        <th scope="col" class="text-center">평균 점수</th>
                         <th scope="col" class="text-center col-status">진행상태</th>
                         <th scope="col" class="text-center col-action">바로가기</th>
                     </tr>
                     </thead>
                     <tbody>
                     <tr th:each="app : ${applications}">
-                        <td class="text-center fw-semibold text-nowrap" th:text="${app.receiptNo}">DPMS-00000001</td>
-                        <td class="d-none d-md-table-cell small cell-truncate" th:text="${app.announcementTitle}">공고명</td>
-                        <td>
-                            <span class="fw-semibold" th:text="${app.companyName}">대구모빌리티</span>
-                            <div class="small text-sub" th:text="${app.businessNo}">504-81-98765</div>
+                        <td data-label="접수번호" class="text-center fw-bold text-nowrap" th:text="${app.receiptNo}">DPMS-00000001</td>
+                        <td class="cell-title">
+                            <a th:href="@{/applications/{id}(id=${app.applicationId})}" th:text="${app.projectName}">과제명</a>
+                            <span class="cell-sub cell-truncate" th:text="${app.announcementTitle}">공고명</span>
                         </td>
-                        <td>
-                            <a th:href="@{/applications/{id}(id=${app.applicationId})}" class="fw-semibold text-body" th:text="${app.projectName}">과제명</a>
+                        <td data-label="신청기업">
+                            <div>
+                                <span class="fw-bold text-nowrap-md" th:text="${app.companyName}">대구모빌리티</span>
+                                <span class="cell-sub" th:text="${app.businessNo}">504-81-98765</span>
+                            </div>
                         </td>
-                        <td class="text-end fw-semibold text-nowrap" th:text="${#numbers.formatInteger(app.requestGrant, 0, 'COMMA')} + '원'">100,000,000원</td>
-                        <td class="d-none d-md-table-cell text-center" th:text="${app.avgScore != null} ? ${#numbers.formatDecimal(app.avgScore, 1, 1)} : '-'">-</td>
-                        <td class="text-center"><th:block th:replace="~{fragments/common :: appStatus(${app.status})}"></th:block></td>
-                        <td class="text-center">
+                        <td data-label="신청 지원금" class="text-end fw-bold text-nowrap" th:text="${#numbers.formatInteger(app.requestGrant, 0, 'COMMA')} + '원'">100,000,000원</td>
+                        <td data-label="평균 점수" class="text-center" th:text="${app.avgScore != null} ? ${#numbers.formatDecimal(app.avgScore, 1, 1)} : '-'">-</td>
+                        <td data-label="진행상태" class="text-center"><th:block th:replace="~{fragments/common :: appStatus(${app.status})}"></th:block></td>
+                        <td class="text-center cell-actions">
                             <a th:if="${app.status == 'SELECTED' and settlementAccessible}"
-                               th:href="@{/settlements/application/{id}(id=${app.applicationId})}" class="btn btn-sm btn-outline-primary">
+                               th:href="@{/settlements/application/{id}(id=${app.applicationId})}" class="btn btn-sm btn-outline-primary text-nowrap">
                                 <i class="bi bi-receipt me-1" aria-hidden="true"></i>e-정산
                             </a>
                             <a th:unless="${app.status == 'SELECTED' and settlementAccessible}"
@@ -101,7 +111,7 @@
                         </td>
                     </tr>
                     <tr th:if="${#lists.isEmpty(applications)}">
-                        <td colspan="8" class="empty-row">조회된 신청 과제가 없습니다.</td>
+                        <td colspan="7" class="empty-row">조회된 신청 과제가 없습니다.</td>
                     </tr>
                     </tbody>
                 </table>

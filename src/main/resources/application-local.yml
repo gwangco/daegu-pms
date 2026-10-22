@@ -3,6 +3,11 @@ spring:
   flyway:
     # 로컬은 기준 스키마(db/migration) 위에 데모 데이터(db/seed)를 함께 적용한다. 운영에는 데모 데이터가 들어가지 않는다
     locations: classpath:db/migration,classpath:db/seed
+  # 개발 중에는 CSS·JS 를 고치면 바로 새 해시 주소가 나오도록 해시 계산 결과를 저장해 두지 않는다
+  web:
+    resources:
+      chain:
+        cache: false
 
 # 로컬 데모 전용 암호화 키 (실제 운영 키가 아님). 환경변수 DPMS_CRYPTO_KEY / DPMS_CRYPTO_KEY_HASH 가 있으면 그 값을 쓴다
 org:

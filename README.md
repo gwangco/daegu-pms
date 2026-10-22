@@ -9,15 +9,21 @@
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.16-6DB33F?logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
 [![MyBatis](https://img.shields.io/badge/MyBatis-3.5.19-C70D2C)](https://mybatis.org/mybatis-3/)
 [![MySQL](https://img.shields.io/badge/MySQL-8.4%20LTS-4479A1?logo=mysql&logoColor=white)](https://dev.mysql.com/doc/relnotes/mysql/8.4/en/)
-[![Tests](https://img.shields.io/badge/Tests-153%20passed-brightgreen)](#5-실행과-테스트)
+[![Tests](https://img.shields.io/badge/Tests-156%20passed-brightgreen)](#5-실행과-테스트)
 
 > 취업 포트폴리오용 데모입니다. 기관·사업·기업명은 설명을 위한 가상의 예시이며 실제 기관과 관련이 없습니다.
 
-| 메인 — 역할별 처리할 일 (사업담당자) | 사업비 e-정산 (기업회원) |
+화면은 KRDS(대한민국 정부 디자인 시스템) 디자인 토큰과 Pretendard GOV 글꼴을 기준으로 만들었습니다 ([7차 스프린트](docs/SPRINT7_DESIGN_RENEWAL.md)).
+
+| 메인 — 공고 검색과 역할별 처리할 일 (사업담당자) | 사업비 e-정산 — 집행률과 증빙 검수 (기업회원) |
 | :---: | :---: |
 | ![메인 화면](docs/images/main-manager.png) | ![정산 화면](docs/images/settlement-company.png) |
 | **자주 묻는 질문 — 전자정부 공통컴포넌트 FAQ** | **사용자 관리 — 연락처·이메일 암호화 저장 후 서버 마스킹** |
 | ![FAQ 화면](docs/images/faq-manager.png) | ![사용자 관리 화면](docs/images/admin-users.png) |
+
+| 모바일 (390px) — 메인, 카드형 신청 목록, e-정산 |
+| :---: |
+| ![모바일 화면](docs/images/mobile-company.png) |
 
 ---
 
@@ -71,6 +77,7 @@ flowchart LR
 | e-정산 | 비목별 집행·증빙, 부가세 서버 계산, 잔액 초과 차단, 반려 건 보완 재요청과 처리 이력, 담당자 검수함 |
 | 개인정보 | 연락처·이메일 ARIA 암호화, 목록·평가위원 화면 마스킹, 본인 정보 화면 |
 | 공통 | 수정자·수정일시 자동 기록(MyBatis 인터셉터), 엑셀 다운로드(SXSSF), 공통 레이아웃 |
+| 화면 | KRDS 디자인 토큰, Pretendard GOV 내장, 모바일 카드형 목록, 금액 한글 단위·한도 안내, 공고 마감 D-day, 정적 리소스 해시 주소·1년 캐시 |
 
 ## 4. 보안
 
@@ -88,7 +95,7 @@ flowchart LR
 | 동시성 | 심사·평가·정산이 같은 신청서 행을 `SELECT … FOR UPDATE`로 잠근 뒤 검사 |
 | 금액 | 양수 검사, `Math.addExact`로 합계 오버플로 차단 |
 | 세션·화면 | 쿠키 HttpOnly·SameSite=Lax, URL 세션 ID 미사용, 30분 만료, 다른 사이트의 iframe 포함 차단 |
-| 공급망 | Maven Wrapper SHA-256 검증, GitHub Actions 커밋 SHA·MySQL 이미지 digest 고정, 외부 CDN 대신 WebJars |
+| 공급망 | Maven Wrapper SHA-256 검증, GitHub Actions 커밋 SHA·MySQL 이미지 digest 고정, 외부 CDN 대신 WebJars, 글꼴도 서버에 내장(배포본 무결성 값 확인) |
 
 ## 5. 실행과 테스트
 
@@ -109,7 +116,7 @@ JDK 17 과 MySQL 8.x(8.4 LTS 권장)가 필요합니다. Maven Wrapper 와 내�
 - 스크립트를 쓰지 않을 때는 `config/dpms-secret.example.yml` 을 참고해 같은 계정을 만들거나 환경변수 `DPMS_DB_*` 를 지정합니다.
 - 개발 환경: [Eclipse](docs/ECLIPSE_SETUP.md) (기본) · [VS Code](docs/VS_CODE_SETUP.md)
 
-테스트 153건: 상태머신·마스킹·업무 시간대 단위 테스트, MockMvc 통합 테스트(인가·CSRF·파일 위조·예산 초과·계정 잠금·암호화·공지·FAQ), 별도 스레드와 MySQL 행 잠금 대기로 확인하는 동시성 테스트, eGov 실행환경·공통컴포넌트 구성과 V2 마이그레이션 결과 테스트, 모든 주요 화면의 공통 규칙(CSP·접근성) 테스트. Pull Request 마다 GitHub Actions 가 MySQL 8.4 컨테이너로 실행합니다.
+테스트 156건: 상태머신·마스킹·업무 시간대 단위 테스트, MockMvc 통합 테스트(인가·CSRF·파일 위조·예산 초과·계정 잠금·암호화·공지·FAQ), 별도 스레드와 MySQL 행 잠금 대기로 확인하는 동시성 테스트, eGov 실행환경·공통컴포넌트 구성과 V2 마이그레이션 결과 테스트, 모든 주요 화면의 공통 규칙(CSP·접근성)과 정적 리소스 캐시 테스트. Pull Request 마다 GitHub Actions 가 MySQL 8.4 컨테이너로 실행합니다.
 
 공개 샘플 계정을 쓰는 로컬 데모입니다. 회원가입, 개인정보 조회 기록, 공지 첨부파일은 아직 구현하지 않았습니다.
 
@@ -143,7 +150,7 @@ resources/
 ├── egovframework/sqlmap/     sql-mapper-config.xml, mappers/*_SQL.xml
 ├── egovframework/message/    메시지 번들
 ├── templates/                Thymeleaf (layout/, fragments/, 업무별 화면)
-├── static/                   dpms.css, dpms.js
+├── static/                   css/dpms.css(KRDS 토큰), js/dpms.js, fonts/pretendard-gov, images/logo.svg
 └── application.yml, log4j2-spring.xml
 ```
 
@@ -155,9 +162,12 @@ resources/
 | [SPRINT4_MESSAGES_SECURITY.md](docs/SPRINT4_MESSAGES_SECURITY.md) | 메시지 외부화, 경쟁 상태·금액 오버플로·로그 노출 수정 |
 | [SPRINT5_ACCOUNT_PRIVACY_UI.md](docs/SPRINT5_ACCOUNT_PRIVACY_UI.md) | 계정 잠금, 개인정보 암호화, 감사 컬럼, 정산 재요청, 화면 개선 |
 | [SPRINT6_MYSQL_COMMON_COMPONENTS.md](docs/SPRINT6_MYSQL_COMMON_COMPONENTS.md) | MySQL·Flyway 전환, DB 계정 분리, 공통컴포넌트 도입, Eclipse 전환 |
+| [SPRINT7_DESIGN_RENEWAL.md](docs/SPRINT7_DESIGN_RENEWAL.md) | KRDS 기준 화면 개편, 글꼴 내장, 모바일 카드형 목록, 정적 리소스 캐시, 명도 대비 수치 |
 | [COMMON_COMPONENTS.md](docs/COMMON_COMPONENTS.md) | 가져온 공통컴포넌트 목록과 원본 대비 변경점 |
 | [ECLIPSE_SETUP.md](docs/ECLIPSE_SETUP.md) | Eclipse 워크스페이스·JDK·실행 설정 |
 | [egov-codegen/README.md](docs/egov-codegen/README.md) | 코드 생성기 원본과 보완 내용 비교 (공지사항, FAQ) |
 | [CHANGELOG.md](CHANGELOG.md) | 스프린트별 변경 이력 |
+
+화면 기준: [KRDS](https://www.krds.go.kr) 디자인 토큰(krds-uiux 1.1.0)을 참고했고, 글꼴은 KRDS 배포본의 Pretendard GOV(SIL OFL 1.1)를 씁니다. 출처와 라이선스는 [`licenses/`](licenses)에 있습니다.
 
 교육 및 포트폴리오 목적으로 만들었습니다. © 2026 gwangco

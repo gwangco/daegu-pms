@@ -19,8 +19,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.time.Clock;
-import java.time.LocalDate;
 import java.util.List;
 
 @Controller
@@ -31,7 +29,6 @@ public class SettlementController {
     private final SettlementService settlementService;
     private final CommonCodeService commonCodeService;
     private final PagingHelper pagingHelper;
-    private final Clock clock;
     private final AppMessages messages;
 
     // 특정 협약 과제의 사업비 정산 내역 조회 (담당자 또는 과제 수행 기업 본인)
@@ -56,7 +53,7 @@ public class SettlementController {
         model.addAttribute("totalPending", used - approved);
         model.addAttribute("remaining", application.getRequestGrant() - used);
         model.addAttribute("expItems", commonCodeService.selectCodeList(CommonCodeService.EXP_ITEM));
-        model.addAttribute("today", LocalDate.now(clock));
+        // 집행일자 입력칸의 최댓값(today)은 LayoutModelAdvice 가 모든 화면에 넣는다
         return "settlement/list";
     }
 

@@ -9,101 +9,127 @@
 <body>
 <th:block layout:fragment="content">
 
-    <section class="hero" aria-labelledby="hero-title">
+    <section class="main-visual" aria-labelledby="hero-title">
         <div class="container">
-            <div class="row align-items-center g-4">
-                <div class="col-lg-8">
-                    <p class="mb-2 fw-semibold text-white-50">공공 R&amp;D·창업 지원사업 통합관리</p>
-                    <h1 id="hero-title" class="mb-3">공고 확인부터 심사, 사업비 정산까지 한 곳에서</h1>
-                    <p>미래 모빌리티·로봇·AI·디지털 헬스케어 분야 지원사업의 신청, 평가위원 심사, 협약 과제의 사업비 집행과 증빙 검수를 처리합니다.</p>
-                    <div class="d-flex flex-wrap gap-2 mt-4">
-                        <a th:href="@{/announcements(status='OPEN')}" class="btn btn-light">접수 중인 공고 보기</a>
-                        <a th:href="@{/login}" class="btn btn-outline-light" sec:authorize="isAnonymous()">로그인</a>
-                        <a th:href="@{/applications}" class="btn btn-outline-light" sec:authorize="isAuthenticated()">내 업무 바로가기</a>
-                    </div>
+            <div class="main-visual-grid">
+                <div>
+                    <p class="eyebrow">대구 공공 R&amp;D·창업 지원사업 통합관리</p>
+                    <h1 id="hero-title">공고 확인부터 사업비 정산까지<br class="d-none d-md-inline"> 한 곳에서 처리합니다</h1>
+                    <p class="lead">미래 모빌리티·로봇·AI·디지털 헬스케어 분야 지원사업의 신청과 평가위원 심사,
+                        협약 과제의 사업비 집행과 증빙 검수를 온라인으로 진행합니다.</p>
+
+                    <!--/* 사업공고 목록의 검색어(searchKeyword)로 바로 넘긴다 */-->
+                    <form class="hero-search" th:action="@{/announcements}" method="get" role="search" aria-label="지원사업 검색">
+                        <label for="heroKeyword" class="visually-hidden">공고명 또는 내용으로 지원사업 검색</label>
+                        <input type="search" id="heroKeyword" name="searchKeyword" class="form-control" maxlength="50"
+                               placeholder="예: 모빌리티, 시험인증">
+                        <button type="submit" class="btn btn-primary"><i class="bi bi-search me-1" aria-hidden="true"></i>검색</button>
+                    </form>
+
+                    <ul class="quick-links" aria-label="바로가기">
+                        <li><a th:href="@{/announcements(status='OPEN')}"><i class="bi bi-megaphone" aria-hidden="true"></i>접수 중인 공고</a></li>
+                        <li><a th:href="@{/notices}"><i class="bi bi-journal-text" aria-hidden="true"></i>공지사항</a></li>
+                        <li><a th:href="@{/faqs}"><i class="bi bi-question-circle" aria-hidden="true"></i>자주 묻는 질문</a></li>
+                    </ul>
                 </div>
-                <div class="col-lg-4">
-                    <ol class="hero-steps" aria-label="지원사업 진행 절차">
-                        <li><span><strong>공고 확인</strong> · 분야별 접수 공고 검색</span></li>
-                        <li><span><strong>온라인 신청</strong> · 사업계획서 제출, 접수번호 발급</span></li>
-                        <li><span><strong>심사·선정</strong> · 서류 검토와 평가위원 채점</span></li>
-                        <li><span><strong>협약·정산</strong> · 사업비 집행 등록과 증빙 검수</span></li>
-                    </ol>
-                </div>
+
+                <!--/* 로그인 사용자는 역할별 "처리할 일"을, 로그인 전에는 전체 현황을 먼저 보여 준다 */-->
+                <aside class="hero-card" aria-labelledby="hero-card-title">
+                    <th:block th:unless="${#lists.isEmpty(myTasks)}">
+                        <h2 id="hero-card-title"><i class="bi bi-clipboard-check" aria-hidden="true"></i>처리할 일</h2>
+                        <ul class="task-list">
+                            <li th:each="t : ${myTasks}" th:classappend="${t.count == 0} ? 'is-zero' : (${t.alert} ? 'is-alert' : '')">
+                                <a th:href="@{${t.url}}">
+                                    <span th:text="${t.label}">서류 검토 대기</span>
+                                    <span class="task-count"><strong th:text="${t.count}">0</strong>건</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </th:block>
+                    <h2 th:if="${#lists.isEmpty(myTasks)}" id="hero-card-title"><i class="bi bi-bar-chart" aria-hidden="true"></i>지원사업 현황</h2>
+                    <dl class="hero-stats">
+                        <div>
+                            <dt>접수 중 공고</dt>
+                            <dd><span th:text="${activeAnnouncements}">4</span><small>건</small></dd>
+                        </div>
+                        <div>
+                            <dt>누적 신청 과제</dt>
+                            <dd><span th:text="${totalApplications}">3</span><small>건</small></dd>
+                        </div>
+                        <div>
+                            <dt>최종 선정 과제</dt>
+                            <dd><span th:text="${selectedApplications}">1</span><small>건</small></dd>
+                        </div>
+                    </dl>
+                    <p class="hero-login" sec:authorize="isAnonymous()">
+                        신청·심사·정산 화면은 <a th:href="@{/login}">로그인</a> 후 이용할 수 있습니다.
+                        로그인 화면에서 역할별 데모 계정을 바로 입력할 수 있습니다.
+                    </p>
+                </aside>
             </div>
+
+            <section class="process" aria-labelledby="process-title">
+                <h2 id="process-title" class="process-title">지원사업 진행 절차</h2>
+                <ol class="process-steps">
+                    <li>
+                        <span class="step-icon" aria-hidden="true"><i class="bi bi-megaphone"></i></span>
+                        <span>
+                            <span class="step-no">1단계</span>
+                            <span class="step-name">공고 확인</span>
+                            <span class="step-desc">분야별 접수 중인 공고 검색</span>
+                        </span>
+                    </li>
+                    <li>
+                        <span class="step-icon" aria-hidden="true"><i class="bi bi-send"></i></span>
+                        <span>
+                            <span class="step-no">2단계</span>
+                            <span class="step-name">온라인 신청</span>
+                            <span class="step-desc">사업계획서 제출, 접수번호 발급</span>
+                        </span>
+                    </li>
+                    <li>
+                        <span class="step-icon" aria-hidden="true"><i class="bi bi-clipboard-check"></i></span>
+                        <span>
+                            <span class="step-no">3단계</span>
+                            <span class="step-name">심사·선정</span>
+                            <span class="step-desc">서류 검토와 평가위원 채점</span>
+                        </span>
+                    </li>
+                    <li>
+                        <span class="step-icon" aria-hidden="true"><i class="bi bi-receipt"></i></span>
+                        <span>
+                            <span class="step-no">4단계</span>
+                            <span class="step-name">협약·정산</span>
+                            <span class="step-desc">사업비 집행 등록과 증빙 검수</span>
+                        </span>
+                    </li>
+                </ol>
+            </section>
         </div>
     </section>
 
     <div class="container">
-        <section th:unless="${#lists.isEmpty(myTasks)}" class="mb-4" aria-labelledby="task-title">
-            <h2 id="task-title" class="section-title">처리할 일</h2>
-            <div class="row g-3">
-                <div class="col-sm-6 col-lg" th:each="t : ${myTasks}">
-                    <a th:href="@{${t.url}}" class="task-card"
-                       th:classappend="${t.count == 0} ? 'is-zero' : (${t.alert} ? 'is-alert' : '')">
-                        <div class="text-sub small fw-semibold" th:text="${t.label}">서류 검토 대기</div>
-                        <div><span class="count" th:text="${t.count}">0</span><span class="ms-1">건</span></div>
-                    </a>
-                </div>
-            </div>
-        </section>
-
-        <h2 class="visually-hidden">사업 현황 요약</h2>
-        <div class="row g-3 mb-4">
-            <div class="col-md-4">
-                <div class="stat-card">
-                    <div class="label">접수 중 공고</div>
-                    <div class="value"><span th:text="${activeAnnouncements}">4</span><small class="fs-6 ms-1">건</small></div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="stat-card">
-                    <div class="label">누적 신청 과제</div>
-                    <div class="value"><span th:text="${totalApplications}">3</span><small class="fs-6 ms-1">건</small></div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="stat-card">
-                    <div class="label">최종 선정(협약) 과제</div>
-                    <div class="value"><span th:text="${selectedApplications}">1</span><small class="fs-6 ms-1">건</small></div>
-                </div>
-            </div>
-        </div>
-
-        <div class="row g-4">
-            <div class="col-lg-8 d-flex flex-column gap-4">
+        <div class="home-grid">
+            <div class="home-col">
                 <section class="panel" aria-labelledby="recent-title">
                     <div class="panel-head">
                         <h2 id="recent-title">접수 중인 지원사업</h2>
                         <a th:href="@{/announcements(status='OPEN')}" class="panel-more">전체 보기 <i class="bi bi-chevron-right" aria-hidden="true"></i></a>
                     </div>
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <caption class="visually-hidden">접수 중인 지원사업 목록: 분야, 공고명, 기업당 최대 지원금, 접수 마감일</caption>
-                            <thead>
-                            <tr>
-                                <th scope="col" class="d-none d-md-table-cell">분야</th>
-                                <th scope="col">공고명</th>
-                                <th scope="col" class="text-end">최대 지원금</th>
-                                <th scope="col" class="text-center">접수 마감</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            <tr th:each="item : ${announcements}">
-                                <td class="d-none d-md-table-cell"><span class="status status-blue" th:text="${item.fieldName}">모빌리티</span></td>
-                                <td>
-                                    <a th:href="@{/announcements/{id}(id=${item.announcementId})}" class="fw-semibold text-body"
-                                       th:text="${item.title}">공고명</a>
-                                </td>
-                                <td class="text-end fw-semibold text-nowrap" th:text="${#numbers.formatInteger(item.maxGrant, 0, 'COMMA')} + '원'">100,000,000원</td>
-                                <td class="text-center text-sub text-nowrap" th:text="${item.endDate}">2026-11-30</td>
-                            </tr>
-                            <tr th:if="${#lists.isEmpty(announcements)}">
-                                <td colspan="4" class="empty-row">현재 접수 중인 공고가 없습니다.</td>
-                            </tr>
-                            </tbody>
-                        </table>
-                    </div>
+                    <ul class="ann-list">
+                        <li th:each="item : ${announcements}">
+                            <div class="ann-badges">
+                                <th:block th:replace="~{fragments/common :: fieldChip(${item.fieldCode}, ${item.fieldName})}"></th:block>
+                                <th:block th:replace="~{fragments/common :: dday(${item.endDate}, ${item.status})}"></th:block>
+                            </div>
+                            <a class="ann-title" th:href="@{/announcements/{id}(id=${item.announcementId})}" th:text="${item.title}">공고명</a>
+                            <ul class="ann-meta">
+                                <li>기업당 최대 <strong th:text="${#numbers.formatInteger(item.maxGrant, 0, 'COMMA')} + '원'">100,000,000원</strong></li>
+                                <li>접수 마감 <strong th:text="${item.endDate}">2026-11-30</strong></li>
+                            </ul>
+                        </li>
+                        <li th:if="${#lists.isEmpty(announcements)}" class="empty-state">현재 접수 중인 공고가 없습니다.</li>
+                    </ul>
                 </section>
 
                 <section class="panel" aria-labelledby="notice-title">
@@ -111,59 +137,65 @@
                         <h2 id="notice-title">공지사항</h2>
                         <a th:href="@{/notices}" class="panel-more">전체 보기 <i class="bi bi-chevron-right" aria-hidden="true"></i></a>
                     </div>
-                    <ul class="list-group list-group-flush">
-                        <li class="list-group-item d-flex justify-content-between gap-2" th:each="n : ${notices}">
-                            <a th:href="@{/notices/{id}(id=${n.nttId})}" class="text-body text-truncate" th:title="${n.nttSj}">
-                                <span th:if="${n.noticeAt == 'Y'}" class="status status-danger me-1">중요</span><span th:text="${n.nttSj}">공지 제목</span>
-                            </a>
-                            <span class="text-sub small text-nowrap" th:text="${#strings.substring(n.frstRegisterPnttm, 5).replace('-', '.')}">10.21</span>
+                    <ul class="notice-list">
+                        <li th:each="n : ${notices}">
+                            <span th:if="${n.noticeAt == 'Y'}" class="status status-danger">중요</span>
+                            <a th:href="@{/notices/{id}(id=${n.nttId})}" th:title="${n.nttSj}" th:text="${n.nttSj}">공지 제목</a>
+                            <span class="notice-date" th:text="${n.frstRegisterPnttm}">2026-10-21</span>
                         </li>
-                        <li class="list-group-item text-sub text-center" th:if="${#lists.isEmpty(notices)}">등록된 공지사항이 없습니다.</li>
+                        <li th:if="${#lists.isEmpty(notices)}" class="empty-state">등록된 공지사항이 없습니다.</li>
                     </ul>
                 </section>
             </div>
 
-            <div class="col-lg-4 d-flex flex-column gap-4">
+            <div class="home-col">
                 <section class="panel" aria-labelledby="budget-title">
                     <div class="panel-head">
                         <h2 id="budget-title">전략산업별 공고 예산</h2>
                     </div>
                     <div class="panel-body">
-                        <div class="chart-box">
-                            <canvas data-chart="budget" data-source="#budgetData" role="img"
-                                    aria-label="전략산업별 공고 예산 비중 도넛 차트. 분야별 금액은 아래 목록에 있습니다."></canvas>
-                        </div>
-                        <ul class="chart-legend" id="budgetData">
-                            <li th:each="s : ${fieldBudgetStats}"
-                                th:attr="data-label=${s.fieldName}, data-value=${#numbers.formatDecimal(s.totalBudget / 100000000.0, 1, 'NONE', 1, 'POINT')}">
-                                <span th:text="${s.fieldName}">분야</span>
-                                <strong th:text="${#numbers.formatDecimal(s.totalBudget / 100000000.0, 1, 'COMMA', 1, 'POINT')} + '억원'">0억원</strong>
+                        <!--/* 막대 길이는 dpms.js 가 data-value 로 맞춘다. 금액은 글자로 함께 보여 주므로 막대는 화면낭독기에서 숨긴다 */-->
+                        <ul class="bar-list" data-bar-list>
+                            <li th:each="s : ${fieldBudgetStats}" th:attr="data-value=${s.totalBudget}">
+                                <div class="bar-head">
+                                    <span th:text="${s.fieldName}">분야</span>
+                                    <strong th:text="${#numbers.formatDecimal(s.totalBudget / 100000000.0, 1, 'COMMA', 1, 'POINT')} + '억원'">0억원</strong>
+                                </div>
+                                <div class="bar-track" aria-hidden="true"><span class="bar-fill"></span></div>
                             </li>
                         </ul>
+                        <p class="bar-caption">마감된 공고를 포함한 전체 공고의 총 지원 예산 합계입니다.</p>
                     </div>
                 </section>
 
-                <section class="panel demo-accounts" aria-labelledby="demo-title" sec:authorize="isAnonymous()">
+                <section class="panel" aria-labelledby="guide-title">
                     <div class="panel-head">
-                        <h2 id="demo-title">데모 계정</h2>
+                        <h2 id="guide-title">이용 안내</h2>
                     </div>
-                    <div class="panel-body">
-                        <p class="text-sub small mb-2">역할별 화면을 바로 확인할 수 있는 로컬 데모 전용 계정입니다.</p>
-                        <dl class="row small mb-0">
-                            <dt class="col-5">총괄관리자</dt><dd class="col-7"><code>admin</code> / <code>admin1234</code></dd>
-                            <dt class="col-5">사업담당자</dt><dd class="col-7"><code>manager1</code> / <code>manager1234</code></dd>
-                            <dt class="col-5">평가위원</dt><dd class="col-7"><code>evaluator1</code> / <code>eval1234</code></dd>
-                            <dt class="col-5">신청기업</dt><dd class="col-7 mb-0"><code>company1</code> / <code>company1234</code></dd>
-                        </dl>
-                    </div>
+                    <ul class="link-list">
+                        <li>
+                            <a th:href="@{/faqs(faqClCode='APPLY')}">
+                                <i class="bi bi-question-circle" aria-hidden="true"></i>신청·접수 자주 묻는 질문
+                                <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                            </a>
+                        </li>
+                        <li>
+                            <a th:href="@{/faqs(faqClCode='SETTLE')}">
+                                <i class="bi bi-cash-coin" aria-hidden="true"></i>사업비 정산 자주 묻는 질문
+                                <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                            </a>
+                        </li>
+                        <li>
+                            <a th:href="@{/privacy}">
+                                <i class="bi bi-shield-check" aria-hidden="true"></i>개인정보처리방침
+                                <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                            </a>
+                        </li>
+                    </ul>
                 </section>
             </div>
         </div>
     </div>
-</th:block>
-
-<th:block layout:fragment="scripts">
-    <script th:src="@{/webjars/chart.js/dist/chart.umd.js}"></script>
 </th:block>
 </body>
 </html>

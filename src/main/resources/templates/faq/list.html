@@ -10,26 +10,28 @@
 <!--/* 생성기의 faqList.html 은 컬럼 11개짜리 표 + jQuery 제출이었다. 질문을 눌러 답변을 펼치는 형태로 바꾸고 스크립트 없이 동작하게 함 */-->
 <th:block layout:fragment="content">
     <div class="page-head">
-        <div class="container medium">
+        <div class="container">
             <nav aria-label="현재 위치">
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a th:href="@{/}">홈</a></li>
                     <li class="breadcrumb-item active" aria-current="page">자주 묻는 질문</li>
                 </ol>
             </nav>
-            <div class="d-flex flex-wrap justify-content-between align-items-end gap-2">
+            <div class="page-head-row">
                 <div>
                     <h1>자주 묻는 질문</h1>
                     <p class="lead-sub">신청부터 사업비 정산까지 자주 받는 질문과 답변입니다.</p>
                 </div>
-                <a sec:authorize="hasAnyRole('MANAGER', 'ADMIN')" th:href="@{/faqs/new}" class="btn btn-primary">
-                    <i class="bi bi-pencil me-1" aria-hidden="true"></i>FAQ 등록
-                </a>
+                <div class="page-actions" sec:authorize="hasAnyRole('MANAGER', 'ADMIN')">
+                    <a th:href="@{/faqs/new}" class="btn btn-primary btn-lg">
+                        <i class="bi bi-pencil me-1" aria-hidden="true"></i>FAQ 등록
+                    </a>
+                </div>
             </div>
         </div>
     </div>
 
-    <div class="container medium">
+    <div class="container">
         <!--/* 분류 탭: 공통코드 DPM005(FAQ 분류) 중 사용 중인 코드만 나온다 */-->
         <nav class="faq-tabs" aria-label="FAQ 분류">
             <a th:href="@{/faqs}" th:classappend="${#strings.isEmpty(searchVO.faqClCode)} ? 'active'"
@@ -42,13 +44,17 @@
         <form id="searchForm" th:action="@{/faqs}" th:object="${searchVO}" method="get" class="search-box" role="search">
             <input type="hidden" th:field="*{pageIndex}">
             <input type="hidden" th:field="*{faqClCode}">
-            <div class="row g-2 align-items-end">
-                <div class="col-md-10">
+            <div class="row g-3 align-items-end">
+                <div class="col-12 col-md">
                     <label for="searchWrd" class="form-label">질문·답변 검색</label>
                     <input type="search" th:field="*{searchWrd}" class="form-control" maxlength="50" placeholder="예: 접수번호, 반려, 잠금">
                 </div>
-                <div class="col-md-2">
-                    <button type="submit" class="btn btn-secondary w-100"><i class="bi bi-search me-1" aria-hidden="true"></i>검색</button>
+                <div class="col-12 col-md-auto">
+                    <div class="search-actions">
+                        <button type="submit" class="btn btn-secondary"><i class="bi bi-search me-1" aria-hidden="true"></i>검색</button>
+                        <a th:unless="${#strings.isEmpty(searchVO.searchWrd)}" th:href="@{/faqs(faqClCode=${searchVO.faqClCode})}"
+                           class="btn btn-outline-secondary">초기화</a>
+                    </div>
                 </div>
             </div>
         </form>

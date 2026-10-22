@@ -22,9 +22,9 @@
 
     <div class="container">
         <form id="searchForm" th:action="@{/settlements/review}" th:object="${searchVO}" method="get" class="search-box" role="search">
-            <div class="row g-2 align-items-end">
-                <input type="hidden" th:field="*{pageIndex}">
-                <div class="col-md-3">
+            <input type="hidden" th:field="*{pageIndex}">
+            <div class="row g-3 align-items-end">
+                <div class="col-12 col-md-4">
                     <label for="status" class="form-label">검수상태</label>
                     <select th:field="*{status}" class="form-select">
                         <option value="">전체</option>
@@ -33,8 +33,10 @@
                         <option value="REJECTED">보완요청(반려)</option>
                     </select>
                 </div>
-                <div class="col-md-2">
-                    <button type="submit" class="btn btn-secondary w-100"><i class="bi bi-funnel me-1" aria-hidden="true"></i>조회</button>
+                <div class="col-12 col-md-auto">
+                    <div class="search-actions">
+                        <button type="submit" class="btn btn-secondary"><i class="bi bi-funnel me-1" aria-hidden="true"></i>조회</button>
+                    </div>
                 </div>
             </div>
         </form>
@@ -43,36 +45,38 @@
 
         <div class="panel">
             <div class="table-responsive">
-                <table class="table table-hover">
-                    <caption class="visually-hidden">정산 검수 목록: 접수번호, 과제명, 기업, 비목, 집행일자, 금액, 등록일, 상태</caption>
+                <table class="table table-hover table-cards">
+                    <caption class="visually-hidden">정산 검수 목록: 접수번호, 과제명, 기업, 비목, 금액, 요청일, 상태</caption>
                     <thead>
                     <tr>
                         <th scope="col" class="text-center">접수번호</th>
-                        <th scope="col">과제명</th>
-                        <th scope="col" class="d-none d-md-table-cell">기업</th>
-                        <th scope="col" class="d-none d-md-table-cell">비목</th>
+                        <th scope="col">과제명 · 집행 내용</th>
+                        <th scope="col">기업</th>
+                        <th scope="col">비목</th>
                         <th scope="col" class="text-end">금액</th>
-                        <th scope="col" class="text-center d-none d-md-table-cell">요청일</th>
+                        <th scope="col" class="text-center">요청일</th>
                         <th scope="col" class="text-center col-status">상태</th>
                         <th scope="col" class="text-center col-action">검수</th>
                     </tr>
                     </thead>
                     <tbody>
                     <tr th:each="s : ${settlements}">
-                        <td class="text-center fw-semibold text-nowrap" th:text="${s.receiptNo}">DPMS-00000001</td>
-                        <td>
-                            <span class="fw-semibold" th:text="${s.projectName}">과제명</span>
-                            <div class="small text-sub" th:text="${s.vendorName} + ' · ' + ${s.description}">거래처 · 내용</div>
+                        <td data-label="접수번호" class="text-center fw-bold text-nowrap" th:text="${s.receiptNo}">DPMS-00000001</td>
+                        <td class="cell-title">
+                            <a th:href="@{/settlements/application/{id}(id=${s.applicationId})}" th:text="${s.projectName}">과제명</a>
+                            <span class="cell-sub" th:text="${s.vendorName} + ' · ' + ${s.description}">거래처 · 내용</span>
                         </td>
-                        <td class="d-none d-md-table-cell" th:text="${s.companyName}">기업명</td>
-                        <td class="d-none d-md-table-cell small" th:text="${s.itemName}">비목</td>
-                        <td class="text-end fw-semibold text-nowrap" th:text="${#numbers.formatInteger(s.totalAmount, 0, 'COMMA')} + '원'">0원</td>
-                        <td class="text-center small text-nowrap d-none d-md-table-cell" th:text="${#temporals.format(s.createdAt, 'MM-dd HH:mm')}">10-18 17:00</td>
-                        <td class="text-center">
-                            <th:block th:replace="~{fragments/common :: settleStatus(${s.status})}"></th:block>
-                            <div th:if="${s.resubmitCount > 0}" class="small text-sub mt-1" th:text="${'재요청 ' + s.resubmitCount + '회'}">재요청 1회</div>
+                        <td data-label="기업" class="text-nowrap-md" th:text="${s.companyName}">기업명</td>
+                        <td data-label="비목" class="small" th:text="${s.itemName}">비목</td>
+                        <td data-label="금액" class="text-end fw-bold text-nowrap" th:text="${#numbers.formatInteger(s.totalAmount, 0, 'COMMA')} + '원'">0원</td>
+                        <td data-label="요청일" class="text-center small text-nowrap" th:text="${#temporals.format(s.createdAt, 'MM-dd HH:mm')}">10-18 17:00</td>
+                        <td data-label="상태" class="text-center">
+                            <div>
+                                <th:block th:replace="~{fragments/common :: settleStatus(${s.status})}"></th:block>
+                                <span th:if="${s.resubmitCount > 0}" class="cell-sub" th:text="${'재요청 ' + s.resubmitCount + '회'}">재요청 1회</span>
+                            </div>
                         </td>
-                        <td class="text-center">
+                        <td class="text-center cell-actions">
                             <a th:href="@{/settlements/application/{id}(id=${s.applicationId})}" class="btn btn-sm btn-outline-primary">열기</a>
                         </td>
                     </tr>

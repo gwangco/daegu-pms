@@ -16,30 +16,33 @@
                     <li class="breadcrumb-item active" aria-current="page">사업공고</li>
                 </ol>
             </nav>
-            <div class="d-flex flex-wrap justify-content-between align-items-end gap-2">
+            <div class="page-head-row">
                 <div>
                     <h1>사업공고</h1>
                     <p class="lead-sub">접수 중이거나 마감된 기술개발·사업화 지원 공고를 확인하세요.</p>
                 </div>
-                <a sec:authorize="hasAnyRole('MANAGER', 'ADMIN')" th:href="@{/announcements/new}" class="btn btn-primary">
-                    <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>공고 등록
-                </a>
+                <div class="page-actions" sec:authorize="hasAnyRole('MANAGER', 'ADMIN')">
+                    <a th:href="@{/announcements/new}" class="btn btn-primary btn-lg">
+                        <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>공고 등록
+                    </a>
+                </div>
             </div>
         </div>
     </div>
 
     <div class="container">
-        <form id="searchForm" th:action="@{/announcements}" th:object="${searchVO}" method="get" class="search-box" role="search">
-            <div class="row g-2 align-items-end">
-                <input type="hidden" th:field="*{pageIndex}">
-                <div class="col-md-3">
+        <form id="searchForm" th:action="@{/announcements}" th:object="${searchVO}" method="get" class="search-box" role="search"
+              th:with="filtered=${!#strings.isEmpty(searchVO.fieldCode) or !#strings.isEmpty(searchVO.status) or !#strings.isEmpty(searchVO.searchKeyword)}">
+            <input type="hidden" th:field="*{pageIndex}">
+            <div class="row g-3 align-items-end">
+                <div class="col-6 col-md-3">
                     <label for="fieldCode" class="form-label">지원 분야</label>
                     <select th:field="*{fieldCode}" class="form-select">
                         <option value="">전체</option>
                         <option th:each="code : ${fieldCodes}" th:value="${code.code}" th:text="${code.codeNm}">분야</option>
                     </select>
                 </div>
-                <div class="col-md-2">
+                <div class="col-6 col-md-2">
                     <label for="status" class="form-label">접수 상태</label>
                     <select th:field="*{status}" class="form-select">
                         <option value="">전체</option>
@@ -47,12 +50,15 @@
                         <option value="CLOSED">접수마감</option>
                     </select>
                 </div>
-                <div class="col-md-5">
+                <div class="col-12 col-md">
                     <label for="searchKeyword" class="form-label">검색어</label>
                     <input type="search" th:field="*{searchKeyword}" class="form-control" placeholder="공고명 또는 내용" maxlength="50">
                 </div>
-                <div class="col-md-2">
-                    <button type="submit" class="btn btn-secondary w-100"><i class="bi bi-search me-1" aria-hidden="true"></i>검색</button>
+                <div class="col-12 col-md-auto">
+                    <div class="search-actions">
+                        <button type="submit" class="btn btn-secondary"><i class="bi bi-search me-1" aria-hidden="true"></i>검색</button>
+                        <a th:if="${filtered}" th:href="@{/announcements}" class="btn btn-outline-secondary">초기화</a>
+                    </div>
                 </div>
             </div>
         </form>
@@ -61,16 +67,16 @@
 
         <div class="panel">
             <div class="table-responsive">
-                <table class="table table-hover">
+                <table class="table table-hover table-cards">
                     <caption class="visually-hidden">사업공고 목록: 번호, 분야, 공고명, 기업당 최대 지원금, 접수기간, 상태, 조회수</caption>
                     <thead>
                     <tr>
                         <th scope="col" class="d-none d-md-table-cell col-num text-center">번호</th>
-                        <th class="d-none d-md-table-cell" scope="col">분야</th>
+                        <th scope="col">분야</th>
                         <th scope="col">공고명</th>
                         <th scope="col" class="text-end col-money">최대 지원금</th>
                         <th scope="col" class="text-center">접수기간</th>
-                        <th scope="col" class="text-center">상태</th>
+                        <th scope="col" class="text-center col-status">상태</th>
                         <th scope="col" class="d-none d-md-table-cell text-center">조회</th>
                     </tr>
                     </thead>
@@ -78,14 +84,19 @@
                     <tr th:each="a, stat : ${announcements}">
                         <td class="d-none d-md-table-cell text-center text-sub"
                             th:text="${paginationInfo.totalRecordCount - (searchVO.pageIndex - 1) * searchVO.recordCountPerPage - stat.index}">1</td>
-                        <td class="d-none d-md-table-cell"><span class="status status-blue" th:text="${a.fieldName}">모빌리티</span></td>
-                        <td>
-                            <a th:href="@{/announcements/{id}(id=${a.announcementId})}" class="fw-semibold text-body" th:text="${a.title}">공고명</a>
-                            <div class="small text-sub cell-truncate" th:text="${a.content}">공고 요약</div>
+                        <td data-label="분야"><th:block th:replace="~{fragments/common :: fieldChip(${a.fieldCode}, ${a.fieldName})}"></th:block></td>
+                        <td class="cell-title">
+                            <a th:href="@{/announcements/{id}(id=${a.announcementId})}" th:text="${a.title}">공고명</a>
+                            <span class="cell-sub cell-truncate" th:text="${a.content}">공고 요약</span>
                         </td>
-                        <td class="text-end fw-semibold" th:text="${#numbers.formatInteger(a.maxGrant, 0, 'COMMA')} + '원'">100,000,000원</td>
-                        <td class="text-center small text-nowrap" th:text="${a.startDate} + ' ~ ' + ${a.endDate}">2026-10-01 ~ 2026-11-30</td>
-                        <td class="text-center"><th:block th:replace="~{fragments/common :: announcementStatus(${a.status})}"></th:block></td>
+                        <td data-label="최대 지원금" class="text-end fw-bold text-nowrap" th:text="${#numbers.formatInteger(a.maxGrant, 0, 'COMMA')} + '원'">100,000,000원</td>
+                        <td data-label="접수기간" class="text-center small text-nowrap" th:text="${a.startDate} + ' ~ ' + ${a.endDate}">2026-10-01 ~ 2026-11-30</td>
+                        <td data-label="상태" class="text-center">
+                            <div class="d-inline-flex flex-wrap justify-content-center gap-1">
+                                <th:block th:replace="~{fragments/common :: announcementStatus(${a.status})}"></th:block>
+                                <th:block th:replace="~{fragments/common :: dday(${a.endDate}, ${a.status})}"></th:block>
+                            </div>
+                        </td>
                         <td class="d-none d-md-table-cell text-center text-sub" th:text="${a.viewCount}">120</td>
                     </tr>
                     <tr th:if="${#lists.isEmpty(announcements)}">

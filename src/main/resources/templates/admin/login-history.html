@@ -22,30 +22,34 @@
     </div>
 
     <div class="container">
-        <form id="searchForm" th:action="@{/admin/login-history}" th:object="${searchVO}" method="get" class="search-box" role="search">
-            <div class="row g-2 align-items-end">
-                <input type="hidden" th:field="*{pageIndex}">
-                <div class="col-md-3">
+        <form id="searchForm" th:action="@{/admin/login-history}" th:object="${searchVO}" method="get" class="search-box" role="search"
+              th:with="filtered=${!#strings.isEmpty(searchVO.searchKeyword) or !#strings.isEmpty(searchVO.resultCode) or searchVO.fromDate != null or searchVO.toDate != null}">
+            <input type="hidden" th:field="*{pageIndex}">
+            <div class="row g-3 align-items-end">
+                <div class="col-12 col-md-3">
                     <label for="searchKeyword" class="form-label">아이디</label>
                     <input type="search" th:field="*{searchKeyword}" class="form-control" maxlength="50">
                 </div>
-                <div class="col-md-2">
+                <div class="col-12 col-md-2">
                     <label for="resultCode" class="form-label">결과</label>
                     <select th:field="*{resultCode}" class="form-select">
                         <option value="">전체</option>
                         <option th:each="r : ${results}" th:value="${r.name()}" th:text="${r.label}">결과</option>
                     </select>
                 </div>
-                <div class="col-md-2">
+                <div class="col-6 col-md">
                     <label for="fromDate" class="form-label">시작일</label>
                     <input type="date" th:field="*{fromDate}" class="form-control">
                 </div>
-                <div class="col-md-2">
+                <div class="col-6 col-md">
                     <label for="toDate" class="form-label">종료일</label>
                     <input type="date" th:field="*{toDate}" class="form-control">
                 </div>
-                <div class="col-md-3">
-                    <button type="submit" class="btn btn-secondary w-100"><i class="bi bi-search me-1" aria-hidden="true"></i>검색</button>
+                <div class="col-12 col-md-auto">
+                    <div class="search-actions">
+                        <button type="submit" class="btn btn-secondary"><i class="bi bi-search me-1" aria-hidden="true"></i>검색</button>
+                        <a th:if="${filtered}" th:href="@{/admin/login-history}" class="btn btn-outline-secondary">초기화</a>
+                    </div>
                 </div>
             </div>
         </form>
@@ -54,29 +58,29 @@
 
         <div class="panel">
             <div class="table-responsive">
-                <table class="table table-hover">
+                <table class="table table-hover table-cards">
                     <caption class="visually-hidden">접속 기록: 일시, 아이디, 이름, 결과, 접속 IP</caption>
                     <thead>
                     <tr>
-                        <th scope="col" class="col-date">일시</th>
+                        <th scope="col">일시</th>
                         <th scope="col">아이디</th>
-                        <th scope="col" class="d-none d-md-table-cell">이름</th>
+                        <th scope="col">이름</th>
                         <th scope="col" class="text-center col-status">결과</th>
                         <th scope="col">접속 IP</th>
                     </tr>
                     </thead>
                     <tbody>
                     <tr th:each="h : ${histories}">
-                        <td class="small text-nowrap" th:text="${#temporals.format(h.loginAt, 'yyyy-MM-dd HH:mm:ss')}">2026-10-21 10:00:00</td>
-                        <td>
-                            <span th:if="${h.userId != null}" class="fw-semibold" th:text="${h.userId}">company1</span>
+                        <td class="cell-title text-nowrap" th:text="${#temporals.format(h.loginAt, 'yyyy-MM-dd HH:mm:ss')}">2026-10-21 10:00:00</td>
+                        <td data-label="아이디">
+                            <span th:if="${h.userId != null}" class="fw-bold" th:text="${h.userId}">company1</span>
                             <span th:if="${h.userId == null}" class="text-sub">(없는 아이디)</span>
                         </td>
-                        <td class="d-none d-md-table-cell" th:text="${h.userName}">이대표</td>
-                        <td class="text-center">
+                        <td data-label="이름" th:text="${h.userName != null} ? ${h.userName} : '-'">이대표</td>
+                        <td data-label="결과" class="text-center">
                             <span class="status" th:classappend="${h.failure} ? 'status-danger' : 'status-success'" th:text="${h.resultLabel}">로그인</span>
                         </td>
-                        <td class="small text-nowrap" th:text="${h.clientIp}">127.0.0.1</td>
+                        <td data-label="접속 IP" class="small text-nowrap" th:text="${h.clientIp}">127.0.0.1</td>
                     </tr>
                     <tr th:if="${#lists.isEmpty(histories)}">
                         <td colspan="5" class="empty-row">조건에 맞는 접속 기록이 없습니다.</td>
