@@ -473,6 +473,12 @@ body {
     vertical-align: middle;
 }
 
+/* 표 컨테이너는 가로 스크롤만 쓴다. 표 높이가 소수점(예: 311.14px)이면 세로로 1px 넘쳐서
+   일반 스크롤바를 쓰는 Windows 브라우저에 쓸모없는 세로 스크롤바가 생긴다 */
+.table-responsive {
+    overflow-y: hidden;
+}
+
 
 .table-info-grid th {
     background: #f1f3f6;
