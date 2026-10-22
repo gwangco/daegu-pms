@@ -25,8 +25,8 @@ class DashboardAndCodeIntegrationTest extends IntegrationTestSupport {
     @Autowired CommonCodeService commonCodeService;
 
     private static String task(String label, int count) {
-        // 카드 안에서 업무 이름 뒤에 건수가 나온다
-        return "(?s).*" + label + "</div>\\s*<div><span class=\"count\">" + count + "</span>.*";
+        // 처리할 일 목록의 한 줄: 업무 이름 바로 뒤에 건수가 나온다
+        return "(?s).*" + label + "</span>\\s*<span class=\"task-count\"><strong>" + count + "</strong>.*";
     }
 
     @Test

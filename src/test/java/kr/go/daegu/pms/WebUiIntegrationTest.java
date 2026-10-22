@@ -61,7 +61,6 @@ class WebUiIntegrationTest extends IntegrationTestSupport {
                 "/webjars/bootstrap/dist/js/bootstrap.bundle.min.js",
                 "/webjars/bootstrap-icons/font/bootstrap-icons.min.css",
                 "/webjars/bootstrap-icons/font/fonts/bootstrap-icons.woff2",
-                "/webjars/chart.js/dist/chart.umd.js",
                 "/css/dpms.css", "/js/dpms.js", "/favicon.svg", "/images/logo.svg",
                 "/fonts/pretendard-gov/PretendardGOV-Regular.subset.woff2",
                 "/fonts/pretendard-gov/PretendardGOV-Medium.subset.woff2",

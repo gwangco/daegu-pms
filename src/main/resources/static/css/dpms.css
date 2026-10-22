@@ -112,7 +112,8 @@
     --bs-body-line-height: 1.6;
     --bs-body-color: var(--dp-text);
     --bs-body-color-rgb: 30, 33, 36;
-    --bs-body-bg: var(--dp-bg);
+    /* Bootstrap 은 입력칸·모달·드롭다운 바탕에도 body 배경 변수를 쓰므로 흰색으로 두고, 페이지 배경만 body 에 따로 준다 */
+    --bs-body-bg: #fff;
     --bs-emphasis-color: var(--dp-text);
     --bs-heading-color: var(--dp-text);
     --bs-secondary-color: var(--dp-text-muted);
@@ -137,6 +138,7 @@ body {
     display: flex;
     flex-direction: column;
     min-height: 100vh;
+    background-color: var(--dp-bg);
     word-break: keep-all;
     /* anywhere 는 표 칸의 최소 폭까지 줄여 모바일에서 한 글자씩 꺾이므로 break-word 를 쓴다 */
     overflow-wrap: break-word;
@@ -1597,6 +1599,11 @@ a.cell-link:hover {
     margin: 0;
 }
 
+.task-list + .hero-stats {
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--dp-line-soft);
+}
+
 .hero-stats > div {
     padding: .25rem .5rem;
     text-align: center;
@@ -2613,8 +2620,17 @@ a.cell-link:hover {
 }
 
 @media (max-width: 575.98px) {
+    /* 작은 화면에서는 아이콘을 빼고 2열로 줄여 첫 화면 아래 목록이 빨리 보이게 한다 */
     .process-steps {
-        grid-template-columns: minmax(0, 1fr);
+        gap: .5rem;
+    }
+
+    .process-steps li {
+        padding: .875rem 1rem;
+    }
+
+    .process-steps .step-icon {
+        display: none;
     }
 
     .form-actions .btn {

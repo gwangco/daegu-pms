@@ -138,40 +138,20 @@
         });
     });
 
-    // ---------- 예산 배분 차트 (아래 목록의 값을 읽어 그린다: 화면낭독기는 목록을 읽음) ----------
-    var canvas = document.querySelector('canvas[data-chart="budget"]');
-    if (canvas && window.Chart) {
-        var items = document.querySelectorAll(canvas.getAttribute('data-source') + ' [data-value]');
-        var labels = [];
-        var values = [];
+    // ---------- 막대 길이 (분야별 예산) ----------
+    // 금액은 글자로 이미 표시되어 있고, 여기서는 가장 큰 값을 100% 로 막대 폭만 맞춘다.
+    // style 속성 대신 CSSOM(el.style.width)으로 넣으므로 CSP(style-src 'self')에 걸리지 않는다
+    document.querySelectorAll('[data-bar-list]').forEach(function (list) {
+        var items = list.querySelectorAll('[data-value]');
+        var max = 0;
         items.forEach(function (item) {
-            labels.push(item.getAttribute('data-label'));
-            values.push(Number(item.getAttribute('data-value')));
+            max = Math.max(max, Number(item.getAttribute('data-value')) || 0);
         });
-        new window.Chart(canvas, {
-            type: 'doughnut',
-            data: {
-                labels: labels,
-                datasets: [{
-                    data: values,
-                    backgroundColor: ['#0b4fc2', '#0a6c8f', '#5b3fb0', '#0f7a4a', '#b26a00'],
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        callbacks: {
-                            label: function (context) {
-                                return context.label + ': ' + context.parsed + '억원';
-                            }
-                        }
-                    }
-                }
+        items.forEach(function (item) {
+            var fill = item.querySelector('.bar-fill');
+            if (fill && max > 0) {
+                fill.style.width = ((Number(item.getAttribute('data-value')) || 0) / max * 100) + '%';
             }
         });
-    }
+    });
 })();
