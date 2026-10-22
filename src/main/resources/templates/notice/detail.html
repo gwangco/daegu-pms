@@ -9,7 +9,7 @@
 <body>
 <th:block layout:fragment="content">
     <div class="page-head">
-        <div class="container medium">
+        <div class="container">
             <nav aria-label="현재 위치">
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a th:href="@{/}">홈</a></li>
@@ -17,28 +17,28 @@
                     <li class="breadcrumb-item active" aria-current="page">공지 상세</li>
                 </ol>
             </nav>
-            <span th:if="${notice.noticeAt == 'Y'}" class="status status-danger">중요</span>
+            <div class="page-badges" th:if="${notice.noticeAt == 'Y'}">
+                <span class="status status-danger">중요</span>
+            </div>
             <h1 th:text="${notice.nttSj}">공지 제목</h1>
-            <p class="lead-sub small">
-                작성자 <span th:text="${notice.frstRegisterNm}">김담당</span>
-                · 등록 <span th:text="${notice.frstRegisterPnttm}">2026-10-21 09:00</span>
-                · 조회 <span th:text="${notice.inqireCo}">1</span>
-                <th:block th:unless="${#strings.isEmpty(notice.lastUpdusrPnttm)}">
-                    · 수정 <span th:text="${notice.lastUpdusrPnttm}"></span>
-                </th:block>
-            </p>
+            <ul class="page-meta">
+                <li>작성자 <strong th:text="${notice.frstRegisterNm}">김담당</strong></li>
+                <li>등록 <strong th:text="${notice.frstRegisterPnttm}">2026-10-21 09:00</strong></li>
+                <li>조회 <strong th:text="${notice.inqireCo}">1</strong></li>
+                <li th:unless="${#strings.isEmpty(notice.lastUpdusrPnttm)}">수정 <strong th:text="${notice.lastUpdusrPnttm}"></strong></li>
+            </ul>
         </div>
     </div>
 
-    <div class="container medium">
-        <article class="panel panel-body">
+    <div class="container">
+        <article class="panel panel-body doc-body">
             <!--/* th:text 는 HTML 특수문자를 이스케이프하므로 본문에 <script> 가 있어도 실행되지 않는다. 줄바꿈은 CSS(pre-line)로 표시 */-->
             <div class="prewrap" th:text="${notice.nttCn}">본문</div>
         </article>
 
         <div class="form-actions">
-            <a th:href="@{/notices}" class="btn btn-outline-secondary">목록</a>
-            <div sec:authorize="hasAnyRole('MANAGER', 'ADMIN')" class="d-flex gap-2">
+            <a th:href="@{/notices}" class="btn btn-outline-secondary"><i class="bi bi-list-ul me-1" aria-hidden="true"></i>목록</a>
+            <div sec:authorize="hasAnyRole('MANAGER', 'ADMIN')" class="form-actions-end">
                 <a th:href="@{/notices/{id}/edit(id=${notice.nttId})}" class="btn btn-outline-primary">수정</a>
                 <!--/* 삭제는 POST + CSRF 토큰. GET 링크로 지우면 이미지 태그 등으로 위조 요청을 보낼 수 있다 */-->
                 <form th:action="@{/notices/{id}/delete(id=${notice.nttId})}" method="post" class="m-0"

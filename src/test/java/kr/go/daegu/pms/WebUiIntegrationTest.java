@@ -117,6 +117,25 @@ class WebUiIntegrationTest extends IntegrationTestSupport {
     }
 
     @Test
+    @DisplayName("접수 중 공고는 마감까지 남은 날을 업무 날짜(Clock) 기준 D-n 으로 보여 준다")
+    void openAnnouncementShowsDday() throws Exception {
+        // 고정 날짜 2026-10-21, 공고 13 마감 2026-11-30 → 40일 전
+        mockMvc.perform(get("/announcements/13"))
+                .andExpect(content().string(containsString(">D-40</span>")))
+                .andExpect(content().string(containsString("마감 40일 전")));
+        // 마감된 공고에는 표시하지 않는다
+        mockMvc.perform(get("/announcements/1"))
+                .andExpect(content().string(not(containsString("class=\"dday"))));
+    }
+
+    @Test
+    @DisplayName("정산 승인은 되돌릴 수 없으므로 확인 창을 거친다")
+    void settlementApprovalAsksConfirmation() throws Exception {
+        mockMvc.perform(get("/settlements/application/1").with(user("manager1").roles("MANAGER")))
+                .andExpect(content().string(containsString("data-confirm=\"이 집행 건을 승인하시겠습니까?")));
+    }
+
+    @Test
     @DisplayName("오류 화면도 공통 스타일을 쓰고 내부 정보 없이 안내 문구만 보여 준다")
     void errorPageUsesSimpleLayout() throws Exception {
         mockMvc.perform(get("/announcements/99999"))

@@ -1303,7 +1303,9 @@ a.cell-link:hover {
         -webkit-line-clamp: 2;
     }
 
-    .table-cards .d-grid {
+    .table-cards .d-grid,
+    .table-cards .review-actions {
+        flex: 1;
         width: 100%;
     }
 
@@ -2246,6 +2248,11 @@ a.cell-link:hover {
     box-shadow: var(--dp-shadow);
 }
 
+.login-card .brand-logo {
+    width: 3rem;
+    height: 3rem;
+}
+
 .login-card h1 {
     margin: 1.25rem 0 .5rem;
     font-size: var(--dp-fs-h1);
@@ -2512,7 +2519,12 @@ a.cell-link:hover {
     border-top: 1px dashed var(--dp-line);
 }
 
-/* ---------- 본문 문서 (개인정보처리방침 등) ---------- */
+/* ---------- 본문 문서 (공지 본문, 개인정보처리방침) ---------- */
+
+/* 긴 글은 한 줄이 너무 길지 않게 (약 45자) */
+.doc-body > * {
+    max-width: 52rem;
+}
 
 .doc-body h2 {
     margin: 2rem 0 .75rem;

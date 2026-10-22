@@ -10,7 +10,7 @@
 <!--/* 생성기의 noticeRegister.html 처럼 등록/수정을 한 화면에서 처리 (nttId 유무로 구분) */-->
 <th:block layout:fragment="content">
     <div class="page-head">
-        <div class="container narrow">
+        <div class="container">
             <nav aria-label="현재 위치">
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a th:href="@{/}">홈</a></li>
@@ -22,29 +22,40 @@
         </div>
     </div>
 
-    <div class="container narrow">
-        <!--/* th:action 을 쓰면 Spring Security CSRF 토큰이 hidden 으로 자동 포함된다 */-->
-        <form th:action="${isNew} ? @{/notices/new} : @{/notices/{id}/edit(id=${notice.nttId})}"
-              th:object="${notice}" method="post" class="panel panel-body">
-            <div class="mb-3">
-                <label for="nttSj" class="form-label">제목 <span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden">(필수)</span></label>
-                <input type="text" th:field="*{nttSj}" class="form-control" th:errorclass="is-invalid" maxlength="200" required>
-                <div class="invalid-feedback" th:errors="*{nttSj}"></div>
-            </div>
-            <div class="form-check mb-3">
-                <input type="checkbox" th:field="*{noticeAt}" value="Y" class="form-check-input">
-                <label class="form-check-label" th:for="${#ids.prev('noticeAt')}">중요 공지 (목록 상단 고정)</label>
-            </div>
-            <div class="mb-1">
-                <label for="nttCn" class="form-label">내용 <span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden">(필수)</span></label>
-                <textarea th:field="*{nttCn}" class="form-control" th:errorclass="is-invalid" rows="12" maxlength="4000" required></textarea>
-                <div class="invalid-feedback" th:errors="*{nttCn}"></div>
-            </div>
-            <div class="form-actions">
-                <a th:href="${isNew} ? @{/notices} : @{/notices/{id}(id=${notice.nttId})}" class="btn btn-outline-secondary">취소</a>
-                <button type="submit" class="btn btn-primary px-4" th:text="${isNew} ? '등록' : '저장'">등록</button>
-            </div>
-        </form>
+    <div class="container">
+        <div class="detail-layout">
+            <!--/* th:action 을 쓰면 Spring Security CSRF 토큰이 hidden 으로 자동 포함된다 */-->
+            <form th:action="${isNew} ? @{/notices/new} : @{/notices/{id}/edit(id=${notice.nttId})}"
+                  th:object="${notice}" method="post" class="panel form-panel">
+                <div class="mb-3">
+                    <label for="nttSj" class="form-label">제목 <span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden">(필수)</span></label>
+                    <input type="text" th:field="*{nttSj}" class="form-control" th:errorclass="is-invalid" maxlength="200" required>
+                    <div class="invalid-feedback" th:errors="*{nttSj}"></div>
+                </div>
+                <div class="form-check mb-3">
+                    <input type="checkbox" th:field="*{noticeAt}" value="Y" class="form-check-input">
+                    <label class="form-check-label" th:for="${#ids.prev('noticeAt')}">중요 공지 (목록 상단 고정)</label>
+                </div>
+                <div>
+                    <label for="nttCn" class="form-label">내용 <span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden">(필수)</span></label>
+                    <textarea th:field="*{nttCn}" class="form-control" th:errorclass="is-invalid" rows="12" maxlength="4000" required></textarea>
+                    <div class="invalid-feedback" th:errors="*{nttCn}"></div>
+                </div>
+                <div class="form-actions">
+                    <a th:href="${isNew} ? @{/notices} : @{/notices/{id}(id=${notice.nttId})}" class="btn btn-outline-secondary">취소</a>
+                    <button type="submit" class="btn btn-primary" th:text="${isNew} ? '등록' : '저장'">등록</button>
+                </div>
+            </form>
+
+            <aside class="aside-card" aria-labelledby="guide-title">
+                <h2 id="guide-title">작성 안내</h2>
+                <ol class="form-guide">
+                    <li>중요 공지는 목록 맨 위에 고정되고 메인 화면에 "중요"로 표시됩니다.</li>
+                    <li>본문은 입력한 줄바꿈 그대로 보이고, HTML 태그는 글자 그대로 표시됩니다.</li>
+                    <li>공지는 전자정부 공통컴포넌트 게시판(공지사항 게시판)에 저장됩니다.</li>
+                </ol>
+            </aside>
+        </div>
     </div>
 </th:block>
 </body>
