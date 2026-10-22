@@ -16,6 +16,7 @@
 
 ### 변경 (Changed)
 - DB: H2 인메모리 → **MySQL 8** (CI 는 8.4 LTS 컨테이너), 시간 컬럼 DATETIME, 컬럼 COMMENT
+- Flyway 11.7.2(Spring Boot 기본) → 11.20.3: 11.7.2 는 MySQL 8.1 까지만 검증 범위라 CI(8.4)에서 미검증 경고
 - 공지사항·FAQ: 코드 생성기로 만든 테이블 → 공통컴포넌트 `COMTNBBS`, `COMTNFAQINFO` (공지 주소 `/notices/{번호}`)
 - 첨부파일: `com_file` → `COMTNFILE`/`COMTNFILEDETAIL`, 다운로드 주소 `/files/{FILE_ID}/{순번}`
 - 공통코드 그룹 ID → 공통컴포넌트 코드 ID `DPM001`~`DPM005`, 채번 테이블 `ids` → `COMTECOPSEQ`

@@ -82,6 +82,8 @@ CI 는 리눅스라 MySQL 테이블 이름이 대소문자를 구분한다(`lowe
 
 ### MySQL 버전
 
+Spring Boot 3.5.16 이 정한 Flyway 11.7.2 는 MySQL 8.1 까지만 검증한 버전이라 CI(8.4)에서 "MySQL 8.4 is newer than this version of Flyway" 경고를 냈다. 같은 11.x 의 마지막 판 11.20.3(MySQL 9.4 까지 검증)으로 올렸다.
+
 이 PC 의 MySQL 은 8.0.46 이다. 8.0 은 2026년 4월 지원이 끝난 마지막 버전이라 보안 패치가 더 나오지 않는다. CI 는 장기 지원판 8.4 를 쓴다. 코드는 두 버전에서 같게 동작하지만 로컬도 8.4 로 올리는 것을 권한다. 또 이 PC 의 MySQL(3306)·MariaDB(3307)는 모든 네트워크 주소(0.0.0.0)에서 접속을 받는다. 개발 PC 라면 `my.ini` 에 `bind-address=127.0.0.1` 을 두는 편이 안전하다.
 
 ## 4. 공통컴포넌트 도입
@@ -109,7 +111,8 @@ NoticeController ─▶ NoticeServiceImpl ─▶ EgovArticleService ─▶ EgovA
 
 ## 6. 검증
 
-- `./mvnw clean verify` — 153건 성공 (로컬 MySQL 8.0.46, JVM 시간대 KST·UTC 둘 다), GitHub Actions(MySQL 8.4 LTS, 리눅스)
+- `./mvnw clean verify` — 153건 성공 (로컬 MySQL 8.0.46, JVM 시간대 KST·UTC 둘 다)
+- GitHub Actions (리눅스, MySQL 8.4 LTS) — 153건 성공, Flyway 경고 0건. 첫 실행의 실패 2건은 트러블슈팅 7번
 - 개발 DB `dpms` 에서 실제 기동 — Flyway 3개 버전 적용 1.0초, 기동 8.4초
 - 내장 브라우저 점검 — 메인, 공지 목록·작성자 검색·상세·등록·수정, FAQ 분류 탭·등록, 신청 상세. 콘솔 오류 0건, 공지 본문의 HTML 태그는 글자로 표시
 - 매퍼 전체에서 `${}` 문자열 치환 0건, 비밀번호 파일 Git 제외 확인
