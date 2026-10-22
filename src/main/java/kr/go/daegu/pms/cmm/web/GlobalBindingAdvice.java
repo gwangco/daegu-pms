@@ -24,10 +24,12 @@ public class GlobalBindingAdvice {
                 "companyUserId", "evaluatorUserId", "writerId",           // 소유자 (로그인 정보로 결정)
                 "createdBy", "reviewedBy", "viewCount",                   // 감사/집계 컬럼
                 "updatedBy", "updatedAt", "createdAt", "useYn",           // 감사/논리삭제 컬럼
-                "noticeId",                                               // 공지 ID (eGov IdGnr 채번 / URL 경로로만 지정)
+                "noticeId", "faqId",                                      // 공지·FAQ ID (eGov IdGnr 채번 / URL 경로로만 지정)
                 "planFileId", "receiptFileId",                            // 파일 ID (업로드 결과로 결정)
                 "receiptNo",                                              // 접수번호 (eGov IdGnr 채번)
-                "totalAmount", "selfFunding", "totalScore"                // 서버 재계산 금액/점수
+                "totalAmount", "selfFunding", "totalScore",               // 서버 재계산 금액/점수
+                "lockedSince", "lockedAt", "loginFailCount",              // 계정 잠금 (서버 판단)
+                "resubmitCount", "settlementId"                           // 정산 재요청 횟수, 대상 ID (URL 경로로만 지정)
         );
     }
 }

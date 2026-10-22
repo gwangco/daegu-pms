@@ -1,15 +1,14 @@
 package kr.go.daegu.pms.cmm.service.impl;
 
+import kr.go.daegu.pms.application.service.ApplicationAccessChecker;
 import kr.go.daegu.pms.cmm.message.AppMessages;
-
-import org.egovframe.rte.fdl.cmmn.EgovAbstractServiceImpl;
+import kr.go.daegu.pms.cmm.service.FileService;
+import kr.go.daegu.pms.cmm.service.FileVO;
 import kr.go.daegu.pms.cmm.util.SecurityUtil;
 import kr.go.daegu.pms.config.AppProperties;
-import kr.go.daegu.pms.cmm.service.FileVO;
-import kr.go.daegu.pms.application.service.ApplicationAccessChecker;
-import kr.go.daegu.pms.cmm.service.FileService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.egovframe.rte.fdl.cmmn.EgovAbstractServiceImpl;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionSynchronization;
@@ -47,8 +46,6 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class FileServiceImpl extends EgovAbstractServiceImpl implements FileService {
 
-    private final AppMessages messages;
-
     private static final int MAX_ORIGINAL_NAME_LENGTH = 200;
     private static final DateTimeFormatter SUB_DIR_FORMAT = DateTimeFormatter.ofPattern("yyyy/MM");
 
@@ -71,6 +68,7 @@ public class FileServiceImpl extends EgovAbstractServiceImpl implements FileServ
     private final ApplicationAccessChecker accessChecker;
     private final AppProperties appProperties;
     private final Clock clock;
+    private final AppMessages messages;
 
     @Override
     public FileVO storeFile(MultipartFile multipartFile) {

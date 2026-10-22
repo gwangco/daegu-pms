@@ -36,7 +36,7 @@ class SqlLoggingSecurityIntegrationTest extends IntegrationTestSupport {
         context = (LoggerContext) LogManager.getContext(false);
         applicationLogger = context.getConfiguration().getLoggerConfig("kr.go.daegu.pms");
         capture = new AbstractAppender("sensitive-data-test", null,
-                PatternLayout.newBuilder().withPattern("%m %ex").build(), false, Property.EMPTY_ARRAY) {
+                PatternLayout.newBuilder().setPattern("%m %ex").build(), false, Property.EMPTY_ARRAY) {
             @Override
             public void append(LogEvent event) {
                 events.add(getLayout().toSerializable(event).toString());

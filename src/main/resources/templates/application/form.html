@@ -1,43 +1,41 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}">
 <head>
-    <meta charset="UTF-8">
-    <title>지원사업 온라인 신청서 작성 | D-PMS</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <style>body { background-color: #f8f9fa; }</style>
+    <title>온라인 사업 신청</title>
 </head>
 <body>
-
-<div th:replace="~{fragments/navbar :: navbar}"></div>
-
-<div class="container py-4" style="max-width: 860px;">
-    <div class="mb-3">
-        <a th:href="@{/announcements/{id}(id=${announcement.announcementId})}" class="text-decoration-none text-muted small">
-            <i class="bi bi-arrow-left"></i> 공고 상세로 돌아가기
-        </a>
-    </div>
-
-    <div class="card border-0 shadow-sm p-4 bg-white">
-        <div class="border-bottom pb-3 mb-4">
-            <span class="badge bg-primary mb-1">지원사업 신청</span>
-            <h4 class="fw-bold text-dark mb-1" th:text="${announcement.title}">공고명</h4>
-            <p class="text-muted small mb-0">
-                접수기간: <strong th:text="${announcement.startDate} + ' ~ ' + ${announcement.endDate}">기간</strong> ·
-                기업당 최대 지원금: <strong class="text-danger" th:text="${#numbers.formatInteger(announcement.maxGrant, 0, 'COMMA')} + '원'">100,000,000원</strong>
+<th:block layout:fragment="content">
+    <div class="page-head">
+        <div class="container narrow">
+            <nav aria-label="현재 위치">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a th:href="@{/}">홈</a></li>
+                    <li class="breadcrumb-item"><a th:href="@{/announcements}">사업공고</a></li>
+                    <li class="breadcrumb-item"><a th:href="@{/announcements/{id}(id=${announcement.announcementId})}">공고 상세</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">온라인 신청</li>
+                </ol>
+            </nav>
+            <h1 th:text="${announcement.title}">공고명</h1>
+            <p class="lead-sub small">
+                접수기간 <strong th:text="${announcement.startDate} + ' ~ ' + ${announcement.endDate}">기간</strong>
+                · 기업당 최대 지원금 <strong th:text="${#numbers.formatInteger(announcement.maxGrant, 0, 'COMMA')} + '원'">100,000,000원</strong>
             </p>
         </div>
+    </div>
 
-        <!-- 파일 업로드가 있으므로 multipart/form-data. th:action 사용 시 CSRF 토큰이 자동으로 포함된다 -->
-        <form th:action="@{/applications/apply}" th:object="${app}" method="post" enctype="multipart/form-data">
+    <div class="container narrow">
+        <!--/* 파일 업로드가 있으므로 multipart/form-data. th:action 을 쓰면 CSRF 토큰이 자동으로 들어간다 */-->
+        <form th:action="@{/applications/apply}" th:object="${app}" method="post" enctype="multipart/form-data" class="panel panel-body">
             <input type="hidden" th:field="*{announcementId}">
 
-            <div th:if="${#fields.hasGlobalErrors()}" class="alert alert-danger small py-2">
+            <div th:if="${#fields.hasGlobalErrors()}" class="alert alert-danger" role="alert">
                 <div th:each="err : ${#fields.globalErrors()}" th:text="${err}">오류</div>
             </div>
 
             <div class="mb-3">
-                <label class="form-label fw-semibold text-secondary">개발 과제명 (프로젝트명) <span class="text-danger">*</span></label>
+                <label for="projectName" class="form-label">과제명 <span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden">(필수)</span></label>
                 <input type="text" th:field="*{projectName}" class="form-control" th:errorclass="is-invalid" maxlength="200"
                        placeholder="예: 전기차 배터리팩 경량화를 위한 탄소복합소재 부품 개발" required>
                 <div class="invalid-feedback" th:errors="*{projectName}"></div>
@@ -45,57 +43,47 @@
 
             <div class="row g-3 mb-3">
                 <div class="col-md-4">
-                    <label class="form-label fw-semibold text-secondary">총 소요 예산 (원) <span class="text-danger">*</span></label>
-                    <input type="number" id="totalBudget" th:field="*{totalBudget}" class="form-control" th:errorclass="is-invalid"
-                           min="1" placeholder="예: 125000000" required oninput="calcSelfFunding()">
+                    <label for="totalBudget" class="form-label">총 소요 예산(원) <span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden">(필수)</span></label>
+                    <input type="number" th:field="*{totalBudget}" class="form-control" th:errorclass="is-invalid"
+                           min="1" data-calc="self-funding" required>
                     <div class="invalid-feedback" th:errors="*{totalBudget}"></div>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label fw-semibold text-secondary">신청 지원금 (원) <span class="text-danger">*</span></label>
-                    <input type="number" id="requestGrant" th:field="*{requestGrant}" class="form-control" th:errorclass="is-invalid"
-                           min="1" th:max="${announcement.maxGrant}" placeholder="예: 100000000" required oninput="calcSelfFunding()">
+                    <label for="requestGrant" class="form-label">신청 지원금(원) <span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden">(필수)</span></label>
+                    <input type="number" th:field="*{requestGrant}" class="form-control" th:errorclass="is-invalid"
+                           min="1" th:max="${announcement.maxGrant}" data-calc="self-funding" aria-describedby="requestGrantHelp" required>
                     <div class="invalid-feedback" th:errors="*{requestGrant}"></div>
-                    <div class="form-text small">공고 기준 한도 내 입력</div>
+                    <div id="requestGrantHelp" class="form-text">기업당 최대 지원금 이내</div>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label fw-semibold text-secondary">기업 자부담금 (자동계산)</label>
-                    <input type="number" id="selfFunding" class="form-control bg-light" readonly placeholder="0">
-                    <div class="form-text small">제출 시 서버에서 다시 계산됩니다.</div>
+                    <label for="selfFunding" class="form-label">기업 자부담금(자동 계산)</label>
+                    <input type="number" id="selfFunding" class="form-control bg-light" readonly aria-describedby="selfFundingHelp">
+                    <div id="selfFundingHelp" class="form-text">제출하면 서버가 다시 계산합니다.</div>
                 </div>
             </div>
 
             <div class="mb-3">
-                <label class="form-label fw-semibold text-secondary">사업계획서 요약 및 핵심 개발 목표 <span class="text-danger">*</span></label>
-                <textarea th:field="*{summary}" class="form-control" th:errorclass="is-invalid" rows="5" maxlength="4000"
-                          placeholder="과제의 필요성, 주요 개발 내용 및 목표 스펙, 기대효과를 요약하여 작성하세요." required></textarea>
+                <label for="summary" class="form-label">사업계획 요약 <span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden">(필수)</span></label>
+                <textarea th:field="*{summary}" class="form-control" th:errorclass="is-invalid" rows="6" maxlength="4000" required
+                          placeholder="과제의 필요성, 주요 개발 내용과 목표, 기대효과를 요약하세요."></textarea>
                 <div class="invalid-feedback" th:errors="*{summary}"></div>
             </div>
 
-            <div class="mb-4">
-                <label class="form-label fw-semibold text-secondary">사업계획서 파일 <span class="text-danger">*</span></label>
-                <input type="file" name="planFile" class="form-control" accept=".pdf,.hwp,.hwpx,.doc,.docx,.zip" required>
-                <div class="form-text small">PDF, HWP(X), DOC(X), ZIP / 최대 20MB. 확장자와 실제 파일 형식이 다르면 업로드가 거부됩니다.</div>
+            <div class="mb-1">
+                <label for="planFile" class="form-label">사업계획서 파일 <span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden">(필수)</span></label>
+                <input type="file" id="planFile" name="planFile" class="form-control" accept=".pdf,.hwp,.hwpx,.doc,.docx,.zip"
+                       aria-describedby="planFileHelp" required>
+                <div id="planFileHelp" class="form-text">PDF·HWP(X)·DOC(X)·ZIP, 최대 20MB. 확장자와 실제 파일 형식이 다르면 접수되지 않습니다.</div>
             </div>
 
-            <div class="d-flex justify-content-between pt-3 border-top">
-                <a th:href="@{/announcements}" class="btn btn-outline-secondary">취소</a>
-                <button type="submit" class="btn btn-primary px-4 fw-semibold">
-                    <i class="bi bi-send me-1"></i> 사업계획서 최종 제출
+            <div class="form-actions">
+                <a th:href="@{/announcements/{id}(id=${announcement.announcementId})}" class="btn btn-outline-secondary">취소</a>
+                <button type="submit" class="btn btn-primary px-4">
+                    <i class="bi bi-send me-1" aria-hidden="true"></i>사업계획서 제출
                 </button>
             </div>
         </form>
     </div>
-</div>
-
-<div th:replace="~{fragments/navbar :: footer}"></div>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-    function calcSelfFunding() {
-        const total = parseFloat(document.getElementById('totalBudget').value) || 0;
-        const grant = parseFloat(document.getElementById('requestGrant').value) || 0;
-        document.getElementById('selfFunding').value = Math.max(0, total - grant);
-    }
-    calcSelfFunding();
-</script>
+</th:block>
 </body>
 </html>

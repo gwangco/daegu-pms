@@ -1,7 +1,6 @@
 package kr.go.daegu.pms.application.service.impl;
 
-import kr.go.daegu.pms.cmm.message.AppMessages;
-
+import jakarta.annotation.Resource;
 import kr.go.daegu.pms.announcement.service.AnnouncementService;
 import kr.go.daegu.pms.announcement.service.AnnouncementVO;
 import kr.go.daegu.pms.application.service.ApplicationAccessChecker;
@@ -9,11 +8,12 @@ import kr.go.daegu.pms.application.service.ApplicationSearchVO;
 import kr.go.daegu.pms.application.service.ApplicationService;
 import kr.go.daegu.pms.application.service.ApplicationStatus;
 import kr.go.daegu.pms.application.service.ApplicationVO;
+import kr.go.daegu.pms.cmm.message.AppMessages;
 import kr.go.daegu.pms.cmm.service.FileService;
 import kr.go.daegu.pms.cmm.service.FileVO;
+import kr.go.daegu.pms.cmm.util.MaskingUtil;
 import kr.go.daegu.pms.cmm.util.SecurityUtil;
 import kr.go.daegu.pms.evaluation.service.impl.EvaluationMapper;
-import jakarta.annotation.Resource;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.egovframe.rte.fdl.cmmn.EgovAbstractServiceImpl;
@@ -33,14 +33,13 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ApplicationServiceImpl extends EgovAbstractServiceImpl implements ApplicationService {
 
-    private final AppMessages messages;
-
     private final ApplicationMapper applicationMapper;
     private final EvaluationMapper evaluationMapper;
     private final AnnouncementService announcementService;
     private final FileService fileService;
     private final ApplicationAccessChecker accessChecker;
     private final Clock clock;
+    private final AppMessages messages;
 
     /**
      * 접수번호 채번 서비스 (EgovConfigIdGeneration 의 receiptNoIdGnrService).
@@ -52,7 +51,9 @@ public class ApplicationServiceImpl extends EgovAbstractServiceImpl implements A
     @Override
     public List<ApplicationVO> selectApplicationList(ApplicationSearchVO searchVO) {
         applyDataScope(searchVO);
-        return applicationMapper.selectApplicationList(searchVO);
+        return applicationMapper.selectApplicationList(searchVO).stream()
+                .map(this::maskForEvaluator)
+                .toList();
     }
 
     @Override
@@ -82,7 +83,21 @@ public class ApplicationServiceImpl extends EgovAbstractServiceImpl implements A
 
     @Override
     public ApplicationVO selectApplication(Long applicationId) {
-        return accessChecker.getReadableApplication(applicationId);
+        return maskForEvaluator(accessChecker.getReadableApplication(applicationId));
+    }
+
+    /**
+     * 평가위원은 심사에 사업자등록번호 전체가 필요하지 않으므로 가린 값만 준다 (개인정보 최소 처리).
+     * 화면에서 가리지 않고 서버에서 바꿔 내려야 HTML 소스에도 원본이 남지 않는다.
+     *
+     * 조회 결과 객체를 직접 고치지 않고 복사본을 만든다. MyBatis 는 같은 트랜잭션(SqlSession) 안의 같은 조회에
+     * 1차 캐시의 같은 객체를 돌려주므로, 원본을 고치면 뒤이은 조회도 가려진 값을 받게 된다.
+     */
+    private ApplicationVO maskForEvaluator(ApplicationVO application) {
+        if (!SecurityUtil.hasRole(SecurityUtil.ROLE_EVALUATOR)) {
+            return application;
+        }
+        return application.toBuilder().businessNo(MaskingUtil.businessNo(application.getBusinessNo())).build();
     }
 
     @Override

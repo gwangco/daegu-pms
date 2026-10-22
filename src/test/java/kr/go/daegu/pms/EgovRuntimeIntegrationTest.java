@@ -97,7 +97,7 @@ class EgovRuntimeIntegrationTest extends IntegrationTestSupport {
     @DisplayName("공고 목록 화면의 페이지 번호 바를 eGov PaginationRenderer 가 그린다")
     void paginationRenderedByEgovRenderer() throws Exception {
         mockMvc.perform(get("/announcements"))
-                .andExpect(content().string(containsString("onclick=\"fnLinkPage(2); return false;\">2</a>")))
+                .andExpect(content().string(containsString("data-page=\"2\" aria-label=\"2쪽\">2</a>")))
                 .andExpect(content().string(containsString("page-item active")));
     }
 

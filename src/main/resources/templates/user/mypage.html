@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}">
+<head>
+    <title>내 정보</title>
+</head>
+<body>
+<th:block layout:fragment="content">
+    <div class="page-head">
+        <div class="container narrow">
+            <nav aria-label="현재 위치">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a th:href="@{/}">홈</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">내 정보</li>
+                </ol>
+            </nav>
+            <h1>내 정보</h1>
+            <p class="lead-sub">연락처와 이메일은 암호화되어 저장되며, 가리지 않은 전체 값은 본인에게만 보입니다.</p>
+        </div>
+    </div>
+
+    <div class="container narrow">
+        <section class="panel" aria-labelledby="me-title">
+            <div class="panel-head"><h2 id="me-title">계정 정보</h2></div>
+            <div class="table-responsive">
+                <table class="table table-bordered table-info-grid mb-0">
+                    <caption class="visually-hidden">내 계정 정보</caption>
+                    <tbody>
+                    <tr>
+                        <th scope="row">아이디</th>
+                        <td th:text="${me.userId}">company1</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">이름</th>
+                        <td th:text="${me.userName}">이대표</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">권한</th>
+                        <td th:text="${me.roleLabel}">기업회원</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">소속</th>
+                        <td th:text="${me.companyName}">(주)대구모빌리티솔루션</td>
+                    </tr>
+                    <tr th:if="${me.role == 'ROLE_COMPANY'}">
+                        <th scope="row">사업자등록번호</th>
+                        <td th:text="${me.businessNo}">504-81-98765</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">이메일</th>
+                        <td th:text="${me.email}">ceo@mobility.example.com</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">연락처</th>
+                        <td th:text="${me.phone}">010-0000-4001</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">최근 로그인</th>
+                        <td th:text="${me.lastLoginAt != null} ? ${#temporals.format(me.lastLoginAt, 'yyyy-MM-dd HH:mm')} : '-'">-</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+</th:block>
+</body>
+</html>

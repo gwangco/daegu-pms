@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<body>
+<!--/* 오류 화면 본문 공통 조각: code(상태 코드 표시), title(제목), message(안내 문구) */-->
+<div th:fragment="errorContent(code, title, message)" class="container">
+    <div class="error-wrap panel panel-body">
+        <p class="error-code mb-2" th:text="${code}">400</p>
+        <h1 class="h4 fw-bold mb-3" th:text="${title}">요청을 처리할 수 없습니다</h1>
+        <p class="text-sub mb-4" th:text="${message}">입력 내용을 확인한 뒤 다시 시도하세요.</p>
+        <div class="d-flex justify-content-center gap-2">
+            <button type="button" class="btn btn-outline-secondary" data-action="back">이전 화면</button>
+            <a th:href="@{/}" class="btn btn-primary">메인으로</a>
+        </div>
+    </div>
+</div>
+</body>
+</html>

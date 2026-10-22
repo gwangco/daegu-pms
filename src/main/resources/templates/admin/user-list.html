@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}">
+<head>
+    <title>사용자 관리</title>
+</head>
+<body>
+<th:block layout:fragment="content">
+    <div class="page-head">
+        <div class="container">
+            <nav aria-label="현재 위치">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a th:href="@{/}">홈</a></li>
+                    <li class="breadcrumb-item">시스템 관리</li>
+                    <li class="breadcrumb-item active" aria-current="page">사용자 관리</li>
+                </ol>
+            </nav>
+            <h1>사용자 관리</h1>
+            <p class="lead-sub">
+                비밀번호를 <span th:text="${lockPolicy.maxFailures}">5</span>회 연속 틀린 계정은
+                <span th:text="${lockPolicy.lockMinutes}">30</span>분 동안 잠깁니다. 본인 확인 후 바로 풀어 줄 수 있습니다.
+                연락처·이메일은 가려서 표시합니다.
+            </p>
+        </div>
+    </div>
+
+    <div class="container">
+        <form id="searchForm" th:action="@{/admin/users}" th:object="${searchVO}" method="get" class="search-box" role="search">
+            <div class="row g-2 align-items-end">
+                <input type="hidden" th:field="*{pageIndex}">
+                <div class="col-md-3">
+                    <label for="role" class="form-label">권한</label>
+                    <select th:field="*{role}" class="form-select">
+                        <option value="">전체</option>
+                        <option value="ROLE_ADMIN">총괄관리자</option>
+                        <option value="ROLE_MANAGER">사업담당자</option>
+                        <option value="ROLE_EVALUATOR">평가위원</option>
+                        <option value="ROLE_COMPANY">기업회원</option>
+                    </select>
+                </div>
+                <div class="col-md-5">
+                    <label for="searchKeyword" class="form-label">검색어</label>
+                    <input type="search" th:field="*{searchKeyword}" class="form-control" placeholder="아이디·이름·소속" maxlength="50">
+                </div>
+                <div class="col-md-2">
+                    <div class="form-check mb-2">
+                        <input type="checkbox" th:field="*{lockedOnly}" value="Y" class="form-check-input">
+                        <label class="form-check-label" th:for="${#ids.prev('lockedOnly')}">잠긴 계정만</label>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-secondary w-100"><i class="bi bi-search me-1" aria-hidden="true"></i>검색</button>
+                </div>
+            </div>
+        </form>
+
+        <th:block th:replace="~{fragments/common :: resultCount(${paginationInfo})}"></th:block>
+
+        <div class="panel">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <caption class="visually-hidden">사용자 목록: 아이디, 이름, 권한, 소속, 연락처, 이메일, 계정 상태, 최근 로그인, 관리</caption>
+                    <thead>
+                    <tr>
+                        <th scope="col">아이디</th>
+                        <th scope="col">이름</th>
+                        <th scope="col">권한</th>
+                        <th scope="col" class="d-none d-md-table-cell">소속</th>
+                        <th scope="col">연락처</th>
+                        <th scope="col" class="d-none d-md-table-cell">이메일</th>
+                        <th scope="col" class="text-center col-status">계정 상태</th>
+                        <th scope="col" class="text-center d-none d-md-table-cell">최근 로그인</th>
+                        <th scope="col" class="text-center col-action">관리</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="u : ${users}">
+                        <td class="fw-semibold" th:text="${u.userId}">company1</td>
+                        <td th:text="${u.userName}">이대표</td>
+                        <td><span class="status status-blue" th:text="${u.roleLabel}">기업회원</span></td>
+                        <td class="d-none d-md-table-cell small" th:text="${u.companyName}">소속</td>
+                        <td class="text-nowrap" th:text="${u.phone}">010-****-4001</td>
+                        <td class="d-none d-md-table-cell small" th:text="${u.email}">ce*@example.com</td>
+                        <td class="text-center">
+                            <span th:if="${!u.enabled}" class="status status-neutral">사용 중지</span>
+                            <th:block th:if="${u.enabled and u.lockedAt != null}">
+                                <span class="status status-danger">잠김</span>
+                                <div class="small text-sub mt-1">
+                                    <span th:text="${#temporals.format(lockPolicy.unlockAt(u.lockedAt), 'HH:mm')}">10:30</span> 해제 예정
+                                </div>
+                            </th:block>
+                            <th:block th:if="${u.enabled and u.lockedAt == null}">
+                                <span class="status status-success">정상</span>
+                                <div th:if="${u.loginFailCount > 0}" class="small text-sub mt-1">
+                                    연속 실패 <span th:text="${u.loginFailCount}">1</span>회
+                                </div>
+                            </th:block>
+                        </td>
+                        <td class="text-center small text-nowrap d-none d-md-table-cell"
+                            th:text="${u.lastLoginAt != null} ? ${#temporals.format(u.lastLoginAt, 'yyyy-MM-dd HH:mm')} : '-'">-</td>
+                        <td class="text-center">
+                            <form th:if="${u.lockedAt != null}" th:action="@{/admin/users/{id}/unlock(id=${u.userId})}" method="post" class="m-0"
+                                  th:attr="data-confirm=${u.userId} + ' 계정의 잠금을 해제하시겠습니까?'">
+                                <button type="submit" class="btn btn-sm btn-outline-primary">잠금 해제</button>
+                            </form>
+                            <span th:if="${u.lockedAt == null}" class="text-sub small">-</span>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(users)}">
+                        <td colspan="9" class="empty-row">조건에 맞는 사용자가 없습니다.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <th:block th:replace="~{fragments/common :: pagination(${paginationInfo})}"></th:block>
+    </div>
+</th:block>
+</body>
+</html>

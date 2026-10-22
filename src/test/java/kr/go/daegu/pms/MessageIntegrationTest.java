@@ -67,6 +67,18 @@ class MessageIntegrationTest extends IntegrationTestSupport {
     }
 
     @Test
+    @DisplayName("메시지 키는 호출 위치에 문자열로 적는다 (변수로 넘기면 위의 누락 키 검사가 찾지 못한다)")
+    void messageKeysAreWrittenAtCallSite() throws Exception {
+        Pattern indirect = Pattern.compile("messages\\.(?:text|business|notFound|denied)\\(\\s*[^\"\\s]");
+        try (var paths = Files.walk(Path.of("src/main/java"))) {
+            for (Path path : paths.filter(p -> p.toString().endsWith(".java")).toList()) {
+                assertThat(indirect.matcher(Files.readString(path, StandardCharsets.UTF_8)).find())
+                        .as("메시지 키를 변수로 전달: %s", path).isFalse();
+            }
+        }
+    }
+
+    @Test
     @DisplayName("한글·날짜·원화 금액·길이·작은따옴표 인자를 정확히 치환한다")
     void formatsArgumentsWithoutLosingKoreanTextOrQuotes() {
         assertThat(messages.text("application.period.closed", LocalDate.of(2026, 10, 1), LocalDate.of(2026, 10, 20)))

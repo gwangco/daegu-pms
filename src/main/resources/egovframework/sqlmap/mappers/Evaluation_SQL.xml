@@ -73,9 +73,9 @@
 
     <insert id="insertEvaluation" parameterType="evaluationVO" useGeneratedKeys="true" keyProperty="evaluationId">
         INSERT INTO evaluation (
-            application_id, evaluator_user_id, quantitative_score, qualitative_score, total_score, status, assigned_at
+            application_id, evaluator_user_id, quantitative_score, qualitative_score, total_score, status, assigned_at, created_by
         ) VALUES (
-            #{applicationId}, #{evaluatorUserId}, 0, 0, 0, 'ASSIGNED', CURRENT_TIMESTAMP
+            #{applicationId}, #{evaluatorUserId}, 0, 0, 0, 'ASSIGNED', CURRENT_TIMESTAMP, #{audit.userId}
         )
     </insert>
 
@@ -87,7 +87,9 @@
             total_score = #{totalScore},
             eval_comment = #{evalComment},
             status = 'COMPLETED',
-            evaluated_at = CURRENT_TIMESTAMP
+            evaluated_at = CURRENT_TIMESTAMP,
+            updated_by = #{audit.userId},
+            updated_at = #{audit.now}
         WHERE evaluation_id = #{evaluationId}
           AND evaluator_user_id = #{evaluatorUserId}
           AND status = 'ASSIGNED'

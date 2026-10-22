@@ -1,20 +1,19 @@
 package kr.go.daegu.pms.application.web;
 
-import kr.go.daegu.pms.cmm.message.AppMessages;
-
 import jakarta.validation.Valid;
+import kr.go.daegu.pms.announcement.service.AnnouncementService;
+import kr.go.daegu.pms.announcement.service.AnnouncementVO;
+import kr.go.daegu.pms.application.service.ApplicationSearchVO;
+import kr.go.daegu.pms.application.service.ApplicationService;
+import kr.go.daegu.pms.application.service.ApplicationStatus;
+import kr.go.daegu.pms.application.service.ApplicationVO;
 import kr.go.daegu.pms.cmm.exception.BusinessException;
-import org.egovframe.rte.ptl.mvc.tags.ui.pagination.PaginationInfo;
+import kr.go.daegu.pms.cmm.message.AppMessages;
 import kr.go.daegu.pms.cmm.pagination.PagingHelper;
 import kr.go.daegu.pms.cmm.util.SecurityUtil;
-import kr.go.daegu.pms.announcement.service.AnnouncementVO;
-import kr.go.daegu.pms.application.service.ApplicationVO;
-import kr.go.daegu.pms.application.service.ApplicationSearchVO;
-import kr.go.daegu.pms.application.service.ApplicationStatus;
-import kr.go.daegu.pms.announcement.service.AnnouncementService;
-import kr.go.daegu.pms.application.service.ApplicationService;
 import kr.go.daegu.pms.evaluation.service.EvaluationService;
 import lombok.RequiredArgsConstructor;
+import org.egovframe.rte.ptl.mvc.tags.ui.pagination.PaginationInfo;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -30,12 +29,11 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ApplicationController {
 
-    private final AppMessages messages;
-
     private final ApplicationService applicationService;
     private final AnnouncementService announcementService;
     private final EvaluationService evaluationService;
     private final PagingHelper pagingHelper;
+    private final AppMessages messages;
 
     // 기업: 본인 신청 내역 / 평가위원: 배정 과제 / 담당자·관리자: 전체 (범위는 서비스에서 강제)
     @GetMapping
@@ -46,6 +44,8 @@ public class ApplicationController {
         paginationInfo.setTotalRecordCount(applicationService.selectApplicationListTotCnt(searchVO));
         model.addAttribute("paginationInfo", paginationInfo);
         model.addAttribute("statuses", ApplicationStatus.values());
+        // 평가위원은 정산 정보를 볼 수 없으므로 e-정산 바로가기를 보여주지 않는다 (서비스에서도 거부)
+        model.addAttribute("settlementAccessible", !SecurityUtil.hasRole(SecurityUtil.ROLE_EVALUATOR));
         return "application/list";
     }
 
@@ -85,6 +85,7 @@ public class ApplicationController {
     public String detail(@PathVariable("id") Long id, Model model) {
         ApplicationVO application = applicationService.selectApplication(id);
         model.addAttribute("app", application);
+        model.addAttribute("settlementAccessible", !SecurityUtil.hasRole(SecurityUtil.ROLE_EVALUATOR));
 
         if (SecurityUtil.isStaff()) {
             ApplicationStatus current = ApplicationStatus.fromCode(application.getStatus()).orElse(null);

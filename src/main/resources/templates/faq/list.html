@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}">
+<head>
+    <title>자주 묻는 질문</title>
+</head>
+<body>
+<!--/* 생성기의 faqList.html 은 컬럼 11개짜리 표 + jQuery 제출이었다. 질문을 눌러 답변을 펼치는 형태로 바꾸고 스크립트 없이 동작하게 함 */-->
+<th:block layout:fragment="content">
+    <div class="page-head">
+        <div class="container medium">
+            <nav aria-label="현재 위치">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a th:href="@{/}">홈</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">자주 묻는 질문</li>
+                </ol>
+            </nav>
+            <div class="d-flex flex-wrap justify-content-between align-items-end gap-2">
+                <div>
+                    <h1>자주 묻는 질문</h1>
+                    <p class="lead-sub">신청부터 사업비 정산까지 자주 받는 질문과 답변입니다.</p>
+                </div>
+                <a sec:authorize="hasAnyRole('MANAGER', 'ADMIN')" th:href="@{/faqs/new}" class="btn btn-primary">
+                    <i class="bi bi-pencil me-1" aria-hidden="true"></i>FAQ 등록
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="container medium">
+        <!--/* 분류 탭: 공통코드 FAQ_CATEGORY 중 사용 중인 코드만 나온다 */-->
+        <nav class="faq-tabs" aria-label="FAQ 분류">
+            <a th:href="@{/faqs}" th:classappend="${#strings.isEmpty(searchVO.categoryCode)} ? 'active'"
+               th:attr="aria-current=${#strings.isEmpty(searchVO.categoryCode)} ? 'page' : null">전체</a>
+            <a th:each="c : ${categories}" th:href="@{/faqs(categoryCode=${c.codeId})}" th:text="${c.codeName}"
+               th:classappend="${c.codeId == searchVO.categoryCode} ? 'active'"
+               th:attr="aria-current=${c.codeId == searchVO.categoryCode} ? 'page' : null">신청·접수</a>
+        </nav>
+
+        <form id="searchForm" th:action="@{/faqs}" th:object="${searchVO}" method="get" class="search-box" role="search">
+            <input type="hidden" th:field="*{pageIndex}">
+            <input type="hidden" th:field="*{categoryCode}">
+            <div class="row g-2 align-items-end">
+                <div class="col-md-10">
+                    <label for="searchKeyword" class="form-label">질문·답변 검색</label>
+                    <input type="search" th:field="*{searchKeyword}" class="form-control" maxlength="50" placeholder="예: 접수번호, 반려, 잠금">
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-secondary w-100"><i class="bi bi-search me-1" aria-hidden="true"></i>검색</button>
+                </div>
+            </div>
+        </form>
+
+        <th:block th:replace="~{fragments/common :: resultCount(${paginationInfo})}"></th:block>
+
+        <div class="faq-list">
+            <!--/* details/summary: 키보드(Enter·Space)와 화면낭독기로 펼치고 접을 수 있고 스크립트가 필요 없다 */-->
+            <details th:each="f : ${resultList}" th:id="'faq-' + ${f.faqId}" class="faq-item"
+                     th:open="${f.faqId == openFaqId}">
+                <summary>
+                    <span class="faq-mark" aria-hidden="true">Q</span>
+                    <span class="faq-question" th:text="${f.question}">질문</span>
+                    <span class="faq-category" th:text="${f.categoryName}">신청·접수</span>
+                </summary>
+                <div class="faq-answer">
+                    <span class="faq-mark is-answer" aria-hidden="true">A</span>
+                    <!--/* th:text 는 HTML 특수문자를 이스케이프한다. 줄바꿈은 CSS(pre-line)로 표시 */-->
+                    <div class="prewrap" th:text="${f.answer}">답변</div>
+                </div>
+                <div sec:authorize="hasAnyRole('MANAGER', 'ADMIN')" class="faq-admin">
+                    <span class="text-sub small">
+                        표시 순서 <span th:text="${f.sortOrder}">1</span>
+                        · 최종 수정 <span th:text="${#temporals.format(f.updatedAt ?: f.createdAt, 'yyyy-MM-dd')}">2026-10-21</span>
+                    </span>
+                    <div class="d-flex gap-2">
+                        <a th:href="@{/faqs/{id}/edit(id=${f.faqId})}" class="btn btn-outline-primary btn-sm">수정</a>
+                        <!--/* 삭제는 POST + CSRF 토큰 (th:action 이 토큰을 자동으로 넣는다) */-->
+                        <form th:action="@{/faqs/{id}/delete(id=${f.faqId})}" method="post" class="m-0"
+                              data-confirm="이 FAQ를 삭제하시겠습니까?">
+                            <button type="submit" class="btn btn-outline-danger btn-sm">삭제</button>
+                        </form>
+                    </div>
+                </div>
+            </details>
+            <p th:if="${#lists.isEmpty(resultList)}" class="panel empty-row mb-0">조건에 맞는 질문이 없습니다.</p>
+        </div>
+
+        <th:block th:replace="~{fragments/common :: pagination(${paginationInfo})}"></th:block>
+
+        <p class="text-sub small mt-4 mb-0">
+            찾는 내용이 없으면 <a th:href="@{/notices}">공지사항</a>을 확인하거나 사업 담당자에게 문의하세요.
+        </p>
+    </div>
+</th:block>
+</body>
+</html>

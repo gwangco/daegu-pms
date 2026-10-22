@@ -18,6 +18,12 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SettlementVO {
+
+    /** 검수 상태: 검수요청 / 승인 / 반려(보완 요청) */
+    public static final String STATUS_REQUESTED = "REQUESTED";
+    public static final String STATUS_APPROVED = "APPROVED";
+    public static final String STATUS_REJECTED = "REJECTED";
+
     private Long settlementId;
 
     @NotNull(message = "과제 정보가 없습니다.")
@@ -49,7 +55,13 @@ public class SettlementVO {
     private String receiptFileName;  // 조인용 (첨부파일 원본명)
     private String status;           // REQUESTED, APPROVED, REJECTED
     private String rejectReason;
+    private int resubmitCount;       // 보완 후 재요청 횟수
     private String reviewedBy;
     private LocalDateTime reviewedAt;
     private LocalDateTime createdAt;
+
+    // 검수함(전체 과제) 목록 조인용
+    private String receiptNo;
+    private String projectName;
+    private String companyName;
 }

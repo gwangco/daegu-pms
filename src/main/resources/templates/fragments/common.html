@@ -1,60 +1,64 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<head></head>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <body>
 
-<!-- 신청서 진행상태 배지 -->
+<!--/* 신청서 진행상태 */-->
 <th:block th:fragment="appStatus(status)">
     <span th:switch="${status}">
-        <span th:case="'TEMP_SAVED'" class="badge bg-light text-dark border">임시저장</span>
-        <span th:case="'SUBMITTED'" class="badge bg-secondary">접수완료</span>
-        <span th:case="'DOCUMENT_PASSED'" class="badge bg-primary">서류적격통과</span>
-        <span th:case="'EVALUATING'" class="badge bg-info text-dark">전문가심사중</span>
-        <span th:case="'SELECTED'" class="badge bg-success">최종선정(협약)</span>
-        <span th:case="'REJECTED'" class="badge bg-danger">심사탈락</span>
-        <span th:case="*" class="badge bg-light text-dark" th:text="${status}">상태</span>
+        <span th:case="'TEMP_SAVED'" class="status status-neutral">임시저장</span>
+        <span th:case="'SUBMITTED'" class="status status-neutral">접수완료</span>
+        <span th:case="'DOCUMENT_PASSED'" class="status status-blue">서류적격통과</span>
+        <span th:case="'EVALUATING'" class="status status-info">전문가심사중</span>
+        <span th:case="'SELECTED'" class="status status-success">최종선정(협약)</span>
+        <span th:case="'REJECTED'" class="status status-danger">심사탈락</span>
+        <span th:case="*" class="status status-neutral" th:text="${status}">상태</span>
     </span>
 </th:block>
 
-<!-- 정산 검수상태 배지 -->
+<!--/* 정산 검수상태 */-->
 <th:block th:fragment="settleStatus(status)">
     <span th:switch="${status}">
-        <span th:case="'REQUESTED'" class="badge bg-warning text-dark">검수요청</span>
-        <span th:case="'APPROVED'" class="badge bg-success">승인완료</span>
-        <span th:case="'REJECTED'" class="badge bg-danger">보완(반려)</span>
-        <span th:case="*" class="badge bg-light text-dark" th:text="${status}">상태</span>
+        <span th:case="'REQUESTED'" class="status status-warning">검수요청</span>
+        <span th:case="'APPROVED'" class="status status-success">승인완료</span>
+        <span th:case="'REJECTED'" class="status status-danger">보완요청(반려)</span>
+        <span th:case="*" class="status status-neutral" th:text="${status}">상태</span>
     </span>
 </th:block>
 
-<!--
+<!--/* 공고 접수상태 */-->
+<th:block th:fragment="announcementStatus(status)">
+    <span th:switch="${status}">
+        <span th:case="'OPEN'" class="status status-success">접수중</span>
+        <span th:case="'CLOSED'" class="status status-neutral">접수마감</span>
+        <span th:case="*" class="status status-neutral" th:text="${status}">상태</span>
+    </span>
+</th:block>
+
+<!--/*
     전자정부 표준 페이징 바  ([처음] [이전] 1 2 3 ... [다음] [마지막])
     - 계산: org.egovframe.rte.ptl.mvc.tags.ui.pagination.PaginationInfo
     - 그리기: EgovBootstrapPaginationRenderer (eGov AbstractPaginationRenderer 확장)
     eGov JSP 의 <ui:pagination paginationInfo="${paginationInfo}" jsFunction="fnLinkPage"/> 와 같은 역할.
-    검색폼(id=searchForm)의 hidden pageIndex 값을 바꿔 submit 하므로 검색조건이 유지된다.
+    링크를 누르면 /js/dpms.js 가 검색 폼(id=searchForm)의 pageIndex 를 바꿔 다시 조회하므로 검색 조건이 유지된다.
 
     th:utext 를 쓰는 이유: 렌더러가 만든 HTML(<li>…)을 그대로 출력해야 하기 때문.
-    렌더러 결과에는 정수(페이지 번호)와 아래 고정 함수명만 들어가므로 XSS 위험이 없다.
--->
+    렌더러 결과에는 정수(페이지 번호)와 메시지 번들의 고정 라벨만 들어가므로 사용자 입력이 섞이지 않는다.
+*/-->
 <th:block th:fragment="pagination(paginationInfo)">
     <nav th:if="${paginationInfo.totalRecordCount > 0}" class="mt-4" aria-label="페이지 이동">
         <ul class="pagination pagination-sm justify-content-center mb-0"
             th:utext="${#egovPaginationRenderer.renderPagination(paginationInfo, 'fnLinkPage')}"></ul>
     </nav>
-    <script>
-        // 페이지 번호 클릭 시 검색조건을 유지한 채 해당 페이지로 이동 (eGov 의 fn_egov_link_page 와 같은 역할)
-        function fnLinkPage(pageNo) {
-            const form = document.getElementById('searchForm');
-            form.pageIndex.value = pageNo;
-            form.submit();
-        }
-        (function () {
-            const form = document.getElementById('searchForm');
-            if (!form) return;
-            // 검색 버튼으로 새로 검색하면 1페이지부터
-            form.addEventListener('submit', function () { form.pageIndex.value = 1; });
-        })();
-    </script>
+</th:block>
+
+<!--/* 목록 위 건수 표시 */-->
+<th:block th:fragment="resultCount(paginationInfo)">
+    <p class="result-count">
+        총 <strong th:text="${#numbers.formatInteger(paginationInfo.totalRecordCount, 0, 'COMMA')}">0</strong>건
+        <span th:if="${paginationInfo.totalPageCount > 1}">
+            (<span th:text="${paginationInfo.currentPageNo}">1</span> / <span th:text="${paginationInfo.totalPageCount}">1</span>쪽)
+        </span>
+    </p>
 </th:block>
 
 </body>

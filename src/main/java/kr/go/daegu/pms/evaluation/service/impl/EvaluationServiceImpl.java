@@ -1,18 +1,17 @@
 package kr.go.daegu.pms.evaluation.service.impl;
 
-import kr.go.daegu.pms.cmm.message.AppMessages;
-
-import org.egovframe.rte.fdl.cmmn.EgovAbstractServiceImpl;
-import kr.go.daegu.pms.cmm.util.SecurityUtil;
-import kr.go.daegu.pms.application.service.ApplicationVO;
 import kr.go.daegu.pms.application.service.ApplicationStatus;
+import kr.go.daegu.pms.application.service.ApplicationVO;
+import kr.go.daegu.pms.application.service.impl.ApplicationMapper;
+import kr.go.daegu.pms.cmm.message.AppMessages;
+import kr.go.daegu.pms.cmm.util.SecurityUtil;
+import kr.go.daegu.pms.evaluation.service.EvaluationService;
 import kr.go.daegu.pms.evaluation.service.EvaluationVO;
 import kr.go.daegu.pms.user.service.UserVO;
-import kr.go.daegu.pms.application.service.impl.ApplicationMapper;
 import kr.go.daegu.pms.user.service.impl.UserMapper;
-import kr.go.daegu.pms.evaluation.service.EvaluationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.egovframe.rte.fdl.cmmn.EgovAbstractServiceImpl;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 
@@ -25,13 +24,12 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class EvaluationServiceImpl extends EgovAbstractServiceImpl implements EvaluationService {
 
-    private final AppMessages messages;
-
     private static final int MAX_COMMENT_LENGTH = 2000;
 
     private final EvaluationMapper evaluationMapper;
     private final ApplicationMapper applicationMapper;
     private final UserMapper userMapper;
+    private final AppMessages messages;
 
     @Override
     public List<EvaluationVO> selectMyEvaluationList() {
@@ -101,7 +99,7 @@ public class EvaluationServiceImpl extends EgovAbstractServiceImpl implements Ev
         Set<String> assigned = evaluationMapper.selectEvaluationListByApplication(applicationId).stream()
                 .map(EvaluationVO::getEvaluatorUserId)
                 .collect(Collectors.toSet());
-        return userMapper.findByRole(SecurityUtil.ROLE_EVALUATOR).stream()
+        return userMapper.selectUserListByRole(SecurityUtil.ROLE_EVALUATOR).stream()
                 .filter(UserVO::isEnabled)
                 .filter(u -> !assigned.contains(u.getUserId()))
                 .toList();
@@ -119,7 +117,7 @@ public class EvaluationServiceImpl extends EgovAbstractServiceImpl implements Ev
             throw messages.business("evaluation.assignment.invalidStatus");
         }
 
-        UserVO evaluator = userMapper.findByUserId(evaluatorUserId)
+        UserVO evaluator = userMapper.selectUser(evaluatorUserId)
                 .filter(u -> SecurityUtil.ROLE_EVALUATOR.equals(u.getRole()) && u.isEnabled())
                 .orElseThrow(() -> messages.business("evaluation.evaluator.invalid"));
 

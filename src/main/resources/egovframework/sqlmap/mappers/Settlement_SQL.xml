@@ -19,6 +19,7 @@
             f.original_name AS receipt_file_name,
             s.status,
             s.reject_reason,
+            s.resubmit_count,
             s.reviewed_by,
             s.reviewed_at,
             s.created_at
@@ -30,12 +31,50 @@
         LEFT JOIN com_file f ON s.receipt_file_id = f.file_id
     </sql>
 
-    <select id="selectSettlementList" resultType="settlementVO">
+    <sql id="searchCondition">
+        <where>
+            <if test="applicationId != null">
+                AND s.application_id = #{applicationId}
+            </if>
+            <if test="status != null and status != ''">
+                AND s.status = #{status}
+            </if>
+        </where>
+    </sql>
+
+    <!-- 과제별 정산 목록 (eGov 페이징) -->
+    <select id="selectSettlementList" parameterType="settlementSearchVO" resultType="settlementVO">
         SELECT
             <include refid="settlementColumns"/>
         <include refid="settlementJoins"/>
-        WHERE s.application_id = #{applicationId}
+        <include refid="searchCondition"/>
         ORDER BY s.expense_date DESC, s.settlement_id DESC
+        <if test="recordCountPerPage > 0">
+            LIMIT #{recordCountPerPage} OFFSET #{firstIndex}
+        </if>
+    </select>
+
+    <select id="selectSettlementListTotCnt" parameterType="settlementSearchVO" resultType="int">
+        SELECT COUNT(*)
+        FROM settlement s
+        <include refid="searchCondition"/>
+    </select>
+
+    <!-- 담당자 검수함: 전체 과제의 정산 (오래 기다린 요청부터) -->
+    <select id="selectSettlementReviewList" parameterType="settlementSearchVO" resultType="settlementVO">
+        SELECT
+            <include refid="settlementColumns"/>,
+            app.receipt_no,
+            app.project_name,
+            u.company_name
+        <include refid="settlementJoins"/>
+        INNER JOIN application app ON s.application_id = app.application_id
+        INNER JOIN users u ON app.company_user_id = u.user_id
+        <include refid="searchCondition"/>
+        ORDER BY s.created_at ASC, s.settlement_id ASC
+        <if test="recordCountPerPage > 0">
+            LIMIT #{recordCountPerPage} OFFSET #{firstIndex}
+        </if>
     </select>
 
     <select id="selectSettlement" resultType="settlementVO">
@@ -47,9 +86,9 @@
 
     <insert id="insertSettlement" parameterType="settlementVO" useGeneratedKeys="true" keyProperty="settlementId">
         INSERT INTO settlement (
-            application_id, item_code, expense_date, vendor_name, supply_amount, vat_amount, total_amount, description, receipt_file_id, status
+            application_id, item_code, expense_date, vendor_name, supply_amount, vat_amount, total_amount, description, receipt_file_id, status, created_by
         ) VALUES (
-            #{applicationId}, #{itemCode}, #{expenseDate}, #{vendorName}, #{supplyAmount}, #{vatAmount}, #{totalAmount}, #{description}, #{receiptFileId}, #{status}
+            #{applicationId}, #{itemCode}, #{expenseDate}, #{vendorName}, #{supplyAmount}, #{vatAmount}, #{totalAmount}, #{description}, #{receiptFileId}, #{status}, #{audit.userId}
         )
     </insert>
 
@@ -58,9 +97,33 @@
         SET status = #{status},
             reject_reason = #{rejectReason},
             reviewed_by = #{reviewedBy},
-            reviewed_at = CURRENT_TIMESTAMP
+            reviewed_at = CURRENT_TIMESTAMP,
+            updated_by = #{audit.userId},
+            updated_at = #{audit.now}
         WHERE settlement_id = #{settlementId}
           AND status = 'REQUESTED'
+    </update>
+
+    <!-- 보완 후 재요청: 반려 상태일 때만 바뀐다. 지난 반려 사유는 settlement_history 에 남아 있다 -->
+    <update id="updateSettlementResubmit" parameterType="settlementVO">
+        UPDATE settlement
+        SET item_code = #{itemCode},
+            expense_date = #{expenseDate},
+            vendor_name = #{vendorName},
+            supply_amount = #{supplyAmount},
+            vat_amount = #{vatAmount},
+            total_amount = #{totalAmount},
+            description = #{description},
+            receipt_file_id = #{receiptFileId},
+            status = 'REQUESTED',
+            reject_reason = NULL,
+            reviewed_by = NULL,
+            reviewed_at = NULL,
+            resubmit_count = resubmit_count + 1,
+            updated_by = #{audit.userId},
+            updated_at = #{audit.now}
+        WHERE settlement_id = #{settlementId}
+          AND status = 'REJECTED'
     </update>
 
     <select id="selectApprovedAmount" resultType="long">
@@ -73,6 +136,24 @@
         SELECT COALESCE(SUM(total_amount), 0)
         FROM settlement
         WHERE application_id = #{applicationId} AND status IN ('APPROVED', 'REQUESTED')
+    </select>
+
+    <insert id="insertSettlementHistory" parameterType="settlementHistoryVO">
+        INSERT INTO settlement_history (settlement_id, action_code, total_amount, memo, actor_id, acted_at)
+        VALUES (#{settlementId}, #{actionCode}, #{totalAmount}, #{memo}, #{audit.userId}, #{audit.now})
+    </insert>
+
+    <!-- 화면에 보이는 정산 건들의 이력을 한 번에 조회 (건마다 조회하는 N+1 방지) -->
+    <select id="selectSettlementHistoryList" resultType="settlementHistoryVO">
+        SELECT h.history_id, h.settlement_id, h.action_code, h.total_amount, h.memo, h.actor_id,
+               u.user_name AS actor_name, h.acted_at
+        FROM settlement_history h
+        LEFT JOIN users u ON h.actor_id = u.user_id
+        WHERE h.settlement_id IN
+        <foreach collection="settlementIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        ORDER BY h.settlement_id, h.acted_at, h.history_id
     </select>
 
 </mapper>

@@ -15,7 +15,7 @@ import javax.sql.DataSource;
  * 동시에 여러 명이 신청해도 같은 번호가 나오지 않게 채번한다.
  *
  * - 채번은 업무 트랜잭션과 별개인 새 트랜잭션(REQUIRES_NEW)에서 확정된다.
- *   → 신청 저장이 실패해 롤백되어도 번호는 소진되므로 "결번"이 생길 수 있다. (감사 시 설명 포인트)
+ *   → 신청 저장이 실패해 롤백되어도 번호는 소진되므로 "결번"이 생길 수 있다.
  * - blockSize: 한 번에 DB 에서 받아 메모리에 보관할 번호 개수. 크면 DB 접근이 줄지만 서버 재시작 시 남은 번호가 버려진다.
  *   접수번호는 연속성이 중요하므로 1 로 둔다.
  */
@@ -41,7 +41,7 @@ public class EgovConfigIdGeneration {
 
     /**
      * 공지 ID: NTC_0000000001 형식 (eGov 코드 생성기의 ServiceImpl 이 PK 를 IdGnr 로 발급하는 방식).
-     * 공지 ID 는 결번이 문제되지 않으므로 blockSize 10 으로 DB 접근을 줄인다. (접수번호와 비교해 볼 것)
+     * 공지 ID 는 결번이 문제되지 않으므로 blockSize 10 으로 DB 접근을 줄인다.
      */
     @Bean(destroyMethod = "destroy")
     public EgovTableIdGnrServiceImpl noticeIdGnrService(@Qualifier("dataSource") DataSource dataSource) {
@@ -51,6 +51,18 @@ public class EgovConfigIdGeneration {
         idGnrService.setBlockSize(10);
         idGnrService.setTable("ids");
         idGnrService.setTableName("NOTICE");
+        return idGnrService;
+    }
+
+    /** FAQ ID: FAQ_0000000001 형식 (공지 ID 와 같은 방식, ids 테이블의 FAQ 행) */
+    @Bean(destroyMethod = "destroy")
+    public EgovTableIdGnrServiceImpl faqIdGnrService(@Qualifier("dataSource") DataSource dataSource) {
+        EgovTableIdGnrServiceImpl idGnrService = new EgovTableIdGnrServiceImpl();
+        idGnrService.setDataSource(dataSource);
+        idGnrService.setStrategy(new EgovIdGnrStrategyImpl("FAQ_", 10, '0'));
+        idGnrService.setBlockSize(10);
+        idGnrService.setTable("ids");
+        idGnrService.setTableName("FAQ");
         return idGnrService;
     }
 }

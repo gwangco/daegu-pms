@@ -1,9 +1,8 @@
 package kr.go.daegu.pms.notice.service.impl;
 
-import kr.go.daegu.pms.cmm.message.AppMessages;
-
 import jakarta.annotation.Resource;
 import kr.go.daegu.pms.cmm.exception.NotFoundException;
+import kr.go.daegu.pms.cmm.message.AppMessages;
 import kr.go.daegu.pms.cmm.util.SecurityUtil;
 import kr.go.daegu.pms.notice.service.NoticeService;
 import kr.go.daegu.pms.notice.service.NoticeVO;
@@ -31,9 +30,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class NoticeServiceImpl extends EgovAbstractServiceImpl implements NoticeService {
 
-    private final AppMessages messages;
-
     private final NoticeMapper noticeMapper;
+    private final AppMessages messages;
 
     /** 공지 ID 채번 (EgovConfigIdGeneration 의 noticeIdGnrService). 생성기 템플릿과 같은 eGov 방식 */
     @Resource(name = "noticeIdGnrService")
@@ -80,15 +78,14 @@ public class NoticeServiceImpl extends EgovAbstractServiceImpl implements Notice
         requireStaff();
         selectNotice(notice.getNoticeId());   // 존재·삭제 여부 확인
         notice.setImportantYn(normalizeYn(notice.getImportantYn()));
-        notice.setUpdatedBy(SecurityUtil.getCurrentUserId());
         noticeMapper.updateNotice(notice);
-        log.info("[공지 수정] noticeId={}, by={}", notice.getNoticeId(), notice.getUpdatedBy());
+        log.info("[공지 수정] noticeId={}, by={}", notice.getNoticeId(), SecurityUtil.getCurrentUserId());
     }
 
     @Override
     public void deleteNotice(String noticeId) {
         requireStaff();
-        if (noticeMapper.deleteNotice(noticeId, SecurityUtil.getCurrentUserId()) == 0) {
+        if (noticeMapper.deleteNotice(noticeId) == 0) {
             throw messages.notFound("notice.delete.notFound");
         }
         log.info("[공지 삭제] noticeId={}, by={}", noticeId, SecurityUtil.getCurrentUserId());

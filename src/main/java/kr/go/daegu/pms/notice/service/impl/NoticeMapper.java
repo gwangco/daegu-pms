@@ -21,11 +21,11 @@ public interface NoticeMapper {
 
     int insertNotice(NoticeVO notice);
 
-    /** 제목·내용·중요여부·수정자·수정일시만 갱신 (작성자/작성일/조회수는 바꿀 수 없음) */
+    /** 제목·내용·중요여부만 갱신 (작성자/작성일/조회수는 바꿀 수 없음). 수정자·수정일시는 인터셉터가 채운다 */
     int updateNotice(NoticeVO notice);
 
     int updateNoticeViewCount(@Param("noticeId") String noticeId);
 
     /** 논리 삭제 (use_yn = 'N') */
-    int deleteNotice(@Param("noticeId") String noticeId, @Param("updatedBy") String updatedBy);
+    int deleteNotice(@Param("noticeId") String noticeId);
 }

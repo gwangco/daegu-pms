@@ -1,0 +1,53 @@
+{
+  "files.encoding": "utf8",
+  "files.autoGuessEncoding": false,
+  "java.configuration.updateBuildConfiguration": "automatic",
+  "java.configuration.runtimes": [
+    {
+      "name": "JavaSE-17",
+      "path": "C:/Java/jdk-17",
+      "default": true
+    }
+  ],
+  "java.jdt.ls.java.home": "C:/Java/jdk-25",
+  "java.jdt.ls.lombokSupport.enabled": false,
+  "java.jdt.ls.vmargs": "-XX:+UseParallelGC -XX:GCTimeRatio=4 -XX:AdaptiveSizePolicyWeight=90 -Dsun.zip.disableMemoryMapping=true -Xmx2G -Xms100m -Xlog:disable -javaagent:\"C:/Users/사용자/.m2/repository/org/projectlombok/lombok/1.18.48/lombok-1.18.48.jar\"",
+  "java.import.maven.enabled": true,
+  "java.import.gradle.enabled": false,
+  "maven.executable.path": "",
+  "maven.executable.preferMavenWrapper": true,
+  "maven.terminal.customEnv": [
+    {
+      "environmentVariable": "JAVA_HOME",
+      "value": "C:/Java/jdk-17"
+    }
+  ],
+  "terminal.integrated.defaultProfile.windows": "Windows PowerShell",
+  "terminal.integrated.profiles.windows": {
+    "Windows PowerShell": {
+      "path": "${env:windir}\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "args": [
+        "-NoLogo",
+        "-NoProfile"
+      ]
+    }
+  },
+  "terminal.integrated.env.windows": {
+    "JAVA_HOME": "C:/Java/jdk-17",
+    "PATH": "C:/Java/jdk-17\\bin;${env:PATH}"
+  },
+  "java.test.config": {
+    "workingDirectory": "${workspaceFolder}",
+    "javaExec": "C:/Java/jdk-17\\bin\\java.exe",
+    "encoding": "UTF-8",
+    "vmArgs": [
+      "-Dfile.encoding=UTF-8"
+    ]
+  },
+  "[java]": {
+    "editor.defaultFormatter": "redhat.java"
+  },
+  "[html]": {
+    "editor.formatOnSave": false
+  }
+}

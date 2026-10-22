@@ -15,7 +15,7 @@
         <Logger name="kr.go.daegu.pms" level="INFO" additivity="false">
             <AppenderRef ref="console"/>
         </Logger>
-        <!-- eGovFrame 실행환경 -->
+        <!-- eGovFrame 실행환경. org.egovframe.boot.crypto 의 DEBUG 는 암호화 평문과 키를 그대로 출력하므로 올리지 않는다 -->
         <Logger name="org.egovframe" level="INFO" additivity="false">
             <AppenderRef ref="console"/>
         </Logger>

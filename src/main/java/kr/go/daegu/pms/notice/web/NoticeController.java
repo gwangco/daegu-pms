@@ -1,8 +1,7 @@
 package kr.go.daegu.pms.notice.web;
 
-import kr.go.daegu.pms.cmm.message.AppMessages;
-
 import jakarta.validation.Valid;
+import kr.go.daegu.pms.cmm.message.AppMessages;
 import kr.go.daegu.pms.cmm.pagination.PagingHelper;
 import kr.go.daegu.pms.notice.service.NoticeService;
 import kr.go.daegu.pms.notice.service.NoticeVO;
@@ -33,10 +32,9 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @RequiredArgsConstructor
 public class NoticeController {
 
-    private final AppMessages messages;
-
     private final NoticeService noticeService;
     private final PagingHelper pagingHelper;
+    private final AppMessages messages;
 
     @GetMapping
     public String selectNoticeList(@ModelAttribute("searchVO") NoticeVO searchVO, Model model) {

@@ -10,6 +10,7 @@ public interface CommonCodeService {
 
     String GROUP_FIELD = "FIELD";
     String GROUP_EXP_ITEM = "EXP_ITEM";
+    String GROUP_FAQ_CATEGORY = "FAQ_CATEGORY";
 
     List<CommonCodeVO> selectCodeList(String groupId);
 

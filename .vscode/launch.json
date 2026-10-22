@@ -1,0 +1,17 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "name": "D-PMS: 로컬 디버깅 (Java 17)",
+      "request": "launch",
+      "mainClass": "kr.go.daegu.pms.DaeguPmsApplication",
+      "projectName": "daegu-pms",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "encoding": "UTF-8",
+      "vmArgs": "-Dfile.encoding=UTF-8",
+      "args": "--spring.profiles.active=local"
+    }
+  ]
+}

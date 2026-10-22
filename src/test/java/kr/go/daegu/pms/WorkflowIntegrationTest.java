@@ -1,14 +1,15 @@
 package kr.go.daegu.pms;
 
-import kr.go.daegu.pms.announcement.service.AnnouncementVO;
-import kr.go.daegu.pms.application.service.ApplicationVO;
-import kr.go.daegu.pms.evaluation.service.EvaluationVO;
-import kr.go.daegu.pms.settlement.service.SettlementVO;
-import kr.go.daegu.pms.announcement.service.impl.AnnouncementMapper;
-import kr.go.daegu.pms.application.service.impl.ApplicationMapper;
-import kr.go.daegu.pms.evaluation.service.impl.EvaluationMapper;
-import kr.go.daegu.pms.settlement.service.impl.SettlementMapper;
 import kr.go.daegu.pms.announcement.service.AnnouncementService;
+import kr.go.daegu.pms.announcement.service.AnnouncementVO;
+import kr.go.daegu.pms.announcement.service.impl.AnnouncementMapper;
+import kr.go.daegu.pms.application.service.ApplicationVO;
+import kr.go.daegu.pms.application.service.impl.ApplicationMapper;
+import kr.go.daegu.pms.evaluation.service.EvaluationVO;
+import kr.go.daegu.pms.evaluation.service.impl.EvaluationMapper;
+import kr.go.daegu.pms.settlement.service.SettlementSearchVO;
+import kr.go.daegu.pms.settlement.service.SettlementVO;
+import kr.go.daegu.pms.settlement.service.impl.SettlementMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -258,7 +259,9 @@ class WorkflowIntegrationTest extends IntegrationTestSupport {
                         .param("totalAmount", "1").param("description", "정상").with(csrf()))
                 .andExpect(flash().attributeExists("successMessage"));
 
-        List<SettlementVO> list = settlementMapper.selectSettlementList(1L);
+        SettlementSearchVO search = new SettlementSearchVO();
+        search.setApplicationId(1L);
+        List<SettlementVO> list = settlementMapper.selectSettlementList(search);
         SettlementVO created = list.stream().filter(s -> "정상".equals(s.getDescription())).findFirst().orElseThrow();
         assertThat(created.getVatAmount()).isEqualTo(100_000L);         // 원 미만 절사
         assertThat(created.getTotalAmount()).isEqualTo(1_100_005L);

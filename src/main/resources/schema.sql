@@ -34,14 +34,31 @@ CREATE TABLE IF NOT EXISTS users (
     user_id VARCHAR(50) PRIMARY KEY,
     password VARCHAR(255) NOT NULL,          -- {bcrypt} 단방향 해시 저장
     user_name VARCHAR(50) NOT NULL,
-    email VARCHAR(100) NOT NULL,
-    phone VARCHAR(20),
+    email VARCHAR(255) NOT NULL,             -- ARIA 암호문 {ARIA}Base64 (평문보다 길어서 넉넉히)
+    phone VARCHAR(100),                      -- ARIA 암호문
     company_name VARCHAR(100),
     business_no VARCHAR(20),
     role VARCHAR(30) NOT NULL, -- ROLE_COMPANY, ROLE_EVALUATOR, ROLE_MANAGER, ROLE_ADMIN
     enabled BOOLEAN DEFAULT TRUE NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+    login_fail_count INT DEFAULT 0 NOT NULL,  -- 연속 로그인 실패 횟수 (성공하면 0)
+    locked_at TIMESTAMP,                      -- 잠긴 시각. 잠금 시간이 지나거나 관리자가 해제하면 NULL
+    last_login_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_by VARCHAR(50),
+    updated_at TIMESTAMP
 );
+
+-- 3-1. 접속 기록 (로그인 성공·실패·잠김·로그아웃)
+--      운영에서는 개인정보 처리시스템 접속기록 보관 기준(1년 이상)에 맞춰 별도 보관·점검한다
+CREATE TABLE IF NOT EXISTS login_history (
+    history_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id VARCHAR(50),                      -- 존재하는 계정만 기록. 없는 아이디는 입력값 대신 NULL
+    result_code VARCHAR(20) NOT NULL,         -- SUCCESS, FAIL_PASSWORD, FAIL_UNKNOWN_ID, LOCKED, DISABLED, LOGOUT
+    client_ip VARCHAR(45) NOT NULL,           -- IPv6 최대 길이
+    login_at TIMESTAMP NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_login_history_user ON login_history (user_id, login_at);
+CREATE INDEX IF NOT EXISTS idx_login_history_at ON login_history (login_at);
 
 -- 4. 첨부파일 (전자정부 공통컴포넌트 COMTNFILEDETAIL 단순화 버전)
 --    물리 파일은 디스크(uploads/)에, 메타데이터(원본명/저장명/크기)는 DB에 분리 저장
@@ -71,6 +88,8 @@ CREATE TABLE IF NOT EXISTS announcement (
     view_count INT DEFAULT 0 NOT NULL,
     writer_id VARCHAR(50) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_by VARCHAR(50),                  -- 감사 컬럼: MyBatis 인터셉터가 #{audit.*} 로 채움 (배치는 SYSTEM)
+    updated_at TIMESTAMP,
     FOREIGN KEY (writer_id) REFERENCES users(user_id)
 );
 -- 마감 배치(status + end_date)와 목록 검색에서 사용하는 조회 조건 인덱스
@@ -91,6 +110,8 @@ CREATE TABLE IF NOT EXISTS application (
     status VARCHAR(30) DEFAULT 'SUBMITTED' NOT NULL, -- TEMP_SAVED, SUBMITTED, DOCUMENT_PASSED, EVALUATING, SELECTED, REJECTED
     submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_by VARCHAR(50),
+    updated_at TIMESTAMP,
     FOREIGN KEY (announcement_id) REFERENCES announcement(announcement_id),
     FOREIGN KEY (company_user_id) REFERENCES users(user_id),
     FOREIGN KEY (plan_file_id) REFERENCES com_file(file_id),
@@ -112,6 +133,9 @@ CREATE TABLE IF NOT EXISTS evaluation (
     status VARCHAR(20) DEFAULT 'ASSIGNED' NOT NULL, -- ASSIGNED, COMPLETED
     assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     evaluated_at TIMESTAMP,
+    created_by VARCHAR(50),                  -- 배정한 담당자
+    updated_by VARCHAR(50),
+    updated_at TIMESTAMP,
     FOREIGN KEY (application_id) REFERENCES application(application_id),
     FOREIGN KEY (evaluator_user_id) REFERENCES users(user_id),
     -- 한 과제에 같은 평가위원 중복 배정 금지
@@ -135,14 +159,32 @@ CREATE TABLE IF NOT EXISTS settlement (
     receipt_file_id BIGINT,           -- 증빙(세금계산서/영수증) 첨부파일 (com_file FK)
     status VARCHAR(20) DEFAULT 'REQUESTED' NOT NULL, -- REQUESTED, APPROVED, REJECTED
     reject_reason VARCHAR(255),
+    resubmit_count INT DEFAULT 0 NOT NULL, -- 보완 후 재요청 횟수
     reviewed_by VARCHAR(50),          -- 검수 처리자 (감사 추적용)
     reviewed_at TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    created_by VARCHAR(50),                  -- 등록한 기업 사용자
+    updated_by VARCHAR(50),
+    updated_at TIMESTAMP,
     FOREIGN KEY (application_id) REFERENCES application(application_id),
     FOREIGN KEY (receipt_file_id) REFERENCES com_file(file_id),
     FOREIGN KEY (reviewed_by) REFERENCES users(user_id)
 );
 CREATE INDEX IF NOT EXISTS idx_settlement_application ON settlement (application_id, status);
+CREATE INDEX IF NOT EXISTS idx_settlement_status ON settlement (status, created_at);
+
+-- 8-1. 정산 처리 이력 (등록 → 승인/반려 → 보완 재요청). 정산 행은 최신 상태만 갖고 지난 반려 사유는 여기에 남는다
+CREATE TABLE IF NOT EXISTS settlement_history (
+    history_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    settlement_id BIGINT NOT NULL,
+    action_code VARCHAR(20) NOT NULL,          -- REQUESTED, APPROVED, REJECTED, RESUBMITTED
+    total_amount BIGINT NOT NULL,              -- 처리 시점의 집행 금액 (재요청으로 금액이 바뀔 수 있음)
+    memo VARCHAR(255),                         -- 보완 요청 사유
+    actor_id VARCHAR(50) NOT NULL,
+    acted_at TIMESTAMP NOT NULL,
+    FOREIGN KEY (settlement_id) REFERENCES settlement(settlement_id)
+);
+CREATE INDEX IF NOT EXISTS idx_settlement_history ON settlement_history (settlement_id, acted_at);
 
 -- 9. 공지사항 (eGovFrame VS Code 확장 CRUD 코드 생성기 입력 DDL: docs/egov-codegen/notice.ddl.sql)
 CREATE TABLE IF NOT EXISTS notice (
@@ -160,3 +202,20 @@ CREATE TABLE IF NOT EXISTS notice (
     FOREIGN KEY (updated_by) REFERENCES users(user_id)
 );
 CREATE INDEX IF NOT EXISTS idx_notice_list ON notice (use_yn, important_yn, created_at);
+
+-- 10. 자주 묻는 질문 (eGovFrame VS Code 확장 CRUD 코드 생성기 입력 DDL: docs/egov-codegen/faq.ddl.sql)
+CREATE TABLE IF NOT EXISTS faq (
+    faq_id VARCHAR(20) PRIMARY KEY,           -- eGov IdGnr 채번: FAQ_0000000001
+    category_code VARCHAR(20) NOT NULL,       -- 공통코드 FAQ_CATEGORY
+    question VARCHAR(300) NOT NULL,
+    answer VARCHAR(4000) NOT NULL,            -- 목록에서 답변을 함께 보여 주므로 CLOB 대신 VARCHAR
+    sort_order INT DEFAULT 1 NOT NULL,        -- 같은 분류 안의 표시 순서
+    use_yn CHAR(1) DEFAULT 'Y' NOT NULL,      -- 논리 삭제 플래그
+    writer_id VARCHAR(50) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_by VARCHAR(50),
+    updated_at TIMESTAMP,
+    FOREIGN KEY (writer_id) REFERENCES users(user_id),
+    FOREIGN KEY (updated_by) REFERENCES users(user_id)
+);
+CREATE INDEX IF NOT EXISTS idx_faq_list ON faq (use_yn, category_code, sort_order);

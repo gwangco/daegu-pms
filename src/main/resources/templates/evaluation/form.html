@@ -1,108 +1,110 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}">
 <head>
-    <meta charset="UTF-8">
-    <title>온라인 채점표 | D-PMS</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <style>body { background-color: #f8f9fa; }</style>
+    <title>온라인 채점표</title>
 </head>
 <body>
-
-<div th:replace="~{fragments/navbar :: navbar}"></div>
-<div th:replace="~{fragments/navbar :: flash}"></div>
-
-<div class="container py-4" style="max-width: 960px;">
-    <div class="mb-3">
-        <a th:href="@{/evaluator/evaluations}" class="text-decoration-none text-muted small"><i class="bi bi-arrow-left"></i> 평가 목록으로 돌아가기</a>
-    </div>
-
-    <!-- 평가 대상 과제 요약 -->
-    <div class="card border-0 shadow-sm p-4 bg-white mb-4">
-        <div class="small text-muted mb-1" th:text="${evaluation.announcementTitle}">공고명</div>
-        <h4 class="fw-bold text-dark mb-3" th:text="${app.projectName}">과제명</h4>
-        <table class="table table-bordered align-middle mb-3">
-            <tbody>
-                <tr>
-                    <th class="table-light text-center" style="width: 20%;">신청기업</th>
-                    <td style="width: 30%;" th:text="${app.companyName}">기업명</td>
-                    <th class="table-light text-center" style="width: 20%;">신청 지원금</th>
-                    <td style="width: 30%;" th:text="${#numbers.formatInteger(app.requestGrant, 0, 'COMMA')} + '원'">0원</td>
-                </tr>
-                <tr>
-                    <th class="table-light text-center">사업계획서</th>
-                    <td colspan="3">
-                        <a th:if="${app.planFileId != null}" th:href="@{/files/{id}(id=${app.planFileId})}" class="text-decoration-none">
-                            <i class="bi bi-download me-1"></i><span th:text="${app.planFileName}">plan.pdf</span>
-                        </a>
-                        <span th:if="${app.planFileId == null}" class="text-muted small">첨부 없음 (샘플 데이터)</span>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-        <h6 class="fw-bold text-dark mb-2">사업계획 요약</h6>
-        <div class="p-3 bg-light rounded-3" style="line-height: 1.8; white-space: pre-line;" th:text="${app.summary}">요약</div>
-    </div>
-
-    <!-- 채점표 -->
-    <div class="card border-0 shadow-sm p-4 bg-white">
-        <h5 class="fw-bold text-dark mb-3"><i class="bi bi-clipboard-check text-primary me-2"></i>온라인 채점표</h5>
-
-        <!-- 제출 완료된 평가: 읽기 전용 -->
-        <div th:if="${evaluation.status == 'COMPLETED'}">
-            <div class="row g-3 text-center mb-3">
-                <div class="col-4"><div class="p-3 bg-light rounded-3"><div class="small text-muted">정량 (40)</div><div class="fs-4 fw-bold" th:text="${evaluation.quantitativeScore}">0</div></div></div>
-                <div class="col-4"><div class="p-3 bg-light rounded-3"><div class="small text-muted">정성 (60)</div><div class="fs-4 fw-bold" th:text="${evaluation.qualitativeScore}">0</div></div></div>
-                <div class="col-4"><div class="p-3 bg-light rounded-3"><div class="small text-muted">총점 (100)</div><div class="fs-4 fw-bold text-primary" th:text="${evaluation.totalScore}">0</div></div></div>
-            </div>
-            <div class="p-3 border rounded-3 small" style="white-space: pre-line;" th:text="${evaluation.evalComment}">의견</div>
-            <div class="small text-muted mt-2">제출일시: <span th:text="${#temporals.format(evaluation.evaluatedAt, 'yyyy-MM-dd HH:mm')}"></span></div>
+<th:block layout:fragment="content">
+    <div class="page-head">
+        <div class="container medium">
+            <nav aria-label="현재 위치">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a th:href="@{/}">홈</a></li>
+                    <li class="breadcrumb-item"><a th:href="@{/evaluator/evaluations}">내 평가과제</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">온라인 채점표</li>
+                </ol>
+            </nav>
+            <p class="lead-sub small mb-1" th:text="${evaluation.announcementTitle}">공고명</p>
+            <h1 th:text="${app.projectName}">과제명</h1>
         </div>
-
-        <!-- 채점 대기: 입력 폼 -->
-        <form th:if="${evaluation.status == 'ASSIGNED'}" th:action="@{/evaluator/evaluations/{id}(id=${evaluation.evaluationId})}" method="post">
-            <div th:if="${app.status != 'EVALUATING'}" class="alert alert-warning small py-2">
-                현재 과제가 '전문가심사중' 상태가 아니어서 채점할 수 없습니다.
-            </div>
-            <div class="row g-3 mb-3">
-                <div class="col-md-4">
-                    <label class="form-label fw-semibold text-secondary">정량 평가 (0~<span th:text="${maxQuantitative}">40</span>점)</label>
-                    <input type="number" id="quantitativeScore" name="quantitativeScore" class="form-control" min="0" th:max="${maxQuantitative}" required oninput="calcTotal()">
-                    <div class="form-text small">매출·인력·특허 등 객관 지표</div>
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label fw-semibold text-secondary">정성 평가 (0~<span th:text="${maxQualitative}">60</span>점)</label>
-                    <input type="number" id="qualitativeScore" name="qualitativeScore" class="form-control" min="0" th:max="${maxQualitative}" required oninput="calcTotal()">
-                    <div class="form-text small">기술성·사업성·지역 연계성</div>
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label fw-semibold text-secondary">총점 (자동계산)</label>
-                    <input type="number" id="totalScore" class="form-control bg-light fw-bold" readonly placeholder="0">
-                </div>
-            </div>
-            <div class="mb-3">
-                <label class="form-label fw-semibold text-secondary">종합 의견 <span class="text-danger">*</span></label>
-                <textarea name="evalComment" class="form-control" rows="5" maxlength="2000" required
-                          placeholder="기술적 차별성, 사업화 가능성, 보완 필요사항 등을 작성하세요."></textarea>
-            </div>
-            <div class="d-flex justify-content-end pt-3 border-top">
-                <button type="submit" class="btn btn-primary px-4 fw-semibold" th:disabled="${app.status != 'EVALUATING'}"
-                        onclick="return confirm('제출 후에는 수정할 수 없습니다. 제출하시겠습니까?');">
-                    <i class="bi bi-send-check me-1"></i> 평가 제출
-                </button>
-            </div>
-        </form>
     </div>
-</div>
 
-<div th:replace="~{fragments/navbar :: footer}"></div>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-    function calcTotal() {
-        const q1 = parseInt(document.getElementById('quantitativeScore').value, 10) || 0;
-        const q2 = parseInt(document.getElementById('qualitativeScore').value, 10) || 0;
-        document.getElementById('totalScore').value = q1 + q2;
-    }
-</script>
+    <div class="container medium">
+        <section class="panel mb-4" aria-labelledby="target-title">
+            <div class="panel-head"><h2 id="target-title">평가 대상 과제</h2></div>
+            <div class="table-responsive">
+                <table class="table table-bordered table-info-grid mb-0">
+                    <caption class="visually-hidden">평가 대상 과제 정보</caption>
+                    <tbody>
+                    <tr>
+                        <th scope="row">신청기업</th>
+                        <td th:text="${app.companyName}">기업명</td>
+                        <th scope="row">사업자등록번호</th>
+                        <td th:text="${app.businessNo}">504-81-*****</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">신청 지원금</th>
+                        <td th:text="${#numbers.formatInteger(app.requestGrant, 0, 'COMMA')} + '원'">0원</td>
+                        <th scope="row">사업계획서</th>
+                        <td>
+                            <a th:if="${app.planFileId != null}" th:href="@{/files/{id}(id=${app.planFileId})}">
+                                <i class="bi bi-download me-1" aria-hidden="true"></i><span th:text="${app.planFileName}">plan.pdf</span>
+                            </a>
+                            <span th:if="${app.planFileId == null}" class="text-sub small">첨부 없음 (샘플 데이터)</span>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="panel-body border-top">
+                <h3 class="section-title fs-6">사업계획 요약</h3>
+                <div class="prewrap" th:text="${app.summary}">요약</div>
+            </div>
+        </section>
+
+        <section class="panel" aria-labelledby="score-title">
+            <div class="panel-head"><h2 id="score-title">채점</h2></div>
+            <div class="panel-body">
+                <div th:if="${evaluation.status == 'COMPLETED'}">
+                    <div class="row g-3 text-center mb-3">
+                        <div class="col-4"><div class="stat-card"><div class="label">정량 (40)</div><div class="value" th:text="${evaluation.quantitativeScore}">0</div></div></div>
+                        <div class="col-4"><div class="stat-card"><div class="label">정성 (60)</div><div class="value" th:text="${evaluation.qualitativeScore}">0</div></div></div>
+                        <div class="col-4"><div class="stat-card"><div class="label">총점 (100)</div><div class="value text-primary" th:text="${evaluation.totalScore}">0</div></div></div>
+                    </div>
+                    <div class="content-box prewrap" th:text="${evaluation.evalComment}">의견</div>
+                    <p class="small text-sub mt-2 mb-0">제출일시 <span th:text="${#temporals.format(evaluation.evaluatedAt, 'yyyy-MM-dd HH:mm')}"></span></p>
+                </div>
+
+                <form th:if="${evaluation.status == 'ASSIGNED'}" th:action="@{/evaluator/evaluations/{id}(id=${evaluation.evaluationId})}"
+                      method="post" data-confirm="제출한 평가는 수정할 수 없습니다. 제출하시겠습니까?">
+                    <div th:if="${app.status != 'EVALUATING'}" class="alert alert-warning" role="alert">
+                        과제가 '전문가심사중' 상태가 아니어서 지금은 채점할 수 없습니다.
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                            <label for="quantitativeScore" class="form-label">정량 평가 (0~<span th:text="${maxQuantitative}">40</span>점)</label>
+                            <input type="number" id="quantitativeScore" name="quantitativeScore" class="form-control" min="0"
+                                   th:max="${maxQuantitative}" data-calc="score-total" aria-describedby="quantHelp" required>
+                            <div id="quantHelp" class="form-text">매출·인력·특허 등 객관 지표</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="qualitativeScore" class="form-label">정성 평가 (0~<span th:text="${maxQualitative}">60</span>점)</label>
+                            <input type="number" id="qualitativeScore" name="qualitativeScore" class="form-control" min="0"
+                                   th:max="${maxQualitative}" data-calc="score-total" aria-describedby="qualHelp" required>
+                            <div id="qualHelp" class="form-text">기술성·사업성·지역 연계성</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="totalScore" class="form-label">총점(자동 계산)</label>
+                            <input type="number" id="totalScore" class="form-control bg-light fw-bold" readonly>
+                        </div>
+                    </div>
+                    <div class="mb-1">
+                        <label for="evalComment" class="form-label">종합 의견 <span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden">(필수)</span></label>
+                        <textarea id="evalComment" name="evalComment" class="form-control" rows="6" maxlength="2000" required
+                                  placeholder="기술적 차별성, 사업화 가능성, 보완이 필요한 사항을 작성하세요."></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <a th:href="@{/evaluator/evaluations}" class="btn btn-outline-secondary">목록</a>
+                        <button type="submit" class="btn btn-primary px-4" th:disabled="${app.status != 'EVALUATING'}">
+                            <i class="bi bi-send-check me-1" aria-hidden="true"></i>평가 제출
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </section>
+    </div>
+</th:block>
 </body>
 </html>

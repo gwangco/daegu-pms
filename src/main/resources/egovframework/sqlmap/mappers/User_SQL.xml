@@ -1,40 +1,125 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="kr.go.daegu.pms.user.service.impl.UserMapper">
 
-    <select id="findByUserId" resultType="userVO">
-        SELECT 
-            user_id, password, user_name, email, phone, company_name, business_no, role, enabled, created_at
+    <!-- 비밀번호 해시는 인증 쿼리(selectUserForLogin)에서만 조회한다 -->
+    <sql id="userColumns">
+            user_id, user_name, email, phone, company_name, business_no, role, enabled,
+            login_fail_count, locked_at, last_login_at, created_at
+    </sql>
+
+    <select id="selectUserForLogin" resultType="userVO">
+        SELECT
+            <include refid="userColumns"/>,
+            password
         FROM users
         WHERE user_id = #{userId}
     </select>
 
-    <select id="findByRole" resultType="userVO">
-        SELECT 
-            user_id, password, user_name, email, phone, company_name, business_no, role, enabled, created_at
+    <select id="selectUser" resultType="userVO">
+        SELECT
+            <include refid="userColumns"/>
+        FROM users
+        WHERE user_id = #{userId}
+    </select>
+
+    <select id="selectUserListByRole" resultType="userVO">
+        SELECT
+            <include refid="userColumns"/>
         FROM users
         WHERE role = #{role}
         ORDER BY user_name ASC
     </select>
 
-    <insert id="insertUser">
-        INSERT INTO users (
-            user_id, password, user_name, email, phone, company_name, business_no, role, enabled
-        ) VALUES (
-            #{userId}, #{password}, #{userName}, #{email}, #{phone}, #{companyName}, #{businessNo}, #{role}, #{enabled}
-        )
-    </insert>
+    <!-- 로그인 실패 처리: 같은 계정의 동시 실패가 서로 횟수를 덮어쓰지 않도록 행을 잠근 뒤 계산한다 -->
+    <select id="selectUserForUpdate" resultType="userVO">
+        SELECT user_id, login_fail_count, locked_at, enabled
+        FROM users
+        WHERE user_id = #{userId}
+        FOR UPDATE
+    </select>
 
-    <update id="updateUser">
+    <!--
+        실패 횟수·잠금 시각은 서비스에서 계산한 값을 그대로 저장한다.
+        (SET a = a + 1, b = CASE WHEN a + 1 ... 처럼 SET 절에서 서로 참조하면
+         MySQL/MariaDB 는 앞에서 바꾼 값을 보고, H2 는 바꾸기 전 값을 봐서 DB 마다 결과가 달라진다)
+    -->
+    <update id="updateLoginFailure">
         UPDATE users
-        SET user_name = #{userName},
-            email = #{email},
-            phone = #{phone},
-            company_name = #{companyName},
-            business_no = #{businessNo}
+        SET login_fail_count = #{loginFailCount},
+            locked_at = #{lockedAt}
         WHERE user_id = #{userId}
     </update>
+
+    <update id="updateLoginSuccess">
+        UPDATE users
+        SET login_fail_count = 0,
+            locked_at = NULL,
+            last_login_at = #{audit.now}
+        WHERE user_id = #{userId}
+    </update>
+
+    <update id="updateUserUnlock">
+        UPDATE users
+        SET login_fail_count = 0,
+            locked_at = NULL,
+            updated_by = #{audit.userId},
+            updated_at = #{audit.now}
+        WHERE user_id = #{userId}
+          AND locked_at IS NOT NULL
+    </update>
+
+    <sql id="userSearchCondition">
+        <where>
+            <if test="role != null and role != ''">
+                AND role = #{role}
+            </if>
+            <!-- OGNL 에서 'Y' 처럼 한 글자 작은따옴표는 char 로 해석되어 문자열과 비교하면 NumberFormatException 이 난다.
+                 문자열 비교는 큰따옴표 리터럴("Y")로 쓴다 -->
+            <if test='lockedOnly == "Y"'>
+                AND locked_at &gt; #{lockedSince}
+            </if>
+            <if test="searchKeyword != null and searchKeyword != ''">
+                <bind name="keywordPattern" value="'%' + searchKeyword + '%'"/>
+                AND (user_id LIKE #{keywordPattern} OR user_name LIKE #{keywordPattern} OR company_name LIKE #{keywordPattern})
+            </if>
+        </where>
+    </sql>
+
+    <select id="selectUserList" parameterType="userSearchVO" resultType="userVO">
+        SELECT
+            <include refid="userColumns"/>
+        FROM users
+        <include refid="userSearchCondition"/>
+        ORDER BY CASE role WHEN 'ROLE_ADMIN' THEN 1 WHEN 'ROLE_MANAGER' THEN 2 WHEN 'ROLE_EVALUATOR' THEN 3 ELSE 4 END, user_id
+        <if test="recordCountPerPage > 0">
+            LIMIT #{recordCountPerPage} OFFSET #{firstIndex}
+        </if>
+    </select>
+
+    <!-- 암호화 전환: 표식({ARIA})으로 시작하지 않는 값이 평문이다 -->
+    <select id="selectPlainContactList" resultType="userVO">
+        <bind name="prefixPattern" value="prefix + '%'"/>
+        SELECT user_id, email, phone
+        FROM users
+        WHERE email NOT LIKE #{prefixPattern}
+           OR (phone IS NOT NULL AND phone NOT LIKE #{prefixPattern})
+        ORDER BY user_id
+    </select>
+
+    <update id="updateUserContact">
+        UPDATE users
+        SET email = #{email},
+            phone = #{phone}
+        WHERE user_id = #{userId}
+    </update>
+
+    <select id="selectUserListTotCnt" parameterType="userSearchVO" resultType="int">
+        SELECT COUNT(*)
+        FROM users
+        <include refid="userSearchCondition"/>
+    </select>
 
 </mapper>
