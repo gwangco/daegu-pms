@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.go.daegu.pms.user.service.impl.LoginHistoryMapper">
+
+    <insert id="insertLoginHistory" parameterType="loginHistoryVO" useGeneratedKeys="true" keyProperty="historyId">
+        INSERT INTO login_history (user_id, result_code, client_ip, login_at)
+        VALUES (#{userId}, #{resultCode}, #{clientIp}, #{audit.now})
+    </insert>
+
+    <sql id="searchCondition">
+        <where>
+            <if test="searchKeyword != null and searchKeyword != ''">
+                AND h.user_id = #{searchKeyword}
+            </if>
+            <if test="resultCode != null and resultCode != ''">
+                AND h.result_code = #{resultCode}
+            </if>
+            <if test="fromDate != null">
+                AND h.login_at &gt;= #{fromDate}
+            </if>
+            <if test="toDate != null">
+                <!-- 종료일 하루 전체를 포함하도록 다음 날 0시 미만으로 비교 (DB 전용 날짜 함수를 쓰지 않음) -->
+                AND h.login_at &lt; #{toDateExclusive}
+            </if>
+        </where>
+    </sql>
+
+    <select id="selectLoginHistoryList" parameterType="loginHistorySearchVO" resultType="loginHistoryVO">
+        SELECT h.history_id, h.user_id, u.user_name, h.result_code, h.client_ip, h.login_at
+        FROM login_history h
+        LEFT JOIN users u ON h.user_id = u.user_id
+        <include refid="searchCondition"/>
+        ORDER BY h.login_at DESC, h.history_id DESC
+        <if test="recordCountPerPage > 0">
+            LIMIT #{recordCountPerPage} OFFSET #{firstIndex}
+        </if>
+    </select>
+
+    <select id="selectLoginHistoryListTotCnt" parameterType="loginHistorySearchVO" resultType="int">
+        SELECT COUNT(*)
+        FROM login_history h
+        <include refid="searchCondition"/>
+    </select>
+
+</mapper>

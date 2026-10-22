@@ -2,6 +2,7 @@ package kr.go.daegu.pms.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+import java.time.Duration;
 import java.util.List;
 
 /**
@@ -9,7 +10,7 @@ import java.util.List;
  * 페이징 값은 EgovConfigProperties 가 이 값을 읽어 EgovPropertyService(pageUnit/pageSize)로 제공한다.
  */
 @ConfigurationProperties(prefix = "app")
-public record AppProperties(File file, Paging paging, Batch batch) {
+public record AppProperties(File file, Paging paging, Batch batch, Login login) {
 
     /** 첨부파일 저장 경로 및 허용 확장자 */
     public record File(String uploadDir, List<String> allowedExtensions) {}
@@ -19,4 +20,7 @@ public record AppProperties(File file, Paging paging, Batch batch) {
 
     /** 배치 스케줄 */
     public record Batch(String announcementCloseCron) {}
+
+    /** 로그인 실패 잠금 정책 (maxFailures 회 연속 실패 시 lockDuration 동안 잠금) */
+    public record Login(int maxFailures, Duration lockDuration) {}
 }

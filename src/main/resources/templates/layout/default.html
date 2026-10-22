@@ -61,6 +61,14 @@
                            th:classappend="${currentMenu == 'evaluation'} ? 'active'"
                            th:attr="aria-current=${currentMenu == 'evaluation'} ? 'page' : null">내 평가과제</a>
                     </li>
+                    <li class="nav-item dropdown" sec:authorize="hasRole('ADMIN')">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"
+                           th:classappend="${currentMenu == 'admin'} ? 'active'">시스템 관리</a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" th:href="@{/admin/users}">사용자 관리</a></li>
+                            <li><a class="dropdown-item" th:href="@{/admin/login-history}">접속 기록</a></li>
+                        </ul>
+                    </li>
                 </ul>
 
                 <div class="user-box" sec:authorize="isAnonymous()">

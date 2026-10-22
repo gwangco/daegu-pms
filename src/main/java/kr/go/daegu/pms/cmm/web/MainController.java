@@ -7,6 +7,8 @@ import kr.go.daegu.pms.application.service.ApplicationService;
 import kr.go.daegu.pms.cmm.message.AppMessages;
 import kr.go.daegu.pms.notice.service.NoticeService;
 import kr.go.daegu.pms.notice.service.NoticeVO;
+import kr.go.daegu.pms.user.service.LoginLockPolicy;
+import kr.go.daegu.pms.user.web.LoginFailureHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -23,6 +25,7 @@ public class MainController {
     private final ApplicationService applicationService;
     private final NoticeService noticeService;
     private final AppMessages messages;
+    private final LoginLockPolicy lockPolicy;
 
     @GetMapping("/")
     public String index(Model model) {
@@ -50,9 +53,16 @@ public class MainController {
     @GetMapping("/login")
     public String login(@RequestParam(value = "error", required = false) String error, Model model) {
         if (error != null) {
-            // 아이디 존재 여부를 알려주지 않도록 하나의 메시지로 통일 (계정 열거 공격 방지)
-            model.addAttribute("loginError", messages.text("login.failed"));
+            // 아이디가 없는 경우와 비밀번호가 틀린 경우는 같은 문구로 안내한다 (계정 존재 여부 노출 방지)
+            String message = switch (error) {
+                case LoginFailureHandler.ERROR_LOCKED ->
+                        messages.text("login.locked", lockPolicy.getMaxFailures(), lockPolicy.getLockMinutes());
+                case LoginFailureHandler.ERROR_DISABLED -> messages.text("login.disabled");
+                default -> messages.text("login.failed");
+            };
+            model.addAttribute("loginError", message);
         }
+        model.addAttribute("loginPolicy", messages.text("login.policy", lockPolicy.getMaxFailures(), lockPolicy.getLockMinutes()));
         return "login";
     }
 

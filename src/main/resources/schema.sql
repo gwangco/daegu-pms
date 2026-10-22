@@ -40,10 +40,25 @@ CREATE TABLE IF NOT EXISTS users (
     business_no VARCHAR(20),
     role VARCHAR(30) NOT NULL, -- ROLE_COMPANY, ROLE_EVALUATOR, ROLE_MANAGER, ROLE_ADMIN
     enabled BOOLEAN DEFAULT TRUE NOT NULL,
+    login_fail_count INT DEFAULT 0 NOT NULL,  -- 연속 로그인 실패 횟수 (성공하면 0)
+    locked_at TIMESTAMP,                      -- 잠긴 시각. 잠금 시간이 지나거나 관리자가 해제하면 NULL
+    last_login_at TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_by VARCHAR(50),
     updated_at TIMESTAMP
 );
+
+-- 3-1. 접속 기록 (로그인 성공·실패·잠김·로그아웃)
+--      운영에서는 개인정보 처리시스템 접속기록 보관 기준(1년 이상)에 맞춰 별도 보관·점검한다
+CREATE TABLE IF NOT EXISTS login_history (
+    history_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id VARCHAR(50),                      -- 존재하는 계정만 기록. 없는 아이디는 입력값 대신 NULL
+    result_code VARCHAR(20) NOT NULL,         -- SUCCESS, FAIL_PASSWORD, FAIL_UNKNOWN_ID, LOCKED, DISABLED, LOGOUT
+    client_ip VARCHAR(45) NOT NULL,           -- IPv6 최대 길이
+    login_at TIMESTAMP NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_login_history_user ON login_history (user_id, login_at);
+CREATE INDEX IF NOT EXISTS idx_login_history_at ON login_history (login_at);
 
 -- 4. 첨부파일 (전자정부 공통컴포넌트 COMTNFILEDETAIL 단순화 버전)
 --    물리 파일은 디스크(uploads/)에, 메타데이터(원본명/저장명/크기)는 DB에 분리 저장

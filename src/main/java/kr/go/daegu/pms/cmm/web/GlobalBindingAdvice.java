@@ -27,7 +27,8 @@ public class GlobalBindingAdvice {
                 "noticeId",                                               // 공지 ID (eGov IdGnr 채번 / URL 경로로만 지정)
                 "planFileId", "receiptFileId",                            // 파일 ID (업로드 결과로 결정)
                 "receiptNo",                                              // 접수번호 (eGov IdGnr 채번)
-                "totalAmount", "selfFunding", "totalScore"                // 서버 재계산 금액/점수
+                "totalAmount", "selfFunding", "totalScore",               // 서버 재계산 금액/점수
+                "lockedSince", "lockedAt", "loginFailCount"               // 계정 잠금 (서버 판단)
         );
     }
 }

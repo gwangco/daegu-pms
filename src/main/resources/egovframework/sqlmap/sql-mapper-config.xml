@@ -22,6 +22,9 @@
         <typeAlias alias="evaluationVO" type="kr.go.daegu.pms.evaluation.service.EvaluationVO"/>
         <typeAlias alias="settlementVO" type="kr.go.daegu.pms.settlement.service.SettlementVO"/>
         <typeAlias alias="userVO" type="kr.go.daegu.pms.user.service.UserVO"/>
+        <typeAlias alias="userSearchVO" type="kr.go.daegu.pms.user.service.UserSearchVO"/>
+        <typeAlias alias="loginHistoryVO" type="kr.go.daegu.pms.user.service.LoginHistoryVO"/>
+        <typeAlias alias="loginHistorySearchVO" type="kr.go.daegu.pms.user.service.LoginHistorySearchVO"/>
         <typeAlias alias="commonCodeVO" type="kr.go.daegu.pms.cmm.service.CommonCodeVO"/>
         <typeAlias alias="fileVO" type="kr.go.daegu.pms.cmm.service.FileVO"/>
         <typeAlias alias="noticeVO" type="kr.go.daegu.pms.notice.service.NoticeVO"/>

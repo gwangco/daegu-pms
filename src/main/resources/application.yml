@@ -77,6 +77,11 @@ app:
   batch:
     # 공고 마감 배치 실행 주기 (초 분 시 일 월 요일) - 매일 자정
     announcement-close-cron: "0 0 0 * * *"
+  login:
+    # 비밀번호를 연속으로 틀리면 계정을 잠근다 (반복된 인증 시도 제한)
+    max-failures: 5
+    # 잠금 유지 시간. 지나면 다시 로그인할 수 있고, 관리자가 먼저 풀 수도 있다
+    lock-duration: 30m
 
 # 로깅 레벨
 logging:

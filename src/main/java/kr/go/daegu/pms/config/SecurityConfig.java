@@ -1,5 +1,8 @@
 package kr.go.daegu.pms.config;
 
+import kr.go.daegu.pms.user.web.LoginFailureHandler;
+import kr.go.daegu.pms.user.web.LoginSuccessHandler;
+import kr.go.daegu.pms.user.web.LogoutHistoryHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -52,7 +55,10 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http,
+                                           LoginSuccessHandler loginSuccessHandler,
+                                           LoginFailureHandler loginFailureHandler,
+                                           LogoutHistoryHandler logoutHistoryHandler) throws Exception {
         http
             .authorizeHttpRequests(auth -> auth
                 // 정적 리소스 및 오류 페이지 (오류 페이지를 막으면 403/404 대신 로그인 화면으로 튕긴다)
@@ -71,6 +77,8 @@ public class SecurityConfig {
                 .requestMatchers("/evaluator/**").hasRole("EVALUATOR")
                 // 엑셀 다운로드 (개인정보·사업자번호 포함) 는 담당자/관리자만
                 .requestMatchers("/excel/**").hasAnyRole("MANAGER", "ADMIN")
+                // 사용자 관리·접속 기록은 총괄관리자만
+                .requestMatchers("/admin/**").hasRole("ADMIN")
                 // 그 외 모든 요청은 인증 필요 (세부 권한은 @PreAuthorize + 서비스 계층에서 검사)
                 .anyRequest().authenticated()
             )
@@ -79,12 +87,14 @@ public class SecurityConfig {
                 .loginProcessingUrl("/login-process")
                 .usernameParameter("userId")
                 .passwordParameter("password")
-                .defaultSuccessUrl("/", true)
-                .failureUrl("/login?error=true")
+                // 성공: 실패 횟수 초기화·접속 기록 후 원래 가려던 화면으로 / 실패: 횟수 증가·잠금 판단
+                .successHandler(loginSuccessHandler)
+                .failureHandler(loginFailureHandler)
                 .permitAll()
             )
             .logout(logout -> logout
                 .logoutUrl("/logout")
+                .addLogoutHandler(logoutHistoryHandler)
                 .logoutSuccessUrl("/")
                 .invalidateHttpSession(true)
                 .deleteCookies("JSESSIONID")
