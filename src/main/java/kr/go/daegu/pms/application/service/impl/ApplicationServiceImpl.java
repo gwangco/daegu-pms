@@ -1,5 +1,6 @@
 package kr.go.daegu.pms.application.service.impl;
 
+import egovframework.com.cmm.service.FileVO;
 import jakarta.annotation.Resource;
 import kr.go.daegu.pms.announcement.service.AnnouncementService;
 import kr.go.daegu.pms.announcement.service.AnnouncementVO;
@@ -10,7 +11,6 @@ import kr.go.daegu.pms.application.service.ApplicationStatus;
 import kr.go.daegu.pms.application.service.ApplicationVO;
 import kr.go.daegu.pms.cmm.message.AppMessages;
 import kr.go.daegu.pms.cmm.service.FileService;
-import kr.go.daegu.pms.cmm.service.FileVO;
 import kr.go.daegu.pms.cmm.util.MaskingUtil;
 import kr.go.daegu.pms.cmm.util.SecurityUtil;
 import kr.go.daegu.pms.evaluation.service.impl.EvaluationMapper;
@@ -134,7 +134,7 @@ public class ApplicationServiceImpl extends EgovAbstractServiceImpl implements A
 
         application.setCompanyUserId(companyUserId);
         application.setSelfFunding(application.getTotalBudget() - application.getRequestGrant());
-        application.setPlanFileId(file.getFileId());
+        application.setPlanAtchFileId(file.getAtchFileId());
         application.setStatus(ApplicationStatus.SUBMITTED.name());
         application.setReceiptNo(nextReceiptNo());
         try {

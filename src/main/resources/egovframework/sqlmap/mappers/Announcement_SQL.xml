@@ -9,7 +9,7 @@
             a.announcement_id,
             a.title,
             a.field_code,
-            c.code_name AS field_name,
+            c.CODE_NM AS field_name,
             a.total_budget,
             a.max_grant,
             a.start_date,
@@ -41,7 +41,7 @@
         SELECT
             <include refid="announcementColumns"/>
         FROM announcement a
-        LEFT JOIN com_code_detail c ON a.field_code = c.code_id AND c.group_id = 'FIELD'
+        LEFT JOIN COMTCCMMNDETAILCODE c ON c.CODE_ID = 'DPM001' AND c.CODE = a.field_code
         LEFT JOIN users u ON a.writer_id = u.user_id
         <include refid="searchCondition"/>
         ORDER BY a.created_at DESC, a.announcement_id DESC
@@ -60,7 +60,7 @@
         SELECT
             <include refid="announcementColumns"/>
         FROM announcement a
-        LEFT JOIN com_code_detail c ON a.field_code = c.code_id AND c.group_id = 'FIELD'
+        LEFT JOIN COMTCCMMNDETAILCODE c ON c.CODE_ID = 'DPM001' AND c.CODE = a.field_code
         LEFT JOIN users u ON a.writer_id = u.user_id
         WHERE a.announcement_id = #{announcementId}
     </select>
@@ -83,18 +83,18 @@
         SELECT COUNT(*) FROM announcement WHERE status = 'OPEN'
     </select>
 
-    <!-- 대시보드: 분야별 공고 예산 합계 (공통코드 정렬순서 기준, 공고 없는 분야도 0으로 표시) -->
+    <!-- 대시보드: 분야별 공고 예산 합계 (공통코드 DPM001 정렬순서 기준, 공고 없는 분야도 0으로 표시) -->
     <select id="selectFieldBudgetStatList" resultType="fieldBudgetStatVO">
         SELECT
-            c.code_id AS field_code,
-            c.code_name AS field_name,
+            c.CODE AS field_code,
+            c.CODE_NM AS field_name,
             COALESCE(SUM(a.total_budget), 0) AS total_budget
-        FROM com_code_detail c
-        LEFT JOIN announcement a ON a.field_code = c.code_id
-        WHERE c.group_id = 'FIELD'
-          AND c.use_yn = 'Y'
-        GROUP BY c.code_id, c.code_name, c.sort_order
-        ORDER BY c.sort_order
+        FROM COMTCCMMNDETAILCODE c
+        LEFT JOIN announcement a ON a.field_code = c.CODE
+        WHERE c.CODE_ID = 'DPM001'
+          AND c.USE_AT = 'Y'
+        GROUP BY c.CODE, c.CODE_NM, c.SORT_ORDR
+        ORDER BY c.SORT_ORDR
     </select>
 
     <!-- 배치: 마감일(end_date)이 오늘보다 이전인 접수중 공고를 마감 처리 -->

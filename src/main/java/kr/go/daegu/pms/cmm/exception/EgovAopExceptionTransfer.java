@@ -27,7 +27,9 @@ public class EgovAopExceptionTransfer {
         this.exceptionTransfer = exceptionTransfer;
     }
 
-    @AfterThrowing(pointcut = "execution(* kr.go.daegu.pms..service.impl.*Impl.*(..))", throwing = "ex")
+    /** 업무 서비스와 공통컴포넌트 서비스 모두 (트랜잭션 포인트컷과 같은 범위) */
+    @AfterThrowing(pointcut = "execution(* kr.go.daegu.pms..service.impl.*Impl.*(..))"
+            + " || execution(* egovframework.com..service.impl.*Impl.*(..))", throwing = "ex")
     public void doAfterThrowingExceptionTransferService(JoinPoint joinPoint, Exception ex) throws Exception {
         if (isExpectedBusinessFlow(ex)) {
             return;

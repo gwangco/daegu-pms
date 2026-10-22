@@ -55,7 +55,7 @@ public class SettlementController {
         model.addAttribute("totalApproved", approved);
         model.addAttribute("totalPending", used - approved);
         model.addAttribute("remaining", application.getRequestGrant() - used);
-        model.addAttribute("expItems", commonCodeService.selectCodeList(CommonCodeService.GROUP_EXP_ITEM));
+        model.addAttribute("expItems", commonCodeService.selectCodeList(CommonCodeService.EXP_ITEM));
         model.addAttribute("today", LocalDate.now(clock));
         return "settlement/list";
     }

@@ -39,7 +39,7 @@
                     <label for="fieldCode" class="form-label">지원 분야 <span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden">(필수)</span></label>
                     <select th:field="*{fieldCode}" class="form-select" th:errorclass="is-invalid" required>
                         <option value="">선택</option>
-                        <option th:each="code : ${fieldCodes}" th:value="${code.codeId}" th:text="${code.codeName}">분야</option>
+                        <option th:each="code : ${fieldCodes}" th:value="${code.code}" th:text="${code.codeNm}">분야</option>
                     </select>
                     <div class="invalid-feedback" th:errors="*{fieldCode}"></div>
                 </div>

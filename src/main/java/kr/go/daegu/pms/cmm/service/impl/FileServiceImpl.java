@@ -1,14 +1,19 @@
 package kr.go.daegu.pms.cmm.service.impl;
 
+import egovframework.com.cmm.service.EgovFileMngService;
+import egovframework.com.cmm.service.FileVO;
+import jakarta.annotation.Resource;
 import kr.go.daegu.pms.application.service.ApplicationAccessChecker;
 import kr.go.daegu.pms.cmm.message.AppMessages;
 import kr.go.daegu.pms.cmm.service.FileService;
-import kr.go.daegu.pms.cmm.service.FileVO;
 import kr.go.daegu.pms.cmm.util.SecurityUtil;
 import kr.go.daegu.pms.config.AppProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.egovframe.rte.fdl.cmmn.EgovAbstractServiceImpl;
+import org.egovframe.rte.fdl.cmmn.exception.BaseRuntimeException;
+import org.egovframe.rte.fdl.cmmn.exception.FdlException;
+import org.egovframe.rte.fdl.idgnr.EgovIdGnrService;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionSynchronization;
@@ -34,12 +39,16 @@ import java.util.UUID;
 /**
  * 첨부파일 처리 구현체.
  *
+ * 파일 정보 등록·조회는 전자정부 공통컴포넌트 EgovFileMngService 를 그대로 쓴다.
+ * 공통컴포넌트의 업로드 도구(EgovFileMngUtil)는 쓰지 않고, 아래 검증을 거친 뒤 파일 정보만 넘긴다.
+ *
  * 시큐어코딩 - 위험한 형식 파일 업로드 / 경로 조작 방지:
  *  1) 확장자 화이트리스트 검사 (application.yml app.file.allowed-extensions)
  *  2) 파일 시그니처(매직넘버) 검사 → "webshell.jsp" 를 "plan.pdf" 로 이름만 바꾼 파일 차단
  *  3) 서버 저장명은 UUID(확장자 없음) → 업로드 파일이 서버에서 실행될 여지 제거
  *  4) 저장/다운로드 경로가 업로드 루트 밖으로 벗어나지 않는지 normalize 후 검사 (../ 경로 조작 차단)
- *  5) 다운로드 시 파일이 연결된 과제의 열람 권한을 재검사 (파일번호 변조 IDOR 차단)
+ *     DB(FILE_STRE_COURS)에는 절대 경로가 아니라 루트 아래 하위 경로(yyyy/MM)만 저장한다
+ *  5) 다운로드 시 파일이 연결된 과제의 열람 권한을 재검사 (첨부파일 ID 는 순번이라 추측할 수 있으므로 IDOR 차단 필수)
  */
 @Slf4j
 @Service("fileService")
@@ -64,11 +73,18 @@ public class FileServiceImpl extends EgovAbstractServiceImpl implements FileServ
             Map.entry("xls", List.of("d0cf11e0a1b11ae1"))
     );
 
+    /** 공통컴포넌트 첨부파일 서비스 (COMTNFILE, COMTNFILEDETAIL) */
+    private final EgovFileMngService fileMngService;
+    /** 첨부파일이 어느 업무(신청서·정산)에 연결되어 있는지 찾는 Mapper */
     private final FileMapper fileMapper;
     private final ApplicationAccessChecker accessChecker;
     private final AppProperties appProperties;
     private final Clock clock;
     private final AppMessages messages;
+
+    /** 첨부파일 ID 채번: FILE_000000000000001 (공통컴포넌트와 같은 Bean 이름) */
+    @Resource(name = "egovFileIdGnrService")
+    private EgovIdGnrService fileIdGnrService;
 
     @Override
     public FileVO storeFile(MultipartFile multipartFile) {
@@ -102,27 +118,33 @@ public class FileServiceImpl extends EgovAbstractServiceImpl implements FileServ
         }
         deleteOnRollback(target);
 
-        FileVO file = FileVO.builder()
-                .originalName(originalName)
-                .storedName(storedName)
-                .filePath(subDir)
-                .fileExt(ext)
-                .fileSize(multipartFile.getSize())
-                .createdBy(userId)
-                .build();
-        fileMapper.insertFile(file);
-        log.info("[파일 업로드] fileId={}, user={}, size={}", file.getFileId(), userId, file.getFileSize());
+        // 첨부파일 묶음(COMTNFILE) 1건 + 파일(COMTNFILEDETAIL) 1건. 업무별 첨부는 파일 1개라 순번은 0
+        FileVO file = new FileVO();
+        file.setAtchFileId(nextAtchFileId());
+        file.setFileSn("0");
+        file.setFileStreCours(subDir);
+        file.setStreFileNm(storedName);
+        file.setOrignlFileNm(originalName);
+        file.setFileExtsn(ext);
+        file.setFileMg(Long.toString(multipartFile.getSize()));
+        fileMngService.insertFileInf(file);
+        log.info("[파일 업로드] atchFileId={}, user={}, size={}", file.getAtchFileId(), userId, file.getFileMg());
         return file;
     }
 
     @Override
-    public Download loadDownload(Long fileId) {
-        FileVO file = fileMapper.selectFile(fileId)
-                .orElseThrow(() -> messages.notFound("file.notFound"));
+    public Download loadDownload(String atchFileId, int fileSn) {
+        FileVO key = new FileVO();
+        key.setAtchFileId(atchFileId);
+        key.setFileSn(Integer.toString(fileSn));
+        FileVO file = fileMngService.selectFileInf(key);
+        if (file == null) {
+            throw messages.notFound("file.notFound");
+        }
 
         // 파일이 어느 과제에 속하는지 찾아 그 과제의 접근 권한으로 다운로드 권한을 판단
-        Long planOwnerApplicationId = fileMapper.selectApplicationIdByPlanFile(fileId);
-        Long receiptOwnerApplicationId = fileMapper.selectApplicationIdByReceiptFile(fileId);
+        Long planOwnerApplicationId = fileMapper.selectApplicationIdByPlanFile(atchFileId);
+        Long receiptOwnerApplicationId = fileMapper.selectApplicationIdByReceiptFile(atchFileId);
         if (planOwnerApplicationId != null) {
             accessChecker.getReadableApplication(planOwnerApplicationId);
         } else if (receiptOwnerApplicationId != null) {
@@ -132,11 +154,19 @@ public class FileServiceImpl extends EgovAbstractServiceImpl implements FileServ
             throw messages.notFound("file.notFound");
         }
 
-        Path path = resolveSafely(file.getFilePath(), file.getStoredName());
+        Path path = resolveSafely(file.getFileStreCours(), file.getStreFileNm());
         if (!Files.isRegularFile(path)) {
             throw messages.notFound("file.content.notFound");
         }
         return new Download(file, new FileSystemResource(path));
+    }
+
+    private String nextAtchFileId() {
+        try {
+            return fileIdGnrService.getNextStringId();
+        } catch (FdlException e) {
+            throw new BaseRuntimeException("첨부파일 ID 채번에 실패했습니다.", e);
+        }
     }
 
     /** 경로 구분자/제어문자 제거 및 길이 제한. 원본 파일명은 표시용으로만 쓰고 저장 경로에는 절대 사용하지 않는다 */

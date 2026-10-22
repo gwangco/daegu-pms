@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 11 15:49:39 KST 2016-->
+<!--
+	수정일                 수정자                          수정내용
+  =========     =======    =================================================
+  2026.10.22    gwangco             D-PMS 적용 (공통컴포넌트 v5.0.7 원본 대비)
+                                    - 정렬: 원본은 ORDER BY 가 없어 DB 마음대로 나옴 → SORT_ORDR(D-PMS 추가 컬럼), CODE 순서
+                                    - 조직정보(COMTNORGNZTINFO)·권한그룹(COMTNAUTHORGROUPINFO) 코드 조회 제거 (해당 테이블 미사용)
+-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="CmmUseDAO">
+
+	<resultMap id="CmmCodeDetail" type="egovframework.com.cmm.service.CmmnDetailCode">
+		<result property="codeId" column="CODE_ID"/>
+		<result property="code" column="CODE"/>
+		<result property="codeNm" column="CODE_NM"/>
+		<result property="codeDc" column="CODE_DC"/>
+	</resultMap>
+
+	<select id="selectCmmCodeDetail" parameterType="ComDefaultCodeVO" resultMap="CmmCodeDetail">
+
+			SELECT
+			CODE_ID, CODE, CODE_NM, CODE_DC
+			FROM
+			COMTCCMMNDETAILCODE
+			WHERE
+			USE_AT = 'Y'
+			AND CODE_ID = #{codeId}
+			ORDER BY SORT_ORDR, CODE
+
+	</select>
+
+</mapper>

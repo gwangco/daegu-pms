@@ -1,9 +1,14 @@
 package kr.go.daegu.pms.faq.service;
 
+import egovframework.com.uss.olh.faq.service.FaqVO;
+
 import java.util.List;
 
 /**
- * 자주 묻는 질문 서비스 (eGovFrame CRUD 코드 생성기 결과를 바탕으로 수정)
+ * 자주 묻는 질문 서비스.
+ *
+ * FAQ 저장·조회는 전자정부 공통컴포넌트 FAQ 서비스(EgovFaqService, COMTNFAQINFO)에 맡기고,
+ * 여기서는 담당자 권한 검사, 분류 코드 검증, 없는 글 404 처리 같은 업무 규칙만 담당한다.
  */
 public interface FaqService {
 

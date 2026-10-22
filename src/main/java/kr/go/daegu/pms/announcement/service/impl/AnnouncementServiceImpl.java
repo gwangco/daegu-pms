@@ -50,7 +50,7 @@ public class AnnouncementServiceImpl extends EgovAbstractServiceImpl implements 
         if (!SecurityUtil.isStaff()) {
             throw messages.denied("announcement.write.denied");
         }
-        if (!commonCodeService.isValidCode(CommonCodeService.GROUP_FIELD, announcement.getFieldCode())) {
+        if (!commonCodeService.isValidCode(CommonCodeService.FIELD, announcement.getFieldCode())) {
             throw messages.business("announcement.field.invalid");
         }
         if (announcement.getEndDate().isBefore(announcement.getStartDate())) {

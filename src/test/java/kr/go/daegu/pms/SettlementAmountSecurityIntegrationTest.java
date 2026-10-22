@@ -31,7 +31,7 @@ class SettlementAmountSecurityIntegrationTest extends IntegrationTestSupport {
     @DisplayName("최대 long 공급가액으로 부가세 합계를 음수로 만들어 예산 검사를 우회할 수 없다")
     void overflowCannotBypassBudgetCheck() throws Exception {
         int settlementsBefore = count("settlement");
-        int filesBefore = count("com_file");
+        int filesBefore = count("COMTNFILE");   // 공통컴포넌트 첨부파일 테이블
 
         mockMvc.perform(multipart("/settlements/register")
                         .file(pdf("receiptFile", "overflow.pdf")).with(csrf())
@@ -44,7 +44,7 @@ class SettlementAmountSecurityIntegrationTest extends IntegrationTestSupport {
                 .andExpect(flash().attribute("errorMessage", containsString("처리 가능한 범위")));
 
         assertThat(count("settlement")).isEqualTo(settlementsBefore);
-        assertThat(count("com_file")).isEqualTo(filesBefore);
+        assertThat(count("COMTNFILE")).isEqualTo(filesBefore);
     }
 
     @ParameterizedTest

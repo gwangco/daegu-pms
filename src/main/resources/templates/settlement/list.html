@@ -121,10 +121,10 @@
                         </td>
                         <td class="text-end fw-semibold text-nowrap" th:text="${#numbers.formatInteger(s.totalAmount, 0, 'COMMA')} + '원'">16,500,000원</td>
                         <td class="text-center small d-none d-md-table-cell">
-                            <a th:if="${s.receiptFileId != null}" th:href="@{/files/{id}(id=${s.receiptFileId})}">
+                            <a th:if="${s.receiptAtchFileId != null}" th:href="@{/files/{id}/{sn}(id=${s.receiptAtchFileId}, sn=0)}">
                                 <i class="bi bi-download me-1" aria-hidden="true"></i><span th:text="${s.receiptFileName}">invoice.pdf</span>
                             </a>
-                            <span th:if="${s.receiptFileId == null}" class="text-sub">샘플(파일 없음)</span>
+                            <span th:if="${s.receiptAtchFileId == null}" class="text-sub">샘플(파일 없음)</span>
                         </td>
                         <td class="text-center"><th:block th:replace="~{fragments/common :: settleStatus(${s.status})}"></th:block></td>
                         <td sec:authorize="hasAnyRole('MANAGER', 'ADMIN')">
@@ -196,7 +196,7 @@
                         <div class="mb-3">
                             <label for="itemCode" class="form-label">비목</label>
                             <select id="itemCode" name="itemCode" class="form-select" required>
-                                <option th:each="code : ${expItems}" th:value="${code.codeId}" th:text="${code.codeName}">비목</option>
+                                <option th:each="code : ${expItems}" th:value="${code.code}" th:text="${code.codeNm}">비목</option>
                             </select>
                         </div>
                         <div class="mb-3">
@@ -253,7 +253,7 @@
                         <div class="mb-3">
                             <label for="reItemCode" class="form-label">비목</label>
                             <select id="reItemCode" name="itemCode" class="form-select" required>
-                                <option th:each="code : ${expItems}" th:value="${code.codeId}" th:text="${code.codeName}">비목</option>
+                                <option th:each="code : ${expItems}" th:value="${code.code}" th:text="${code.codeNm}">비목</option>
                             </select>
                         </div>
                         <div class="mb-3">

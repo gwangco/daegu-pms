@@ -113,10 +113,10 @@
                     </div>
                     <ul class="list-group list-group-flush">
                         <li class="list-group-item d-flex justify-content-between gap-2" th:each="n : ${notices}">
-                            <a th:href="@{/notices/{id}(id=${n.noticeId})}" class="text-body text-truncate" th:title="${n.title}">
-                                <span th:if="${n.importantYn == 'Y'}" class="status status-danger me-1">중요</span><span th:text="${n.title}">공지 제목</span>
+                            <a th:href="@{/notices/{id}(id=${n.nttId})}" class="text-body text-truncate" th:title="${n.nttSj}">
+                                <span th:if="${n.noticeAt == 'Y'}" class="status status-danger me-1">중요</span><span th:text="${n.nttSj}">공지 제목</span>
                             </a>
-                            <span class="text-sub small text-nowrap" th:text="${#temporals.format(n.createdAt, 'MM.dd')}">10.21</span>
+                            <span class="text-sub small text-nowrap" th:text="${#strings.substring(n.frstRegisterPnttm, 5).replace('-', '.')}">10.21</span>
                         </li>
                         <li class="list-group-item text-sub text-center" th:if="${#lists.isEmpty(notices)}">등록된 공지사항이 없습니다.</li>
                     </ul>

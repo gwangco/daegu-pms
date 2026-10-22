@@ -7,7 +7,6 @@ import kr.go.daegu.pms.application.service.ApplicationService;
 import kr.go.daegu.pms.cmm.message.AppMessages;
 import kr.go.daegu.pms.cmm.service.DashboardService;
 import kr.go.daegu.pms.notice.service.NoticeService;
-import kr.go.daegu.pms.notice.service.NoticeVO;
 import kr.go.daegu.pms.user.service.LoginLockPolicy;
 import kr.go.daegu.pms.user.web.LoginFailureHandler;
 import lombok.RequiredArgsConstructor;
@@ -45,10 +44,8 @@ public class MainController {
         searchVO.setRecordCountPerPage(RECENT_COUNT);
         model.addAttribute("announcements", announcementService.selectAnnouncementList(searchVO));
 
-        // 최근 공지사항 5건 (중요 공지 우선)
-        NoticeVO noticeSearchVO = new NoticeVO();
-        noticeSearchVO.setRecordCountPerPage(RECENT_COUNT);
-        model.addAttribute("notices", noticeService.selectNoticeList(noticeSearchVO));
+        // 최근 공지사항 5건 (중요 공지 우선, 공통컴포넌트 게시판)
+        model.addAttribute("notices", noticeService.selectRecentNoticeList(RECENT_COUNT));
 
         // 전략산업별 예산 배분 차트 데이터 (DB 집계)
         model.addAttribute("fieldBudgetStats", announcementService.selectFieldBudgetStatList());

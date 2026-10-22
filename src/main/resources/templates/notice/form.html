@@ -2,12 +2,12 @@
 <html lang="ko" xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout/default}"
-      th:with="isNew=${#strings.isEmpty(notice.noticeId)}">
+      th:with="isNew=${notice.nttId == null or notice.nttId == 0}">
 <head>
     <title th:text="${isNew} ? '공지 등록' : '공지 수정'">공지 등록</title>
 </head>
 <body>
-<!--/* 생성기의 noticeRegister.html 처럼 등록/수정을 한 화면에서 처리 (noticeId 유무로 구분) */-->
+<!--/* 생성기의 noticeRegister.html 처럼 등록/수정을 한 화면에서 처리 (nttId 유무로 구분) */-->
 <th:block layout:fragment="content">
     <div class="page-head">
         <div class="container narrow">
@@ -24,24 +24,24 @@
 
     <div class="container narrow">
         <!--/* th:action 을 쓰면 Spring Security CSRF 토큰이 hidden 으로 자동 포함된다 */-->
-        <form th:action="${isNew} ? @{/notices/new} : @{/notices/{id}/edit(id=${notice.noticeId})}"
+        <form th:action="${isNew} ? @{/notices/new} : @{/notices/{id}/edit(id=${notice.nttId})}"
               th:object="${notice}" method="post" class="panel panel-body">
             <div class="mb-3">
-                <label for="title" class="form-label">제목 <span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden">(필수)</span></label>
-                <input type="text" th:field="*{title}" class="form-control" th:errorclass="is-invalid" maxlength="200" required>
-                <div class="invalid-feedback" th:errors="*{title}"></div>
+                <label for="nttSj" class="form-label">제목 <span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden">(필수)</span></label>
+                <input type="text" th:field="*{nttSj}" class="form-control" th:errorclass="is-invalid" maxlength="200" required>
+                <div class="invalid-feedback" th:errors="*{nttSj}"></div>
             </div>
             <div class="form-check mb-3">
-                <input type="checkbox" th:field="*{importantYn}" value="Y" class="form-check-input">
-                <label class="form-check-label" th:for="${#ids.prev('importantYn')}">중요 공지 (목록 상단 고정)</label>
+                <input type="checkbox" th:field="*{noticeAt}" value="Y" class="form-check-input">
+                <label class="form-check-label" th:for="${#ids.prev('noticeAt')}">중요 공지 (목록 상단 고정)</label>
             </div>
             <div class="mb-1">
-                <label for="content" class="form-label">내용 <span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden">(필수)</span></label>
-                <textarea th:field="*{content}" class="form-control" th:errorclass="is-invalid" rows="12" maxlength="4000" required></textarea>
-                <div class="invalid-feedback" th:errors="*{content}"></div>
+                <label for="nttCn" class="form-label">내용 <span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden">(필수)</span></label>
+                <textarea th:field="*{nttCn}" class="form-control" th:errorclass="is-invalid" rows="12" maxlength="4000" required></textarea>
+                <div class="invalid-feedback" th:errors="*{nttCn}"></div>
             </div>
             <div class="form-actions">
-                <a th:href="${isNew} ? @{/notices} : @{/notices/{id}(id=${notice.noticeId})}" class="btn btn-outline-secondary">취소</a>
+                <a th:href="${isNew} ? @{/notices} : @{/notices/{id}(id=${notice.nttId})}" class="btn btn-outline-secondary">취소</a>
                 <button type="submit" class="btn btn-primary px-4" th:text="${isNew} ? '등록' : '저장'">등록</button>
             </div>
         </form>

@@ -34,7 +34,7 @@ public class AnnouncementController {
         model.addAttribute("announcements", announcementService.selectAnnouncementList(searchVO));
         paginationInfo.setTotalRecordCount(announcementService.selectAnnouncementListTotCnt(searchVO));
         model.addAttribute("paginationInfo", paginationInfo);
-        model.addAttribute("fieldCodes", commonCodeService.selectCodeList(CommonCodeService.GROUP_FIELD));
+        model.addAttribute("fieldCodes", commonCodeService.selectCodeList(CommonCodeService.FIELD));
         return "announcement/list";
     }
 
@@ -52,7 +52,7 @@ public class AnnouncementController {
     @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     public String newForm(Model model) {
         model.addAttribute("announcement", new AnnouncementVO());
-        model.addAttribute("fieldCodes", commonCodeService.selectCodeList(CommonCodeService.GROUP_FIELD));
+        model.addAttribute("fieldCodes", commonCodeService.selectCodeList(CommonCodeService.FIELD));
         return "announcement/form";
     }
 
@@ -71,7 +71,7 @@ public class AnnouncementController {
                 bindingResult.reject("business", e.getMessage());
             }
         }
-        model.addAttribute("fieldCodes", commonCodeService.selectCodeList(CommonCodeService.GROUP_FIELD));
+        model.addAttribute("fieldCodes", commonCodeService.selectCodeList(CommonCodeService.FIELD));
         return "announcement/form";
     }
 }
