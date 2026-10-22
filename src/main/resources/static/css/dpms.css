@@ -1096,6 +1096,7 @@ a {
 
 .search-actions .btn {
     flex: 1 1 auto;
+    min-width: 6.5rem;
     white-space: nowrap;
 }
 
@@ -1160,6 +1161,18 @@ a {
 a.cell-link {
     color: var(--dp-text);
     font-weight: 700;
+}
+
+/* 제목 칸이 다른 칸에 밀려 한 줄에 몇 글자씩 꺾이지 않도록 최소 폭을 준다.
+   기관·기업명은 "(주)" 뒤에서 줄이 바뀌지 않게 PC 에서 한 줄로 둔다 */
+@media (min-width: 768px) {
+    .table .cell-title:has(> a) {
+        min-width: 16rem;
+    }
+
+    .text-nowrap-md {
+        white-space: nowrap;
+    }
 }
 
 .cell-title a:hover,
@@ -1281,9 +1294,13 @@ a.cell-link:hover {
         padding: 2rem 1rem !important;
     }
 
+    /* 카드에서는 한 줄 말줄임 대신 2줄까지 보여 준다 */
     .table-cards .cell-truncate {
+        display: -webkit-box;
         max-width: none;
         white-space: normal;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
     }
 
     .table-cards .d-grid {

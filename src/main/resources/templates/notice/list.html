@@ -17,23 +17,26 @@
                     <li class="breadcrumb-item active" aria-current="page">공지사항</li>
                 </ol>
             </nav>
-            <div class="d-flex flex-wrap justify-content-between align-items-end gap-2">
+            <div class="page-head-row">
                 <div>
                     <h1>공지사항</h1>
                     <p class="lead-sub">지원사업 운영과 시스템 이용 안내를 확인하세요.</p>
                 </div>
-                <a sec:authorize="hasAnyRole('MANAGER', 'ADMIN')" th:href="@{/notices/new}" class="btn btn-primary">
-                    <i class="bi bi-pencil me-1" aria-hidden="true"></i>공지 등록
-                </a>
+                <div class="page-actions" sec:authorize="hasAnyRole('MANAGER', 'ADMIN')">
+                    <a th:href="@{/notices/new}" class="btn btn-primary btn-lg">
+                        <i class="bi bi-pencil me-1" aria-hidden="true"></i>공지 등록
+                    </a>
+                </div>
             </div>
         </div>
     </div>
 
     <div class="container">
-        <form id="searchForm" th:action="@{/notices}" th:object="${searchVO}" method="get" class="search-box" role="search">
-            <div class="row g-2 align-items-end">
-                <input type="hidden" th:field="*{pageIndex}">
-                <div class="col-md-2">
+        <form id="searchForm" th:action="@{/notices}" th:object="${searchVO}" method="get" class="search-box" role="search"
+              th:with="filtered=${!#strings.isEmpty(searchVO.searchCnd) or !#strings.isEmpty(searchVO.searchWrd)}">
+            <input type="hidden" th:field="*{pageIndex}">
+            <div class="row g-3 align-items-end">
+                <div class="col-12 col-md-3">
                     <label for="searchCnd" class="form-label">검색 대상</label>
                     <!--/* 공통컴포넌트 게시판 검색 조건 값: 0 제목, 1 내용, 2 작성자 (빈 값은 제목+내용) */-->
                     <select th:field="*{searchCnd}" class="form-select">
@@ -43,12 +46,15 @@
                         <option value="2">작성자</option>
                     </select>
                 </div>
-                <div class="col-md-8">
+                <div class="col-12 col-md">
                     <label for="searchWrd" class="form-label">검색어</label>
                     <input type="search" th:field="*{searchWrd}" class="form-control" maxlength="50">
                 </div>
-                <div class="col-md-2">
-                    <button type="submit" class="btn btn-secondary w-100"><i class="bi bi-search me-1" aria-hidden="true"></i>검색</button>
+                <div class="col-12 col-md-auto">
+                    <div class="search-actions">
+                        <button type="submit" class="btn btn-secondary"><i class="bi bi-search me-1" aria-hidden="true"></i>검색</button>
+                        <a th:if="${filtered}" th:href="@{/notices}" class="btn btn-outline-secondary">초기화</a>
+                    </div>
                 </div>
             </div>
         </form>
@@ -57,32 +63,32 @@
 
         <div class="panel">
             <div class="table-responsive">
-                <table class="table table-hover">
+                <table class="table table-hover table-cards">
                     <caption class="visually-hidden">공지사항 목록: 번호, 제목, 작성자, 등록일, 조회수</caption>
                     <thead>
                     <tr>
-                        <th scope="col" class="text-center col-num">번호</th>
+                        <th scope="col" class="d-none d-md-table-cell text-center col-num">번호</th>
                         <th scope="col">제목</th>
-                        <th scope="col" class="d-none d-md-table-cell text-center">작성자</th>
+                        <th scope="col" class="text-center">작성자</th>
                         <th scope="col" class="text-center col-date">등록일</th>
-                        <th scope="col" class="d-none d-md-table-cell text-center">조회</th>
+                        <th scope="col" class="text-center">조회</th>
                     </tr>
                     </thead>
                     <tbody>
                     <tr th:each="n, stat : ${resultList}">
                         <!--/* 게시판 역순 번호: 전체건수 - (현재페이지-1)*페이지당건수 - 행번호 (eGov 샘플과 같은 계산) */-->
-                        <td class="text-center">
+                        <td class="d-none d-md-table-cell text-center">
                             <span th:if="${n.noticeAt == 'Y'}" class="status status-danger">중요</span>
                             <span th:unless="${n.noticeAt == 'Y'}" class="text-sub"
                                   th:text="${paginationInfo.totalRecordCount - (searchVO.pageIndex - 1) * searchVO.recordCountPerPage - stat.index}">1</span>
                         </td>
-                        <td>
-                            <a th:href="@{/notices/{id}(id=${n.nttId})}" class="text-body"
-                               th:classappend="${n.noticeAt == 'Y'} ? 'fw-bold' : 'fw-semibold'" th:text="${n.nttSj}">제목</a>
+                        <td class="cell-title">
+                            <span th:if="${n.noticeAt == 'Y'}" class="status status-danger d-md-none me-1">중요</span>
+                            <a th:href="@{/notices/{id}(id=${n.nttId})}" th:text="${n.nttSj}">제목</a>
                         </td>
-                        <td class="d-none d-md-table-cell text-center" th:text="${n.frstRegisterNm}">김담당</td>
-                        <td class="text-center text-sub" th:text="${n.frstRegisterPnttm}">2026-10-21</td>
-                        <td class="d-none d-md-table-cell text-center text-sub" th:text="${n.inqireCo}">0</td>
+                        <td data-label="작성자" class="text-center" th:text="${n.frstRegisterNm}">김담당</td>
+                        <td data-label="등록일" class="text-center text-sub text-nowrap" th:text="${n.frstRegisterPnttm}">2026-10-21</td>
+                        <td data-label="조회" class="text-center text-sub" th:text="${n.inqireCo}">0</td>
                     </tr>
                     <tr th:if="${#lists.isEmpty(resultList)}">
                         <td colspan="5" class="empty-row">등록된 공지사항이 없습니다.</td>

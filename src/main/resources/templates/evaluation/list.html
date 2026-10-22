@@ -23,38 +23,39 @@
     <div class="container">
         <div class="panel">
             <div class="table-responsive">
-                <table class="table table-hover">
-                    <caption class="visually-hidden">배정된 평가 과제 목록: 공고명, 과제명, 신청기업, 총점, 평가상태, 배정일</caption>
+                <table class="table table-hover table-cards">
+                    <caption class="visually-hidden">배정된 평가 과제 목록: 과제명과 공고명, 신청기업, 총점, 평가상태, 배정일</caption>
                     <thead>
                     <tr>
-                        <th class="d-none d-md-table-cell" scope="col">공고명</th>
                         <th scope="col">과제명</th>
                         <th scope="col">신청기업</th>
                         <th scope="col" class="text-center">총점</th>
                         <th scope="col" class="text-center col-status">평가상태</th>
-                        <th scope="col" class="d-none d-md-table-cell text-center col-date">배정일</th>
+                        <th scope="col" class="text-center col-date">배정일</th>
                         <th scope="col" class="text-center col-action">채점</th>
                     </tr>
                     </thead>
                     <tbody>
                     <tr th:each="ev : ${evaluations}">
-                        <td class="d-none d-md-table-cell small cell-truncate" th:text="${ev.announcementTitle}">공고명</td>
-                        <td class="fw-semibold" th:text="${ev.projectName}">과제명</td>
-                        <td th:text="${ev.companyName}">기업명</td>
-                        <td class="text-center fw-bold" th:text="${ev.status == 'COMPLETED'} ? ${ev.totalScore} : '-'">-</td>
-                        <td class="text-center">
+                        <td class="cell-title">
+                            <a th:href="@{/evaluator/evaluations/{id}(id=${ev.evaluationId})}" th:text="${ev.projectName}">과제명</a>
+                            <span class="cell-sub cell-truncate" th:text="${ev.announcementTitle}">공고명</span>
+                        </td>
+                        <td data-label="신청기업" th:text="${ev.companyName}">기업명</td>
+                        <td data-label="총점" class="text-center fw-bold" th:text="${ev.status == 'COMPLETED'} ? ${ev.totalScore} : '-'">-</td>
+                        <td data-label="평가상태" class="text-center">
                             <span th:if="${ev.status == 'COMPLETED'}" class="status status-success">제출완료</span>
                             <span th:if="${ev.status == 'ASSIGNED'}" class="status status-warning">채점대기</span>
                         </td>
-                        <td class="d-none d-md-table-cell text-center small" th:text="${#temporals.format(ev.assignedAt, 'yyyy-MM-dd')}">2026-10-19</td>
-                        <td class="text-center">
+                        <td data-label="배정일" class="text-center small text-nowrap" th:text="${#temporals.format(ev.assignedAt, 'yyyy-MM-dd')}">2026-10-19</td>
+                        <td class="text-center cell-actions">
                             <a th:href="@{/evaluator/evaluations/{id}(id=${ev.evaluationId})}" class="btn btn-sm"
                                th:classappend="${ev.status == 'ASSIGNED'} ? 'btn-primary' : 'btn-outline-secondary'"
                                th:text="${ev.status == 'ASSIGNED'} ? '채점하기' : '조회'">채점하기</a>
                         </td>
                     </tr>
                     <tr th:if="${#lists.isEmpty(evaluations)}">
-                        <td colspan="7" class="empty-row">배정된 평가 과제가 없습니다.</td>
+                        <td colspan="6" class="empty-row">배정된 평가 과제가 없습니다.</td>
                     </tr>
                     </tbody>
                 </table>
