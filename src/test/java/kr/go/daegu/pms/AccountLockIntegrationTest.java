@@ -9,7 +9,6 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.ResultActions;
 
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.Map;
 
@@ -89,8 +88,9 @@ class AccountLockIntegrationTest extends IntegrationTestSupport {
     @Test
     @DisplayName("잠금 시간(30분)이 지나면 다시 로그인할 수 있고, 다음 실패는 1회부터 센다")
     void lockExpires() throws Exception {
+        // LocalDateTime 을 그대로 넘긴다. Timestamp 로 바꾸면 JVM 시간대(CI 는 UTC)에서 DB 시간대(KST)로 9시간이 옮겨 저장된다
         jdbc.update("UPDATE users SET login_fail_count = 5, locked_at = ? WHERE user_id = 'company2'",
-                Timestamp.valueOf(NOW.minusMinutes(31)));
+                NOW.minusMinutes(31));
 
         login("company2", "wrong").andExpect(redirectedUrl("/login?error=true"));
         assertThat(lockState("company2").get("login_fail_count")).isEqualTo(1);
@@ -117,7 +117,7 @@ class AccountLockIntegrationTest extends IntegrationTestSupport {
     @Test
     @DisplayName("총괄관리자는 잠긴 계정을 찾아 해제할 수 있고, 해제한 사람이 감사 컬럼에 남는다")
     void adminUnlocks() throws Exception {
-        jdbc.update("UPDATE users SET login_fail_count = 5, locked_at = ? WHERE user_id = 'company2'", Timestamp.valueOf(NOW));
+        jdbc.update("UPDATE users SET login_fail_count = 5, locked_at = ? WHERE user_id = 'company2'", NOW);
 
         mockMvc.perform(get("/admin/users").param("lockedOnly", "Y").with(user("admin").roles("ADMIN")))
                 .andExpect(status().isOk())

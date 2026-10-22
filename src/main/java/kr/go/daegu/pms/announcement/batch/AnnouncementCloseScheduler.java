@@ -1,6 +1,7 @@
 package kr.go.daegu.pms.announcement.batch;
 
 import kr.go.daegu.pms.announcement.service.AnnouncementService;
+import kr.go.daegu.pms.config.AppConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Component;
 /**
  * 공고 접수 마감 배치.
  * 매일 자정(app.batch.announcement-close-cron) 접수 마감일이 지난 OPEN 공고를 CLOSED 로 전환한다.
+ * 자정은 한국 시간 기준이다 (zone 을 지정하지 않으면 서버 시간대를 따라 UTC 서버에서는 오전 9시에 돈다).
  *
  * 노트북처럼 자정에 서버가 꺼져 있을 수 있는 환경을 고려해 서버 기동 직후에도 1회 실행한다.
  * (실무에서 WAS 를 여러 대로 이중화하면 모든 서버가 동시에 배치를 돌리므로
@@ -23,7 +25,7 @@ public class AnnouncementCloseScheduler {
 
     private final AnnouncementService announcementService;
 
-    @Scheduled(cron = "${app.batch.announcement-close-cron}")
+    @Scheduled(cron = "${app.batch.announcement-close-cron}", zone = AppConfig.SERVICE_ZONE_ID)
     public void closeExpiredAnnouncements() {
         int closed = announcementService.closeExpiredAnnouncements();
         log.info("[배치] 접수 마감 공고 자동 전환 완료: {}건", closed);
