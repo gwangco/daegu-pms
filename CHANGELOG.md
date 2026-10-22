@@ -4,6 +4,43 @@
 
 ---
 
+## [0.5.0] 5차 스프린트 — 계정 보안·개인정보 보호·화면 개선 (2026-10-22)
+브랜치: `feature/sprint5-account-privacy-ui` · 상세: [docs/SPRINT5_ACCOUNT_PRIVACY_UI.md](docs/SPRINT5_ACCOUNT_PRIVACY_UI.md)
+
+### 추가 (Added)
+- 로그인 5회 연속 실패 시 30분 계정 잠금, 접속 기록(성공·실패·잠김·로그아웃·IP), 총괄관리자 사용자 관리·잠금 해제·접속 기록 화면
+- eGov 암호화 서비스(ARIA)로 연락처·이메일 암호화 저장, 관리자 목록 마스킹, 본인 정보 화면(`/mypage`)
+- MyBatis 인터셉터가 모든 SQL 에 감사 값(`#{audit.userId}`, `#{audit.now}`)을 넣어 수정자·수정일시 자동 기록
+- 정산 반려 건 보완 후 재요청, 처리 이력 타임라인, 과제별 정산 목록 페이징·상태 필터, 담당자 정산 검수함
+- 메인 화면 역할별 "처리할 일" (대기 건수와 바로가기)
+- 자주 묻는 질문(FAQ): eGov 코드 생성기로 두 번째 생성 → 10개 기준과 추가 5개 항목 보완, 공통코드 분류 탭 ([기록](docs/egov-codegen/README.md#3-두-번째-생성-자주-묻는-질문faq))
+- 개인정보처리방침 화면, VS Code 공유 설정(디버깅·빌드 작업·추천 확장)과 [개발 환경 문서](docs/VS_CODE_SETUP.md)
+
+### 변경 (Changed)
+- eGovFrame 5.0.2 → **5.1.0** (Spring Boot 3.5.16, Spring 6.2.19, Spring Security 6.5.11-egov.1, JUnit 6)
+- Thymeleaf Layout Dialect 공통 레이아웃, Bootstrap·아이콘·Chart.js 를 외부 CDN 대신 WebJars 로 내장, 웹 접근성 기본 요소 보완
+- 엑셀 다운로드를 SXSSF 스트리밍으로 바꾸고 고정 열 너비·머리글 행 고정
+- 사용자 조회 컬럼 최소화(인증 조회만 비밀번호 해시), 미사용 Mapper 제거, 정산 상태 상수 위치 정리
+
+### 보안 (Security)
+- CSP `script-src 'self'`: 인라인 스크립트·이벤트를 공통 스크립트로 이동, Referrer-Policy, 세션 쿠키 HttpOnly·SameSite=Lax, URL 세션 ID 미사용
+- 잠긴 계정은 비밀번호 비교 전에 거부, 없는 아이디는 접속 기록에 입력값 대신 NULL 저장
+- 암호화 키는 운영 환경변수로 분리, 키 길이·해시가 맞지 않으면 기동 실패
+- MyBatis 1차 캐시 범위를 STATEMENT 로 바꿔 행 잠금 뒤 재조회가 실제 DB 값을 읽도록 함
+
+### 수정 (Fixed)
+- Windows Maven Wrapper 가 일반 `.m2` 폴더에서 `Cannot index into a null array`로 실패하던 문제
+- 조회 결과를 그대로 마스킹하면 같은 트랜잭션의 다음 조회가 가려진 값을 받던 문제 → 복사본 반환
+- VS Code 내장 Lombok 과 프로젝트 Lombok 버전 차이로 생기던 편집기 오탐 → 프로젝트 Lombok 지정
+- 메시지 키를 변수로 넘기면 누락 키 검사가 찾지 못하던 문제(FAQ 안내) → 호출 위치에 키를 적고 검사 테스트 추가
+- 표 높이가 소수점일 때 Windows 브라우저의 목록 표마다 불필요한 세로 스크롤바가 생기던 문제
+
+### 테스트
+- 78건 → **144건**: 화면 공통 규칙 6, 감사 컬럼 4, 계정 잠금 8, 마스킹 17, 암호화 8, 정산 재요청 6, 대시보드·공통코드 5, 엑셀 2, FAQ 9, 메시지 키 호출 규칙 1
+- 실행 JAR 을 헤드리스 Chrome 으로 32개 화면 × 2개 폭(1366·390px) 점검: CSP 위반·콘솔 오류·가로 넘침·라벨 없는 입력칸 0건
+
+---
+
 ## [0.4.0] 4차 스프린트 — 메시지 외부화와 보안·무결성 보완 (2026-10-21~22)
 브랜치: `codex/sprint4-messages-security` · 상세: [docs/SPRINT4_MESSAGES_SECURITY.md](docs/SPRINT4_MESSAGES_SECURITY.md)
 
