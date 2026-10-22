@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- 메인 화면 "처리할 일" 건수 (FROM 없는 SELECT 는 H2·MariaDB·MySQL 모두 지원) -->
+<mapper namespace="kr.go.daegu.pms.cmm.service.impl.DashboardMapper">
+
+    <select id="selectCompanyTaskCounts" resultType="dashboardCountVO">
+        SELECT
+            (SELECT COUNT(*) FROM application
+              WHERE company_user_id = #{userId}
+                AND status IN ('SUBMITTED', 'DOCUMENT_PASSED', 'EVALUATING')) AS in_progress,
+            (SELECT COUNT(*) FROM application
+              WHERE company_user_id = #{userId} AND status = 'SELECTED') AS selected,
+            (SELECT COUNT(*) FROM settlement s
+              INNER JOIN application a ON s.application_id = a.application_id
+              WHERE a.company_user_id = #{userId} AND s.status = 'REJECTED') AS rejected_settlement
+    </select>
+
+    <!-- 심사 중인 과제의 아직 제출하지 않은 평가 -->
+    <select id="selectEvaluatorPendingCount" resultType="int">
+        SELECT COUNT(*)
+        FROM evaluation e
+        INNER JOIN application a ON e.application_id = a.application_id
+        WHERE e.evaluator_user_id = #{userId}
+          AND e.status = 'ASSIGNED'
+          AND a.status = 'EVALUATING'
+    </select>
+
+    <select id="selectStaffTaskCounts" resultType="dashboardCountVO">
+        SELECT
+            (SELECT COUNT(*) FROM application WHERE status = 'SUBMITTED') AS submitted,
+            (SELECT COUNT(*) FROM application a
+              WHERE a.status = 'EVALUATING'
+                AND EXISTS (SELECT 1 FROM evaluation e WHERE e.application_id = a.application_id)
+                AND NOT EXISTS (SELECT 1 FROM evaluation e
+                                 WHERE e.application_id = a.application_id AND e.status &lt;&gt; 'COMPLETED')) AS ready_to_select,
+            (SELECT COUNT(*) FROM settlement WHERE status = 'REQUESTED') AS settlement_requested
+    </select>
+
+    <select id="selectAdminTaskCounts" resultType="dashboardCountVO">
+        SELECT
+            (SELECT COUNT(*) FROM users WHERE locked_at &gt; #{lockedSince}) AS locked_users,
+            (SELECT COUNT(*) FROM login_history
+              WHERE result_code IN ('FAIL_PASSWORD', 'FAIL_UNKNOWN_ID', 'LOCKED')
+                AND login_at &gt;= #{todayStart}) AS login_failures_today
+    </select>
+
+</mapper>

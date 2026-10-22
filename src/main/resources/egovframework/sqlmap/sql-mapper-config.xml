@@ -33,6 +33,7 @@
         <typeAlias alias="loginHistoryVO" type="kr.go.daegu.pms.user.service.LoginHistoryVO"/>
         <typeAlias alias="loginHistorySearchVO" type="kr.go.daegu.pms.user.service.LoginHistorySearchVO"/>
         <typeAlias alias="commonCodeVO" type="kr.go.daegu.pms.cmm.service.CommonCodeVO"/>
+        <typeAlias alias="dashboardCountVO" type="kr.go.daegu.pms.cmm.service.DashboardCountVO"/>
         <typeAlias alias="fileVO" type="kr.go.daegu.pms.cmm.service.FileVO"/>
         <typeAlias alias="noticeVO" type="kr.go.daegu.pms.notice.service.NoticeVO"/>
     </typeAliases>

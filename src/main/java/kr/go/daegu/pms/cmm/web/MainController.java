@@ -5,6 +5,7 @@ import kr.go.daegu.pms.announcement.service.AnnouncementService;
 import kr.go.daegu.pms.announcement.service.AnnouncementVO;
 import kr.go.daegu.pms.application.service.ApplicationService;
 import kr.go.daegu.pms.cmm.message.AppMessages;
+import kr.go.daegu.pms.cmm.service.DashboardService;
 import kr.go.daegu.pms.notice.service.NoticeService;
 import kr.go.daegu.pms.notice.service.NoticeVO;
 import kr.go.daegu.pms.user.service.LoginLockPolicy;
@@ -24,11 +25,15 @@ public class MainController {
     private final AnnouncementService announcementService;
     private final ApplicationService applicationService;
     private final NoticeService noticeService;
+    private final DashboardService dashboardService;
     private final AppMessages messages;
     private final LoginLockPolicy lockPolicy;
 
     @GetMapping("/")
     public String index(Model model) {
+        // 로그인 사용자의 처리할 일 (비로그인이면 빈 목록)
+        model.addAttribute("myTasks", dashboardService.selectMyTaskList());
+
         // 주요 대시보드 통계 지표
         model.addAttribute("activeAnnouncements", announcementService.selectActiveAnnouncementCount());
         model.addAttribute("totalApplications", applicationService.selectTotalApplicationCount());

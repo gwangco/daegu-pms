@@ -35,6 +35,19 @@
     </section>
 
     <div class="container">
+        <section th:unless="${#lists.isEmpty(myTasks)}" class="mb-4" aria-labelledby="task-title">
+            <h2 id="task-title" class="section-title">처리할 일</h2>
+            <div class="row g-3">
+                <div class="col-sm-6 col-lg" th:each="t : ${myTasks}">
+                    <a th:href="@{${t.url}}" class="task-card"
+                       th:classappend="${t.count == 0} ? 'is-zero' : (${t.alert} ? 'is-alert' : '')">
+                        <div class="text-sub small fw-semibold" th:text="${t.label}">서류 검토 대기</div>
+                        <div><span class="count" th:text="${t.count}">0</span><span class="ms-1">건</span></div>
+                    </a>
+                </div>
+            </div>
+        </section>
+
         <h2 class="visually-hidden">사업 현황 요약</h2>
         <div class="row g-3 mb-4">
             <div class="col-md-4">
