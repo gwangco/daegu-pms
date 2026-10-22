@@ -17,7 +17,7 @@ concurrency:
 
 jobs:
   build:
-    name: Maven 빌드 및 테스트 (JDK 17)
+    name: Maven 빌드 및 테스트 (JDK 17, MySQL 8.4)
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -33,6 +33,36 @@ jobs:
           distribution: temurin
           java-version: '17'
           cache: maven
+
+      # 테스트 전용 MySQL. 비밀번호는 실행할 때마다 새로 만들고 로그에서는 가린다 (저장소에 DB 비밀번호를 두지 않음)
+      # 이미지는 태그가 아닌 digest 로 고정 (같은 태그에 다른 이미지가 올라와도 영향 없음)
+      - name: MySQL 8.4 LTS 테스트 DB 준비
+        run: |
+          ROOT_PW="$(openssl rand -hex 16)"; OWNER_PW="$(openssl rand -hex 16)"; APP_PW="$(openssl rand -hex 16)"
+          echo "::add-mask::$ROOT_PW"; echo "::add-mask::$OWNER_PW"; echo "::add-mask::$APP_PW"
+          docker run -d --name mysql -p 127.0.0.1:3306:3306 \
+            -e MYSQL_ROOT_PASSWORD="$ROOT_PW" -e TZ=Asia/Seoul \
+            mysql:8.4.10@sha256:8dbcf531a03aade657e181b9cf2f1d1803ce621a1d55610cb44cb531ab7d7db6 \
+            --character-set-server=utf8mb4 --collation-server=utf8mb4_0900_ai_ci
+          # 컨테이너는 초기화용 임시 서버를 먼저 띄우므로 TCP 로 접속되는 본 서버가 뜰 때까지 기다린다
+          for i in $(seq 1 60); do
+            if docker exec -e MYSQL_PWD="$ROOT_PW" mysql mysqladmin ping -h 127.0.0.1 -uroot --silent 2>/dev/null; then break; fi
+            sleep 2
+          done
+          docker exec -i -e MYSQL_PWD="$ROOT_PW" mysql mysql -h 127.0.0.1 -uroot <<SQL
+          CREATE DATABASE dpms_test CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
+          CREATE USER 'dpms_owner'@'%' IDENTIFIED BY '$OWNER_PW';
+          GRANT ALL PRIVILEGES ON dpms_test.* TO 'dpms_owner'@'%';
+          CREATE USER 'dpms_app'@'%' IDENTIFIED BY '$APP_PW';
+          GRANT SELECT, INSERT, UPDATE, DELETE ON dpms_test.* TO 'dpms_app'@'%';
+          GRANT SELECT ON performance_schema.data_lock_waits TO 'dpms_app'@'%';
+          SQL
+          {
+            echo "DPMS_DB_USERNAME=dpms_app"
+            echo "DPMS_DB_PASSWORD=$APP_PW"
+            echo "DPMS_DB_MIGRATION_USERNAME=dpms_owner"
+            echo "DPMS_DB_MIGRATION_PASSWORD=$OWNER_PW"
+          } >> "$GITHUB_ENV"
 
       - name: 빌드 및 테스트
         run: ./mvnw -B -ntp verify

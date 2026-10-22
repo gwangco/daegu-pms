@@ -25,18 +25,33 @@ spring:
     name: daegu-pms
   profiles:
     active: local
+  # 로컬 DB 비밀번호 파일 (scripts/setup-local-mysql.ps1 이 생성, Git 제외). 없으면 건너뛴다.
+  # 같은 이름의 환경변수가 있으면 환경변수가 우선한다 (CI·운영은 환경변수로 넣는다)
+  config:
+    import: "optional:file:./config/dpms-secret.yml"
 
-  # 초경량 H2 Database (개발 및 로컬 테스트용)
+  # MySQL 8.x. 비밀번호 기본값은 두지 않는다 (없으면 기동 실패 → 잘못된 계정으로 조용히 뜨는 일이 없다)
   datasource:
-    driver-class-name: org.h2.Driver
-    url: jdbc:h2:mem:daegupms;MODE=MySQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
-    username: sa
-    password:
+    url: ${DPMS_DB_URL:jdbc:mysql://127.0.0.1:3306/dpms?characterEncoding=UTF-8&connectionTimeZone=Asia/Seoul}
+    # 서버 실행 계정: 조회·등록·수정·삭제 권한만 있다 (테이블 생성·삭제 불가)
+    username: ${DPMS_DB_USERNAME:dpms_app}
+    password: ${DPMS_DB_PASSWORD}
+    hikari:
+      pool-name: dpms-pool
+      maximum-pool-size: 10
+      # 커넥션을 얻지 못하면 무한정 기다리지 않고 5초 뒤 오류로 끝낸다
+      connection-timeout: 5000
 
-  # H2 웹 콘솔은 기본 비활성화. local 프로필(application-local.yml)에서만 켠다.
-  h2:
-    console:
-      enabled: false
+  # Flyway: db/migration 의 V1, V2 ... 를 순서대로 한 번씩 적용한다
+  flyway:
+    # 테이블 변경은 별도 계정으로만 (서버 실행 계정에는 DDL 권한이 없다)
+    user: ${DPMS_DB_MIGRATION_USERNAME:dpms_owner}
+    password: ${DPMS_DB_MIGRATION_PASSWORD}
+    locations: classpath:db/migration
+    # 운영 DB 를 통째로 지우는 clean 명령은 막아 둔다 (테스트 프로필에서만 허용)
+    clean-disabled: true
+    # 이미 적용한 파일이 바뀌었으면 기동을 멈춘다 (적용된 마이그레이션은 고치지 않고 새 버전을 추가한다)
+    validate-on-migrate: true
 
   # 정적 리소스 및 Thymeleaf 뷰 템플릿 설정
   thymeleaf:
@@ -51,15 +66,6 @@ spring:
       enabled: true
       max-file-size: 20MB
       max-request-size: 50MB
-
-  # SQL 초기화 스크립트 실행 (schema.sql, data.sql)
-  sql:
-    init:
-      mode: always
-      schema-locations: classpath:schema.sql
-      data-locations: classpath:data.sql
-      # 미지정 시 OS 기본 문자셋(한글 Windows = MS949)으로 읽어 한글 seed 데이터가 깨진다
-      encoding: UTF-8
 
 # MyBatis 설정은 eGovFrame 방식대로 Java Config(EgovConfigMapper) + egovframework/sqlmap/sql-mapper-config.xml 에서 관리
 

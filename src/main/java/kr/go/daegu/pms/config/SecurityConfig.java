@@ -12,11 +12,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.header.writers.DelegatingRequestMatcherHeaderWriter;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
-import org.springframework.security.web.header.writers.StaticHeadersWriter;
-import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
-import org.springframework.security.web.util.matcher.NegatedRequestMatcher;
 
 /**
  * Spring Security 설정 (URL 단위 1차 인가).
@@ -46,7 +42,8 @@ public class SecurityConfig {
             "object-src 'none'",
             "base-uri 'self'",
             "form-action 'self'",
-            "frame-ancestors 'self'");
+            // 다른 사이트(같은 출처 포함)가 이 화면을 iframe 으로 감싸지 못하게 한다 (클릭재킹 방지)
+            "frame-ancestors 'none'");
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -63,8 +60,6 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 // 정적 리소스 및 오류 페이지 (오류 페이지를 막으면 403/404 대신 로그인 화면으로 튕긴다)
                 .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**", "/favicon.svg", "/favicon.ico", "/error").permitAll()
-                // H2 웹 콘솔: 임의 SQL 실행이 가능한 관리 도구이므로 총괄관리자만 (local 프로필에서만 활성화됨)
-                .requestMatchers("/h2-console/**").hasRole("ADMIN")
                 // 공고 등록은 담당자/관리자 (아래 공고 조회 허용 규칙보다 먼저 선언해야 함 - 위에서부터 순서대로 매칭)
                 .requestMatchers("/announcements/new").hasAnyRole("MANAGER", "ADMIN")
                 // 공지사항 등록/수정/삭제는 담당자/관리자 (아래 공지 조회 허용 규칙보다 먼저)
@@ -102,18 +97,12 @@ public class SecurityConfig {
                 .deleteCookies("JSESSIONID")
                 .permitAll()
             )
-            .csrf(csrf -> csrf
-                // H2 콘솔은 자체 폼을 사용해 CSRF 토큰을 보낼 수 없으므로 예외 (ADMIN 전용 + local 전용)
-                .ignoringRequestMatchers("/h2-console/**")
-            )
+            // CSRF 는 Spring Security 기본값(모든 POST 에 토큰 필수)을 그대로 쓴다.
+            // MySQL 전환으로 H2 웹 콘솔을 없애면서 콘솔용 CSRF 예외·iframe 허용·CSP 예외도 함께 없앴다.
             .headers(headers -> headers
-                // 기본값 DENY → 같은 출처 iframe 만 허용 (H2 콘솔 화면이 iframe 구조)
-                .frameOptions(frame -> frame.sameOrigin())
+                .frameOptions(frame -> frame.deny())
                 .referrerPolicy(referrer -> referrer.policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
-                // H2 콘솔(local 전용 관리 도구)은 자체 인라인 스크립트를 쓰므로 CSP 대상에서 뺀다
-                .addHeaderWriter(new DelegatingRequestMatcherHeaderWriter(
-                        new NegatedRequestMatcher(PathPatternRequestMatcher.withDefaults().matcher("/h2-console/**")),
-                        new StaticHeadersWriter("Content-Security-Policy", CONTENT_SECURITY_POLICY)))
+                .contentSecurityPolicy(csp -> csp.policyDirectives(CONTENT_SECURITY_POLICY))
             );
 
         return http.build();

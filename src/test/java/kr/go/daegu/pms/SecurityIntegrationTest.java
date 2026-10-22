@@ -48,10 +48,10 @@ class SecurityIntegrationTest extends IntegrationTestSupport {
     }
 
     @Test
-    @DisplayName("H2 콘솔은 총괄관리자 외 접근 불가")
-    @WithUserDetails("manager1")
-    void h2ConsoleAdminOnly() throws Exception {
-        mockMvc.perform(get("/h2-console/")).andExpect(status().isForbidden());
+    @DisplayName("H2 웹 콘솔은 MySQL 전환과 함께 제거되어 총괄관리자도 열 수 없다")
+    @WithUserDetails("admin")
+    void h2ConsoleRemoved() throws Exception {
+        mockMvc.perform(get("/h2-console/")).andExpect(status().isNotFound());
     }
 
     // ───────────── IDOR: 신청서 ─────────────

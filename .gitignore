@@ -52,3 +52,7 @@ jdk-*/
 
 # 업로드 파일 저장소 (실행 시 생성되는 사용자 첨부파일)
 uploads/
+
+# 로컬 DB 접속 정보 (scripts/setup-local-mysql.ps1 이 생성). 예시 파일만 공유한다
+/config/*
+!/config/dpms-secret.example.yml

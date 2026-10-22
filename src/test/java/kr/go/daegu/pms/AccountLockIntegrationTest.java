@@ -63,7 +63,7 @@ class AccountLockIntegrationTest extends IntegrationTestSupport {
 
         Map<String, Object> state = lockState("company2");
         assertThat(state.get("login_fail_count")).isEqualTo(5);
-        assertThat(((Timestamp) state.get("locked_at")).toLocalDateTime()).isEqualTo(NOW);
+        assertThat(state.get("locked_at")).isEqualTo(NOW);   // MySQL 드라이버는 DATETIME 을 LocalDateTime 으로 준다
         assertThat(history("company2", "FAIL_PASSWORD")).isEqualTo(5);
         assertThat(history("company2", "LOCKED")).isEqualTo(1);
         assertThat(history("company2", "SUCCESS")).isZero();
@@ -81,7 +81,7 @@ class AccountLockIntegrationTest extends IntegrationTestSupport {
 
         Map<String, Object> state = lockState("company2");
         assertThat(state.get("login_fail_count")).isEqualTo(0);
-        assertThat(((Timestamp) state.get("last_login_at")).toLocalDateTime()).isEqualTo(NOW);
+        assertThat(state.get("last_login_at")).isEqualTo(NOW);
         assertThat(jdbc.queryForObject("SELECT client_ip FROM login_history WHERE user_id = 'company2' AND result_code = 'SUCCESS'", String.class))
                 .isEqualTo("203.0.113.7");
     }

@@ -99,10 +99,11 @@ class WebUiIntegrationTest extends IntegrationTestSupport {
     }
 
     @Test
-    @DisplayName("H2 콘솔(local 전용)은 자체 인라인 스크립트를 쓰므로 CSP 를 붙이지 않는다")
-    void h2ConsoleIsExcludedFromCsp() throws Exception {
-        mockMvc.perform(get("/h2-console/").with(user("admin").roles("ADMIN")))
-                .andExpect(header().doesNotExist("Content-Security-Policy"));
+    @DisplayName("클릭재킹 방지: 어떤 사이트도 화면을 iframe 으로 감쌀 수 없다")
+    void framingIsDenied() throws Exception {
+        mockMvc.perform(get("/"))
+                .andExpect(header().string("X-Frame-Options", "DENY"))
+                .andExpect(header().string("Content-Security-Policy", containsString("frame-ancestors 'none'")));
     }
 
     @Test

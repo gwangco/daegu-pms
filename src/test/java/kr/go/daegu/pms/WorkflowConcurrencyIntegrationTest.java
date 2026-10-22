@@ -30,7 +30,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * 서로 다른 스레드·DB 커넥션·트랜잭션의 경쟁을 검증한다.
  * 상위 테스트의 자동 롤백을 해제하고 전용 과제를 생성/삭제하므로 시드 데이터는 변경하지 않는다.
- * 고정 sleep 으로 순서를 추측하지 않고 H2 세션의 BLOCKER_ID 로 실제 잠금 대기를 확인한다.
+ * 고정 sleep 으로 순서를 추측하지 않고 MySQL performance_schema.data_lock_waits(행 잠금 대기 목록)로 실제 잠금 대기를 확인한다.
+ * (테스트 DB 계정에는 이 표의 조회 권한만 따로 준다: scripts/setup-local-mysql.ps1, CI 워크플로)
  */
 @Transactional(propagation = Propagation.NOT_SUPPORTED)
 @WithMockUser(username = "manager1", roles = "MANAGER")
@@ -152,7 +153,7 @@ class WorkflowConcurrencyIntegrationTest extends IntegrationTestSupport {
     private boolean awaitDatabaseLockOrCompletion(Future<?> competing) {
         long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(1);
         while (System.nanoTime() < deadline) {
-            Integer blocked = jdbc.queryForObject("SELECT COUNT(*) FROM INFORMATION_SCHEMA.SESSIONS WHERE BLOCKER_ID IS NOT NULL", Integer.class);
+            Integer blocked = jdbc.queryForObject("SELECT COUNT(*) FROM performance_schema.data_lock_waits", Integer.class);
             if (blocked != null && blocked > 0) {
                 return true;
             }
