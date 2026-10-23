@@ -58,6 +58,10 @@
             <if test="status != null and status != ''">
                 AND app.status = #{status}
             </if>
+            <!-- 임시저장은 제출 전이라 담당자·평가위원 목록에 나오지 않는다 (서비스가 권한에 따라 설정) -->
+            <if test="excludeDraft">
+                AND app.status &lt;&gt; 'TEMP_SAVED'
+            </if>
             <if test="searchKeyword != null and searchKeyword != ''">
                 AND (app.project_name LIKE CONCAT('%', #{searchKeyword}, '%')
                      OR u.company_name LIKE CONCAT('%', #{searchKeyword}, '%')
@@ -93,7 +97,7 @@
 
     <!-- 상태 변경·평가 배정·채점·정산의 공통 잠금. 신청서 → 평가표/정산 순서로 잠가 경쟁 상태를 방지 -->
     <select id="selectApplicationForUpdate" resultType="applicationVO">
-        SELECT application_id, company_user_id, request_grant, status
+        SELECT application_id, announcement_id, company_user_id, request_grant, status, receipt_no, plan_atch_file_id
         FROM application
         WHERE application_id = #{applicationId}
         FOR UPDATE
@@ -114,6 +118,75 @@
         )
     </insert>
 
+    <!--
+        임시저장: 접수번호·제출 일시 없이 저장. 빈 항목은 NULL (V5 CHECK 는 임시저장이면 통과).
+        제출 일시는 컬럼 기본값(CURRENT_TIMESTAMP)이 들어가지 않도록 NULL 을 직접 넣는다
+    -->
+    <insert id="insertApplicationDraft" parameterType="applicationVO" useGeneratedKeys="true" keyProperty="applicationId">
+        INSERT INTO application (
+            announcement_id, company_user_id, project_name, total_budget, request_grant, self_funding, summary, plan_atch_file_id,
+            status, submitted_at, created_at
+        ) VALUES (
+            #{announcementId}, #{companyUserId}, #{projectName}, #{totalBudget}, #{requestGrant}, #{selfFunding}, #{summary}, #{planAtchFileId},
+            'TEMP_SAVED', NULL, #{audit.now}
+        )
+    </insert>
+
+    <update id="updateApplicationDraft" parameterType="applicationVO">
+        UPDATE application
+        SET project_name = #{projectName},
+            total_budget = #{totalBudget},
+            request_grant = #{requestGrant},
+            self_funding = #{selfFunding},
+            summary = #{summary},
+            plan_atch_file_id = #{planAtchFileId},
+            updated_by = #{audit.userId},
+            updated_at = #{audit.now}
+        WHERE application_id = #{applicationId}
+          AND status = 'TEMP_SAVED'
+    </update>
+
+    <!-- 제출: 필수 항목이 비어 있으면 V5 CHECK(ck_application_submitted_complete)가 거부한다 -->
+    <update id="updateApplicationSubmit" parameterType="applicationVO">
+        UPDATE application
+        SET project_name = #{projectName},
+            total_budget = #{totalBudget},
+            request_grant = #{requestGrant},
+            self_funding = #{selfFunding},
+            summary = #{summary},
+            plan_atch_file_id = #{planAtchFileId},
+            receipt_no = #{receiptNo},
+            status = 'SUBMITTED',
+            submitted_at = #{audit.now},
+            updated_by = #{audit.userId},
+            updated_at = #{audit.now}
+        WHERE application_id = #{applicationId}
+          AND status = 'TEMP_SAVED'
+    </update>
+
+    <update id="updateApplicationWithdraw">
+        UPDATE application
+        SET status = 'TEMP_SAVED',
+            submitted_at = NULL,
+            updated_by = #{audit.userId},
+            updated_at = #{audit.now}
+        WHERE application_id = #{applicationId}
+          AND status = 'SUBMITTED'
+    </update>
+
+    <delete id="deleteApplicationDraft">
+        DELETE FROM application
+        WHERE application_id = #{applicationId}
+          AND status = 'TEMP_SAVED'
+    </delete>
+
+    <select id="selectApplicationByCompany" resultType="applicationVO">
+        SELECT application_id, status
+        FROM application
+        WHERE announcement_id = #{announcementId}
+          AND company_user_id = #{companyUserId}
+    </select>
+
     <update id="updateApplicationStatus">
         UPDATE application
         SET status = #{status},
@@ -123,7 +196,7 @@
     </update>
 
     <select id="selectTotalApplicationCount" resultType="int">
-        SELECT COUNT(*) FROM application
+        SELECT COUNT(*) FROM application WHERE status &lt;&gt; 'TEMP_SAVED'
     </select>
 
     <select id="selectSelectedApplicationCount" resultType="int">

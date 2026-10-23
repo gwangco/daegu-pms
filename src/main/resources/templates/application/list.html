@@ -87,7 +87,7 @@
                     </thead>
                     <tbody>
                     <tr th:each="app : ${applications}">
-                        <td data-label="접수번호" class="text-center fw-bold text-nowrap" th:text="${app.receiptNo}">DPMS-00000001</td>
+                        <td data-label="접수번호" class="text-center fw-bold text-nowrap" th:text="${app.receiptNo != null} ? ${app.receiptNo} : '작성 중'">DPMS-00000001</td>
                         <td class="cell-title">
                             <a th:href="@{/applications/{id}(id=${app.applicationId})}" th:text="${app.projectName}">과제명</a>
                             <span class="cell-sub cell-truncate" th:text="${app.announcementTitle}">공고명</span>
@@ -98,7 +98,7 @@
                                 <span class="cell-sub" th:text="${app.businessNo}">504-81-98765</span>
                             </div>
                         </td>
-                        <td data-label="신청 지원금" class="text-end fw-bold text-nowrap" th:text="${#numbers.formatInteger(app.requestGrant, 0, 'COMMA')} + '원'">100,000,000원</td>
+                        <td data-label="신청 지원금" class="text-end fw-bold text-nowrap" th:text="${app.requestGrant != null} ? ${#numbers.formatInteger(app.requestGrant, 0, 'COMMA')} + '원' : '-'">100,000,000원</td>
                         <td data-label="평균 점수" class="text-center" th:text="${app.avgScore != null} ? ${#numbers.formatDecimal(app.avgScore, 1, 1)} : '-'">-</td>
                         <td data-label="진행상태" class="text-center"><th:block th:replace="~{fragments/common :: appStatus(${app.status})}"></th:block></td>
                         <td class="text-center cell-actions">

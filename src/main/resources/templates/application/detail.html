@@ -18,13 +18,14 @@
                 </ol>
             </nav>
             <div class="page-badges">
-                <span class="status status-neutral" th:text="'접수번호 ' + ${app.receiptNo}">접수번호 DPMS-00000001</span>
+                <span th:if="${app.receiptNo != null}" class="status status-neutral" th:text="'접수번호 ' + ${app.receiptNo}">접수번호 DPMS-00000001</span>
                 <th:block th:replace="~{fragments/common :: appStatus(${app.status})}"></th:block>
             </div>
             <h1 th:text="${app.projectName}">과제명</h1>
             <ul class="page-meta">
                 <li>공고 <strong th:text="${app.announcementTitle}">공고명</strong></li>
-                <li>제출 <strong th:text="${#temporals.format(app.submittedAt, 'yyyy-MM-dd HH:mm')}">2026-10-15 14:30</strong></li>
+                <li th:if="${app.submittedAt != null}">제출 <strong th:text="${#temporals.format(app.submittedAt, 'yyyy-MM-dd HH:mm')}">2026-10-15 14:30</strong></li>
+                <li th:if="${app.submittedAt == null}">아직 제출하지 않음</li>
             </ul>
         </div>
     </div>
@@ -32,6 +33,33 @@
     <div class="container">
         <div class="detail-layout">
             <div class="detail-main">
+                <!--/* 기업 본인 신청서: 임시저장이면 이어서 작성·삭제, 접수완료면 제출 취소. 가능 여부는 서버가 다시 확인한다 */-->
+                <section th:if="${mine and app.status == 'TEMP_SAVED'}" class="panel draft-panel" aria-labelledby="draft-title">
+                    <div class="panel-body">
+                        <h2 id="draft-title" class="h5 mb-2">아직 제출하지 않은 신청서입니다</h2>
+                        <p class="text-sub mb-3">접수 기간 안에 이어서 작성해 제출하세요. 제출하기 전에는 담당자에게 보이지 않습니다.</p>
+                        <div class="d-flex flex-wrap gap-2">
+                            <a th:href="@{/applications/{id}/edit(id=${app.applicationId})}" class="btn btn-primary">
+                                <i class="bi bi-pencil-square me-1" aria-hidden="true"></i>이어서 작성
+                            </a>
+                            <form th:action="@{/applications/{id}/delete(id=${app.applicationId})}" method="post" class="m-0"
+                                  data-confirm="작성 중인 신청서를 삭제하시겠습니까? 저장한 사업계획서 파일도 함께 지워집니다.">
+                                <button type="submit" class="btn btn-outline-danger"><i class="bi bi-trash3 me-1" aria-hidden="true"></i>삭제</button>
+                            </form>
+                        </div>
+                    </div>
+                </section>
+                <section th:if="${mine and app.status == 'SUBMITTED'}" class="panel draft-panel" aria-labelledby="withdraw-title">
+                    <div class="panel-body">
+                        <h2 id="withdraw-title" class="h5 mb-2">제출을 취소하고 고칠 수 있습니다</h2>
+                        <p class="text-sub mb-3">서류 검토가 시작되기 전이고 접수 기간 안일 때만 됩니다. 취소하면 임시저장 상태가 되고 접수번호는 그대로입니다.</p>
+                        <form th:action="@{/applications/{id}/withdraw(id=${app.applicationId})}" method="post" class="m-0"
+                              data-confirm="제출을 취소하시겠습니까? 다시 제출할 때까지 담당자에게 보이지 않습니다.">
+                            <button type="submit" class="btn btn-outline-primary"><i class="bi bi-arrow-counterclockwise me-1" aria-hidden="true"></i>제출 취소</button>
+                        </form>
+                    </div>
+                </section>
+
                 <section class="panel" aria-labelledby="info-title">
                     <div class="panel-head"><h2 id="info-title">신청 정보</h2></div>
                     <dl class="info-list">
@@ -45,15 +73,15 @@
                         </div>
                         <div>
                             <dt>총 소요 예산</dt>
-                            <dd th:text="${#numbers.formatInteger(app.totalBudget, 0, 'COMMA')} + '원'">125,000,000원</dd>
+                            <dd th:text="${app.totalBudget != null} ? ${#numbers.formatInteger(app.totalBudget, 0, 'COMMA')} + '원' : '-'">125,000,000원</dd>
                         </div>
                         <div>
                             <dt>신청 지원금</dt>
-                            <dd class="is-key" th:text="${#numbers.formatInteger(app.requestGrant, 0, 'COMMA')} + '원'">100,000,000원</dd>
+                            <dd class="is-key" th:text="${app.requestGrant != null} ? ${#numbers.formatInteger(app.requestGrant, 0, 'COMMA')} + '원' : '-'">100,000,000원</dd>
                         </div>
                         <div>
                             <dt>기업 자부담금</dt>
-                            <dd th:text="${#numbers.formatInteger(app.selfFunding, 0, 'COMMA')} + '원'">25,000,000원</dd>
+                            <dd th:text="${app.selfFunding != null} ? ${#numbers.formatInteger(app.selfFunding, 0, 'COMMA')} + '원' : '-'">25,000,000원</dd>
                         </div>
                         <div>
                             <dt>평균 평가점수</dt>
@@ -68,7 +96,8 @@
                                 <a th:if="${app.planAtchFileId != null}" th:href="@{/files/{id}/{sn}(id=${app.planAtchFileId}, sn=0)}">
                                     <i class="bi bi-download me-1" aria-hidden="true"></i><span th:text="${app.planFileName}">plan.pdf</span>
                                 </a>
-                                <span th:if="${app.planAtchFileId == null}" class="text-sub">첨부 없음 (샘플 데이터)</span>
+                                <span th:if="${app.planAtchFileId == null}" class="text-sub"
+                                      th:text="${app.status == 'TEMP_SAVED'} ? '아직 첨부하지 않았습니다' : '첨부 없음 (샘플 데이터)'">첨부 없음 (샘플 데이터)</span>
                             </dd>
                         </div>
                     </dl>
