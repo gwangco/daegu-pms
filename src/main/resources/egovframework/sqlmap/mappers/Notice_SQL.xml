@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+    공지 첨부에 필요한 조회. 게시물 자체는 공통컴포넌트 SQL(egovframework/mapper/com/cop/bbs/EgovArticle_SQL_mysql.xml)이 다룬다.
+    공통컴포넌트 테이블 이름은 DDL 과 같은 대문자로 쓴다 (리눅스 MySQL 은 대소문자를 구분).
+-->
+<mapper namespace="kr.go.daegu.pms.notice.service.impl.NoticeMapper">
+
+    <select id="selectAttachPolicy" resultType="noticeAttachPolicyVO">
+        SELECT FILE_ATCH_POSBL_AT              AS fileAtchPosblAt,
+               ATCH_POSBL_FILE_NUMBER          AS posblAtchFileNumber,
+               IFNULL(ATCH_POSBL_FILE_SIZE, 0) AS posblAtchFileSize
+          FROM COMTNBBSMASTER
+         WHERE BBS_ID = #{bbsId}
+           AND USE_AT = 'Y'
+    </select>
+
+    <select id="selectNoticeForUpdate" resultType="egovframework.com.cop.bbs.service.BoardVO">
+        SELECT NTT_ID       AS nttId,
+               ATCH_FILE_ID AS atchFileId
+          FROM COMTNBBS
+         WHERE BBS_ID = #{bbsId}
+           AND NTT_ID = #{nttId}
+           AND USE_AT = 'Y'
+           FOR UPDATE
+    </select>
+
+</mapper>

@@ -13,6 +13,10 @@
                                     - 삭제: 제목을 "삭제되었습니다" 로 덮어쓰지 않고 USE_AT 만 N (이력 보존)
                                     - 조회수: 최대값을 읽어 다시 쓰던 2단계 처리를 RDCNT + 1 한 번으로 (동시 조회 누락 방지), 수정자·수정일시는 바꾸지 않음
                                     - 답글·방명록·블로그 SQL 제거
+  2026.10.23    gwangco             D-PMS 8차 첨부파일
+                                    - 등록: 첨부파일 ID 를 비워 두던 것을 서버가 만든 첨부 ID(#{atchFileId})로 저장 (Board 는 서비스가 새로 만들어 채우므로 화면 값이 아님)
+                                    - 수정: 첨부 ID 가 비어 있을 때만 연결하고, 이미 연결된 첨부 ID 는 바꾸지 않음 (다른 게시물의 첨부 묶음으로 바꿔치기 차단)
+                                    - 목록: 파일이 하나라도 남아 있을 때만 첨부 ID 를 돌려줌 (첨부 표시가 빈 묶음에 붙지 않게)
 -->
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
@@ -97,7 +101,7 @@
 			( #{nttId}, #{bbsId}, #{nttSj}, #{nttCn}, #{nttId},
 			  #{audit.userId}, (SELECT LEFT(u.user_name, 20) FROM users u WHERE u.user_id = #{audit.userId}), NULL, 0,
 			  NULL, NULL, #{replyAt},
-			  #{parnts}, 1, #{replyLc}, NULL,
+			  #{parnts}, 1, #{replyLc}, NULLIF(#{atchFileId}, ''),
 			  #{audit.userId}, #{audit.now}, 'Y',
 			  'N', #{noticeAt}, 'N'
 			 )
@@ -109,7 +113,13 @@
 			SELECT
 				a.NTT_ID, a.NTT_SJ, a.FRST_REGISTER_ID, IFNULL(u.user_name, a.NTCR_NM) as FRST_REGISTER_NM,
 				DATE_FORMAT(a.FRST_REGIST_PNTTM, '%Y-%m-%d') as FRST_REGIST_PNTTM,
-				a.RDCNT, a.PARNTSCTT_NO, a.ANSWER_AT, a.ANSWER_LC, a.USE_AT, a.ATCH_FILE_ID,
+				a.RDCNT, a.PARNTSCTT_NO, a.ANSWER_AT, a.ANSWER_LC, a.USE_AT,
+				CASE WHEN EXISTS (SELECT 1
+				                    FROM COMTNFILE m
+				                    JOIN COMTNFILEDETAIL d ON d.ATCH_FILE_ID = m.ATCH_FILE_ID
+				                   WHERE m.ATCH_FILE_ID = a.ATCH_FILE_ID
+				                     AND m.USE_AT = 'Y')
+				     THEN a.ATCH_FILE_ID END AS ATCH_FILE_ID,
 				a.BBS_ID, a.NTCE_BGNDE, a.NTCE_ENDDE, a.SJ_BOLD_AT, a.NOTICE_AT, a.SECRET_AT
 			FROM
 				COMTNBBS a
@@ -176,6 +186,7 @@
 				NTT_SJ = #{nttSj},
 				NTT_CN = #{nttCn},
 				NOTICE_AT = #{noticeAt},
+				ATCH_FILE_ID = IFNULL(NULLIF(ATCH_FILE_ID, ''), NULLIF(#{atchFileId}, '')),
 				LAST_UPDUSR_ID = #{audit.userId},
 				LAST_UPDT_PNTTM = #{audit.now}
 			WHERE BBS_ID = #{bbsId}

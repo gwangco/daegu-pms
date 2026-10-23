@@ -85,6 +85,9 @@
                         <td class="cell-title">
                             <span th:if="${n.noticeAt == 'Y'}" class="status status-danger d-md-none me-1">중요</span>
                             <a th:href="@{/notices/{id}(id=${n.nttId})}" th:text="${n.nttSj}">제목</a>
+                            <th:block th:unless="${#strings.isEmpty(n.atchFileId)}">
+                                <i class="bi bi-paperclip attach-mark" aria-hidden="true"></i><span class="visually-hidden">첨부파일 있음</span>
+                            </th:block>
                         </td>
                         <td data-label="작성자" class="text-center" th:text="${n.frstRegisterNm}">김담당</td>
                         <td data-label="등록일" class="text-center text-sub text-nowrap" th:text="${n.frstRegisterPnttm}">2026-10-21</td>

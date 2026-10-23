@@ -36,6 +36,23 @@
             <div class="prewrap" th:text="${notice.nttCn}">본문</div>
         </article>
 
+        <!--/* 첨부파일: /notices/{게시물 ID}/files/{순번} 으로 내려받는다 (공지처럼 누구나, 삭제된 공지면 404) */-->
+        <section th:unless="${#lists.isEmpty(files)}" class="panel mt-4" aria-labelledby="files-title">
+            <div class="panel-head">
+                <h2 id="files-title">첨부파일 <span class="text-sub fw-normal" th:text="${#lists.size(files)} + '개'">2개</span></h2>
+            </div>
+            <ul class="file-list">
+                <li th:each="f : ${files}">
+                    <th:block th:replace="~{fragments/common :: fileIcon(${f.extension()})}"></th:block>
+                    <a class="file-name" th:href="@{/notices/{id}/files/{sn}(id=${notice.nttId}, sn=${f.fileSn()})}">
+                        <span th:text="${f.name()}">공고문.pdf</span><span class="visually-hidden"> 내려받기</span>
+                    </a>
+                    <span class="file-size" th:text="${f.sizeLabel()}">1.2MB</span>
+                    <i class="bi bi-download file-download" aria-hidden="true"></i>
+                </li>
+            </ul>
+        </section>
+
         <div class="form-actions">
             <a th:href="@{/notices}" class="btn btn-outline-secondary"><i class="bi bi-list-ul me-1" aria-hidden="true"></i>목록</a>
             <div sec:authorize="hasAnyRole('MANAGER', 'ADMIN')" class="form-actions-end">

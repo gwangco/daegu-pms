@@ -177,25 +177,52 @@
 
     document.querySelectorAll('[data-calc], [data-money]').forEach(recalculate);
 
-    // ---------- 첨부 파일 안내: 이름과 크기, 용량을 넘으면 올리기 전에 알린다 (data-max-mb) ----------
-    document.addEventListener('change', function (event) {
-        var input = event.target;
-        if (input.type !== 'file' || !input.hasAttribute('data-max-mb')) {
-            return;
-        }
+    // ---------- 첨부 파일 안내: 이름과 크기, 용량·개수를 넘으면 올리기 전에 알린다 ----------
+    // data-max-mb: 파일당 최대 MB, data-max-count: 최대 개수, data-existing-count: 이미 올린 파일 수 (수정 화면)
+    // 서버 표시(AttachedFile.sizeLabel)와 같은 규칙: 1MB 이상은 MB 소수 한 자리, 미만은 KB
+    function sizeLabel(bytes) {
+        return bytes >= 1024 * 1024 ? (bytes / 1024 / 1024).toFixed(1) + 'MB' : Math.max(1, Math.round(bytes / 1024)) + 'KB';
+    }
+
+    function updateFileHint(input) {
         var hint = hintFor(input, 'file-hint');
-        var file = input.files && input.files[0];
-        if (!file) {
+        var files = Array.prototype.slice.call(input.files || []);
+        if (!files.length) {
             showHint(hint, '', false);
             return;
         }
+        var names = files.map(function (file) {
+            return file.name + ' (' + sizeLabel(file.size) + ')';
+        });
+        var text = files.length === 1 ? '선택한 파일: ' + names[0] : '선택한 파일 ' + files.length + '개: ' + names.join(', ');
+
         var maxMb = Number(input.getAttribute('data-max-mb'));
-        var sizeMb = file.size / 1024 / 1024;
-        var size = sizeMb < 0.1 ? Math.max(1, Math.round(file.size / 1024)) + 'KB' : sizeMb.toFixed(1) + 'MB';
-        if (sizeMb > maxMb) {
-            showHint(hint, '선택한 파일: ' + file.name + ' (' + size + ') — ' + maxMb + 'MB를 넘어 접수되지 않습니다. 파일을 줄여 다시 선택하세요.', true);
-        } else {
-            showHint(hint, '선택한 파일: ' + file.name + ' (' + size + ')', false);
+        var tooBig = files.filter(function (file) {
+            return file.size / 1024 / 1024 > maxMb;
+        });
+        if (tooBig.length) {
+            showHint(hint, text + ' — ' + maxMb + 'MB를 넘는 파일은 접수되지 않습니다. 파일을 줄여 다시 선택하세요.', true);
+            return;
+        }
+        if (input.hasAttribute('data-max-count')) {
+            // 이미 올린 파일 중 "삭제"에 표시한 만큼 자리가 생긴다
+            var deleting = input.form ? input.form.querySelectorAll('[name="deleteFileSn"]:checked').length : 0;
+            var room = Number(input.getAttribute('data-max-count')) - Number(input.getAttribute('data-existing-count') || 0) + deleting;
+            if (files.length > room) {
+                showHint(hint, text + ' — 지금은 ' + Math.max(0, room) + '개까지 더 올릴 수 있습니다.', true);
+                return;
+            }
+        }
+        showHint(hint, text, false);
+    }
+
+    document.addEventListener('change', function (event) {
+        var input = event.target;
+        if (input.type === 'file' && input.hasAttribute('data-max-mb')) {
+            updateFileHint(input);
+        } else if (input.name === 'deleteFileSn' && input.form) {
+            // 삭제 표시를 바꾸면 더 올릴 수 있는 개수가 달라지므로 안내를 다시 계산한다
+            input.form.querySelectorAll('input[type="file"][data-max-mb]').forEach(updateFileHint);
         }
     });
 

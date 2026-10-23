@@ -5,9 +5,11 @@ import egovframework.com.cmm.service.FileVO;
 import jakarta.annotation.Resource;
 import kr.go.daegu.pms.application.service.ApplicationAccessChecker;
 import kr.go.daegu.pms.cmm.message.AppMessages;
+import kr.go.daegu.pms.cmm.service.AttachedFile;
 import kr.go.daegu.pms.cmm.service.FileService;
 import kr.go.daegu.pms.cmm.util.SecurityUtil;
 import kr.go.daegu.pms.config.AppProperties;
+import kr.go.daegu.pms.notice.service.NoticeService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.egovframe.rte.fdl.cmmn.EgovAbstractServiceImpl;
@@ -18,6 +20,7 @@ import org.springframework.core.io.FileSystemResource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -29,6 +32,7 @@ import java.nio.file.Paths;
 import java.time.Clock;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HexFormat;
 import java.util.List;
@@ -48,7 +52,7 @@ import java.util.UUID;
  *  3) 서버 저장명은 UUID(확장자 없음) → 업로드 파일이 서버에서 실행될 여지 제거
  *  4) 저장/다운로드 경로가 업로드 루트 밖으로 벗어나지 않는지 normalize 후 검사 (../ 경로 조작 차단)
  *     DB(FILE_STRE_COURS)에는 절대 경로가 아니라 루트 아래 하위 경로(yyyy/MM)만 저장한다
- *  5) 다운로드 시 파일이 연결된 과제의 열람 권한을 재검사 (첨부파일 ID 는 순번이라 추측할 수 있으므로 IDOR 차단 필수)
+ *  5) 다운로드 시 파일이 연결된 업무의 열람 권한을 재검사 (첨부파일 ID 는 순번이라 추측할 수 있으므로 IDOR 차단 필수)
  */
 @Slf4j
 @Service("fileService")
@@ -75,7 +79,7 @@ public class FileServiceImpl extends EgovAbstractServiceImpl implements FileServ
 
     /** 공통컴포넌트 첨부파일 서비스 (COMTNFILE, COMTNFILEDETAIL) */
     private final EgovFileMngService fileMngService;
-    /** 첨부파일이 어느 업무(신청서·정산)에 연결되어 있는지 찾는 Mapper */
+    /** 첨부파일이 어느 업무(신청서·정산·공지)에 연결되어 있는지 찾는 Mapper */
     private final FileMapper fileMapper;
     private final ApplicationAccessChecker accessChecker;
     private final AppProperties appProperties;
@@ -86,58 +90,87 @@ public class FileServiceImpl extends EgovAbstractServiceImpl implements FileServ
     @Resource(name = "egovFileIdGnrService")
     private EgovIdGnrService fileIdGnrService;
 
+    /** 검사를 마친 업로드 파일 (원래 이름·확장자) */
+    private record CheckedUpload(MultipartFile file, String originalName, String extension) {}
+
     @Override
     public FileVO storeFile(MultipartFile multipartFile) {
         if (multipartFile == null || multipartFile.isEmpty()) {
             throw messages.business("file.required");
         }
-        String userId = SecurityUtil.getCurrentUserId();
-        if (userId == null) {
-            throw messages.denied("common.login.required");
-        }
+        requireLogin();
+        CheckedUpload upload = check(multipartFile);
 
-        String originalName = sanitizeFileName(multipartFile.getOriginalFilename(), messages);
-        String ext = extractExtension(originalName);
-        List<String> allowed = appProperties.file().allowedExtensions();
-        if (!allowed.contains(ext)) {
-            throw messages.business("file.extension.denied", String.join(", ", allowed));
-        }
-        verifySignature(multipartFile, ext);
-
-        String subDir = YearMonth.now(clock).format(SUB_DIR_FORMAT);
-        String storedName = UUID.randomUUID().toString().replace("-", "");
-        Path target = resolveSafely(subDir, storedName);
-
-        try {
-            Files.createDirectories(target.getParent());
-            try (InputStream in = multipartFile.getInputStream()) {
-                Files.copy(in, target);
-            }
-        } catch (IOException e) {
-            throw new UncheckedIOException("첨부파일 저장 중 오류가 발생했습니다.", e);
-        }
-        deleteOnRollback(target);
-
-        // 첨부파일 묶음(COMTNFILE) 1건 + 파일(COMTNFILEDETAIL) 1건. 업무별 첨부는 파일 1개라 순번은 0
-        FileVO file = new FileVO();
+        // 첨부파일 묶음(COMTNFILE) 1건 + 파일(COMTNFILEDETAIL) 1건. 신청서·정산 첨부는 파일 1개라 순번은 0
+        FileVO file = writeToDisk(upload);
         file.setAtchFileId(nextAtchFileId());
         file.setFileSn("0");
-        file.setFileStreCours(subDir);
-        file.setStreFileNm(storedName);
-        file.setOrignlFileNm(originalName);
-        file.setFileExtsn(ext);
-        file.setFileMg(Long.toString(multipartFile.getSize()));
         fileMngService.insertFileInf(file);
-        log.info("[파일 업로드] atchFileId={}, user={}, size={}", file.getAtchFileId(), userId, file.getFileMg());
+        log.info("[파일 업로드] atchFileId={}, user={}, size={}", file.getAtchFileId(), SecurityUtil.getCurrentUserId(), file.getFileMg());
         return file;
     }
 
     @Override
+    public String storeFiles(List<MultipartFile> files, String atchFileId, long maxFileSize) {
+        if (files == null || files.isEmpty()) {
+            throw messages.business("file.required");
+        }
+        requireLogin();
+
+        // 먼저 전부 검사한다. 세 번째 파일이 규칙에 어긋나면 앞의 두 파일도 저장하지 않는다
+        List<CheckedUpload> uploads = new ArrayList<>();
+        for (MultipartFile file : files) {
+            CheckedUpload upload = check(file);
+            if (file.getSize() > maxFileSize) {
+                throw messages.business("file.size.limit", maxFileSize / 1024 / 1024, upload.originalName());
+            }
+            uploads.add(upload);
+        }
+
+        // 새 묶음은 순번 0 부터, 기존 묶음은 공통컴포넌트 getMaxFileSN(현재 최대 순번 + 1)부터 이어서 매긴다
+        boolean newGroup = !StringUtils.hasText(atchFileId);
+        String groupId = newGroup ? nextAtchFileId() : atchFileId;
+        int nextSn = newGroup ? 0 : fileMngService.getMaxFileSN(key(groupId, 0));
+
+        List<FileVO> stored = new ArrayList<>();
+        for (CheckedUpload upload : uploads) {
+            FileVO file = writeToDisk(upload);
+            file.setAtchFileId(groupId);
+            file.setFileSn(Integer.toString(nextSn++));
+            stored.add(file);
+        }
+        if (newGroup) {
+            fileMngService.insertFileInfs(stored);    // 묶음(COMTNFILE) + 파일들(COMTNFILEDETAIL)
+        } else {
+            fileMngService.updateFileInfs(stored);    // 기존 묶음에 파일들만 추가
+        }
+        log.info("[파일 업로드] atchFileId={}, files={}, user={}", groupId, stored.size(), SecurityUtil.getCurrentUserId());
+        return groupId;
+    }
+
+    @Override
+    public List<AttachedFile> selectFiles(String atchFileId) {
+        if (!StringUtils.hasText(atchFileId)) {
+            return List.of();
+        }
+        FileVO group = new FileVO();
+        group.setAtchFileId(atchFileId);
+        return fileMngService.selectFileInfs(group).stream()
+                .map(f -> new AttachedFile(Integer.parseInt(f.getFileSn()), f.getOrignlFileNm(), f.getFileExtsn(), sizeOf(f)))
+                .toList();
+    }
+
+    @Override
+    public void deleteFile(String atchFileId, int fileSn) {
+        if (!StringUtils.hasText(atchFileId) || fileMngService.deleteFileInf(key(atchFileId, fileSn)) == 0) {
+            throw messages.notFound("file.notFound");
+        }
+        log.info("[파일 삭제] atchFileId={}, fileSn={}, user={}", atchFileId, fileSn, SecurityUtil.getCurrentUserId());
+    }
+
+    @Override
     public Download loadDownload(String atchFileId, int fileSn) {
-        FileVO key = new FileVO();
-        key.setAtchFileId(atchFileId);
-        key.setFileSn(Integer.toString(fileSn));
-        FileVO file = fileMngService.selectFileInf(key);
+        FileVO file = fileMngService.selectFileInf(key(atchFileId, fileSn));
         if (file == null) {
             throw messages.notFound("file.notFound");
         }
@@ -150,15 +183,86 @@ public class FileServiceImpl extends EgovAbstractServiceImpl implements FileServ
         } else if (receiptOwnerApplicationId != null) {
             accessChecker.getSettlementAccessibleApplication(receiptOwnerApplicationId);
         } else {
-            // 어떤 업무 데이터에도 연결되지 않은 파일은 노출하지 않는다
+            // 어떤 업무 데이터에도 연결되지 않은 파일은 노출하지 않는다 (공지 첨부는 loadNoticeFile 로만 내려준다)
             throw messages.notFound("file.notFound");
         }
+        return open(file);
+    }
 
+    @Override
+    public Download loadNoticeFile(long nttId, int fileSn) {
+        // 첨부 ID 는 요청 값이 아니라 공지 게시물에서 읽는다. 삭제된 공지(USE_AT='N')면 null 이라 404
+        String atchFileId = fileMapper.selectNoticeAtchFileId(NoticeService.BBS_ID, nttId);
+        FileVO file = StringUtils.hasText(atchFileId) ? fileMngService.selectFileInf(key(atchFileId, fileSn)) : null;
+        if (file == null) {
+            throw messages.notFound("file.notFound");
+        }
+        return open(file);
+    }
+
+    private Download open(FileVO file) {
         Path path = resolveSafely(file.getFileStreCours(), file.getStreFileNm());
         if (!Files.isRegularFile(path)) {
             throw messages.notFound("file.content.notFound");
         }
         return new Download(file, new FileSystemResource(path));
+    }
+
+    private void requireLogin() {
+        if (SecurityUtil.getCurrentUserId() == null) {
+            throw messages.denied("common.login.required");
+        }
+    }
+
+    /** 이름·확장자·시그니처 검사. 디스크에는 아직 쓰지 않는다 */
+    private CheckedUpload check(MultipartFile multipartFile) {
+        if (multipartFile == null || multipartFile.isEmpty()) {
+            throw messages.business("file.required");
+        }
+        String originalName = sanitizeFileName(multipartFile.getOriginalFilename(), messages);
+        String ext = extractExtension(originalName);
+        List<String> allowed = appProperties.file().allowedExtensions();
+        if (!allowed.contains(ext)) {
+            throw messages.business("file.extension.denied", String.join(", ", allowed));
+        }
+        verifySignature(multipartFile, ext);
+        return new CheckedUpload(multipartFile, originalName, ext);
+    }
+
+    /** 업로드 루트/yyyy/MM 아래에 UUID 이름으로 저장하고 파일 정보(ID·순번 제외)를 만든다 */
+    private FileVO writeToDisk(CheckedUpload upload) {
+        String subDir = YearMonth.now(clock).format(SUB_DIR_FORMAT);
+        String storedName = UUID.randomUUID().toString().replace("-", "");
+        Path target = resolveSafely(subDir, storedName);
+
+        try {
+            Files.createDirectories(target.getParent());
+            try (InputStream in = upload.file().getInputStream()) {
+                Files.copy(in, target);
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException("첨부파일 저장 중 오류가 발생했습니다.", e);
+        }
+        deleteOnRollback(target);
+
+        FileVO file = new FileVO();
+        file.setFileStreCours(subDir);
+        file.setStreFileNm(storedName);
+        file.setOrignlFileNm(upload.originalName());
+        file.setFileExtsn(upload.extension());
+        file.setFileMg(Long.toString(upload.file().getSize()));
+        return file;
+    }
+
+    private static FileVO key(String atchFileId, int fileSn) {
+        FileVO key = new FileVO();
+        key.setAtchFileId(atchFileId);
+        key.setFileSn(Integer.toString(fileSn));
+        return key;
+    }
+
+    private static long sizeOf(FileVO file) {
+        return StringUtils.hasText(file.getFileMg()) ? Long.parseLong(file.getFileMg().trim()) : 0L;
     }
 
     private String nextAtchFileId() {

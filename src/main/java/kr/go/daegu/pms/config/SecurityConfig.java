@@ -68,7 +68,8 @@ public class SecurityConfig {
                 // 공개 페이지 (메인, 로그인, 공고 목록/상세 조회)
                 .requestMatchers("/", "/login", "/privacy").permitAll()
                 .requestMatchers(HttpMethod.GET, "/announcements", "/announcements/*").permitAll()
-                .requestMatchers(HttpMethod.GET, "/notices", "/notices/*").permitAll()
+                // 공지 첨부는 공지처럼 누구나 받는다. 삭제된 공지의 파일인지는 FileService 가 다시 확인한다
+                .requestMatchers(HttpMethod.GET, "/notices", "/notices/*", "/notices/*/files/*").permitAll()
                 .requestMatchers(HttpMethod.GET, "/faqs").permitAll()
                 // 평가위원 전용 채점 화면
                 .requestMatchers("/evaluator/**").hasRole("EVALUATOR")

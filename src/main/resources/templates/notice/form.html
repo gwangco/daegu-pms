@@ -24,23 +24,71 @@
 
     <div class="container">
         <div class="detail-layout">
-            <!--/* th:action 을 쓰면 Spring Security CSRF 토큰이 hidden 으로 자동 포함된다 */-->
+            <!--/*
+                첨부파일이 있으므로 multipart/form-data. th:action 을 쓰면 Spring Security CSRF 토큰이 hidden 으로 자동 포함된다.
+                첨부 규칙(개수·크기)은 게시판 속성(policy)에서 읽어 안내하고, 같은 값으로 서버가 다시 검사한다
+            */-->
             <form th:action="${isNew} ? @{/notices/new} : @{/notices/{id}/edit(id=${notice.nttId})}"
-                  th:object="${notice}" method="post" class="panel form-panel">
-                <div class="mb-3">
-                    <label for="nttSj" class="form-label">제목 <span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden">(필수)</span></label>
-                    <input type="text" th:field="*{nttSj}" class="form-control" th:errorclass="is-invalid" maxlength="200" required>
-                    <div class="invalid-feedback" th:errors="*{nttSj}"></div>
+                  th:object="${notice}" method="post" enctype="multipart/form-data" class="panel form-panel">
+                <div th:if="${#fields.hasGlobalErrors()}" class="alert alert-danger" role="alert">
+                    <div th:each="err : ${#fields.globalErrors()}" th:text="${err}">오류</div>
+                    <div class="small mt-1">입력한 제목과 내용은 그대로 두었습니다. 첨부파일은 다시 선택하세요.</div>
                 </div>
-                <div class="form-check mb-3">
-                    <input type="checkbox" th:field="*{noticeAt}" value="Y" class="form-check-input">
-                    <label class="form-check-label" th:for="${#ids.prev('noticeAt')}">중요 공지 (목록 상단 고정)</label>
-                </div>
-                <div>
-                    <label for="nttCn" class="form-label">내용 <span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden">(필수)</span></label>
-                    <textarea th:field="*{nttCn}" class="form-control" th:errorclass="is-invalid" rows="12" maxlength="4000" required></textarea>
-                    <div class="invalid-feedback" th:errors="*{nttCn}"></div>
-                </div>
+
+                <section class="form-section" aria-labelledby="sec-content">
+                    <h2 id="sec-content" class="form-section-title">내용</h2>
+                    <div class="mb-3">
+                        <label for="nttSj" class="form-label">제목 <span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden">(필수)</span></label>
+                        <input type="text" th:field="*{nttSj}" class="form-control" th:errorclass="is-invalid" maxlength="200" required>
+                        <div class="invalid-feedback" th:errors="*{nttSj}"></div>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input type="checkbox" th:field="*{noticeAt}" value="Y" class="form-check-input">
+                        <label class="form-check-label" th:for="${#ids.prev('noticeAt')}">중요 공지 (목록 상단 고정)</label>
+                    </div>
+                    <div>
+                        <label for="nttCn" class="form-label">내용 <span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden">(필수)</span></label>
+                        <textarea th:field="*{nttCn}" class="form-control" th:errorclass="is-invalid" rows="12" maxlength="4000" required></textarea>
+                        <div class="invalid-feedback" th:errors="*{nttCn}"></div>
+                    </div>
+                </section>
+
+                <section class="form-section" aria-labelledby="sec-files">
+                    <h2 id="sec-files" class="form-section-title">첨부파일</h2>
+
+                    <!--/* 이미 올린 파일: 지울 파일에 표시하면 저장할 때 함께 지운다 (서버는 이 공지에 있는 순번만 지운다) */-->
+                    <ul th:unless="${#lists.isEmpty(files)}" class="file-list file-list-edit mb-3">
+                        <li th:each="f : ${files}">
+                            <th:block th:replace="~{fragments/common :: fileIcon(${f.extension()})}"></th:block>
+                            <span class="file-name" th:text="${f.name()}">공고문.pdf</span>
+                            <span class="file-size" th:text="${f.sizeLabel()}">1.2MB</span>
+                            <span class="form-check ms-auto mb-0">
+                                <input type="checkbox" class="form-check-input" name="deleteFileSn"
+                                       th:id="${'deleteFile' + f.fileSn()}" th:value="${f.fileSn()}">
+                                <label class="form-check-label" th:for="${'deleteFile' + f.fileSn()}">
+                                    삭제<span class="visually-hidden" th:text="${' ' + f.name()}"></span>
+                                </label>
+                            </span>
+                        </li>
+                    </ul>
+
+                    <th:block th:if="${policy.allowed}">
+                        <label for="files" class="form-label">파일 추가</label>
+                        <input type="file" id="files" name="files" class="form-control" multiple
+                               accept=".pdf,.hwp,.hwpx,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.zip"
+                               th:attr="data-max-mb=${policy.maxFileSizeMb > 0} ? ${policy.maxFileSizeMb} : null,
+                                        data-max-count=${policy.posblAtchFileNumber},
+                                        data-existing-count=${#lists.size(files)}"
+                               aria-describedby="filesHelp">
+                        <div id="filesHelp" class="form-text">
+                            공지 하나에 최대 <span th:text="${policy.posblAtchFileNumber}">3</span>개<th:block th:if="${policy.maxFileSizeMb > 0}">,
+                            파일당 <span th:text="${policy.maxFileSizeMb}">10</span>MB</th:block>.
+                            PDF·HWP(X)·DOC(X)·XLS(X)·JPG·PNG·ZIP
+                        </div>
+                    </th:block>
+                    <p th:unless="${policy.allowed}" class="form-text m-0">공지사항 게시판은 지금 첨부파일을 받지 않습니다.</p>
+                </section>
+
                 <div class="form-actions">
                     <a th:href="${isNew} ? @{/notices} : @{/notices/{id}(id=${notice.nttId})}" class="btn btn-outline-secondary">취소</a>
                     <button type="submit" class="btn btn-primary" th:text="${isNew} ? '등록' : '저장'">등록</button>
@@ -52,7 +100,9 @@
                 <ol class="form-guide">
                     <li>중요 공지는 목록 맨 위에 고정되고 메인 화면에 "중요"로 표시됩니다.</li>
                     <li>본문은 입력한 줄바꿈 그대로 보이고, HTML 태그는 글자 그대로 표시됩니다.</li>
-                    <li>공지는 전자정부 공통컴포넌트 게시판(공지사항 게시판)에 저장됩니다.</li>
+                    <li>첨부파일은 누구나 내려받을 수 있습니다. 개인정보가 담긴 파일은 올리지 마세요.</li>
+                    <li>공지를 삭제하면 첨부파일도 내려받을 수 없게 됩니다.</li>
+                    <li>첨부 개수·크기는 게시판 속성(공통컴포넌트 게시판 관리)에서 정합니다.</li>
                 </ol>
             </aside>
         </div>

@@ -16,4 +16,13 @@
         SELECT application_id FROM settlement WHERE receipt_atch_file_id = #{atchFileId}
     </select>
 
+    <!-- 공지 첨부: 공통컴포넌트 게시판 테이블(대문자)에서 삭제되지 않은 글만 -->
+    <select id="selectNoticeAtchFileId" resultType="string">
+        SELECT ATCH_FILE_ID
+          FROM COMTNBBS
+         WHERE BBS_ID = #{bbsId}
+           AND NTT_ID = #{nttId}
+           AND USE_AT = 'Y'
+    </select>
+
 </mapper>

@@ -14,6 +14,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import egovframework.com.cmm.service.EgovFileMngService;
 import egovframework.com.cmm.service.FileVO;
@@ -31,6 +33,8 @@ import lombok.RequiredArgsConstructor;
  *    2026.07.09.	EricSeokgon	PMD UseCollectionIsEmpty: size() != 0 대신 !isEmpty() 사용
  *    2026.10.22.	gwangco	D-PMS 적용: FILE_STRE_COURS 를 업로드 루트 기준 하위 경로로 저장하므로
  *    	                	물리 파일 삭제 시 루트(Globals.fileStorePath)와 합치고 루트 밖 경로는 지우지 않음
+ *    2026.10.23.	gwangco	D-PMS 8차: deleteFileInf 의 물리 파일 삭제를 트랜잭션 커밋 뒤로 미룸
+ *    	                	(원본은 DB 삭제 전에 파일부터 지워서, 이후 롤백되면 DB 에는 남고 파일만 사라졌다)
  *
  * @author 공통 서비스 개발팀 이삼섭
  * @since 2009. 3. 25.
@@ -120,8 +124,30 @@ public class EgovFileMngServiceImpl extends EgovAbstractServiceImpl implements E
 	 */
 	@Override
 	public int deleteFileInf(FileVO fvo) {
-		deletePhysicalFile(fileMngDAO.selectFileInf(fvo));
-		return fileMngDAO.deleteFileInf(fvo);
+		FileVO stored = fileMngDAO.selectFileInf(fvo);
+		int deleted = fileMngDAO.deleteFileInf(fvo);
+		deletePhysicalFileAfterCommit(stored);
+		return deleted;
+	}
+
+	/**
+	 * 실제 파일은 DB 삭제가 커밋된 뒤에 지운다. 트랜잭션 밖에서 호출되면 바로 지운다.
+	 * @param fvo - 삭제할 파일의 상세정보(파일 상세정보 삭제 전에 조회해 둔 것)
+	 */
+	private void deletePhysicalFileAfterCommit(FileVO fvo) {
+		if (fvo == null) {
+			return;
+		}
+		if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+			deletePhysicalFile(fvo);
+			return;
+		}
+		TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+			@Override
+			public void afterCommit() {
+				deletePhysicalFile(fvo);
+			}
+		});
 	}
 
 	/**

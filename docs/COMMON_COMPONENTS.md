@@ -11,8 +11,8 @@
 | :--- | :--- | :--- | :--- |
 | 공통 기반 | `cmm` (`EgovComAbstractDAO`, `ComDefaultVO`, `ComDefaultCodeVO`) | — | 모든 공통컴포넌트 DAO 의 부모 |
 | 공통코드 | `cmm.service.EgovCmmUseService` | `COMTCCMMNCLCODE`, `COMTCCMMNCODE`, `COMTCCMMNDETAILCODE` | 지원 분야·비목·FAQ 분류 선택 상자, 코드 검증 |
-| 첨부파일 | `cmm.service.EgovFileMngService` | `COMTNFILE`, `COMTNFILEDETAIL` | 사업계획서, 정산 증빙 |
-| 게시판 | `cop.bbs` (`EgovArticleService`) | `COMTNBBSMASTER`, `COMTNBBS` | 공지사항 |
+| 첨부파일 | `cmm.service.EgovFileMngService` | `COMTNFILE`, `COMTNFILEDETAIL` | 사업계획서, 정산 증빙, 공지 첨부(8차, 묶음 하나에 여러 파일) |
+| 게시판 | `cop.bbs` (`EgovArticleService`) | `COMTNBBSMASTER`, `COMTNBBS` | 공지사항. 첨부 허용·개수·크기는 게시판 속성(`COMTNBBSMASTER`) 값으로 정함 |
 | FAQ | `uss.olh.faq` (`EgovFaqService`) | `COMTNFAQINFO` | 자주 묻는 질문 |
 | 채번 | (실행환경 ID Generation) | `COMTECOPSEQ` | 접수번호, 첨부파일·게시물·FAQ ID |
 
@@ -56,6 +56,11 @@ NoticeController     NoticeServiceImpl                 EgovArticleService       
 | 수정 시 게시 기간·비밀글·볼드·첨부 등 모든 컬럼 갱신 | 제목·내용·중요여부만, 삭제된 글은 수정 불가 | 화면에 없는 값이 빈 값으로 덮이지 않게 |
 | 목록 정렬 `SORT_ORDR DESC` (공지는 별도 쿼리) | `NOTICE_AT DESC, SORT_ORDR DESC` | 중요 공지를 한 목록 위에 고정. 목록에서는 본문(`NTT_CN`)을 조회하지 않음 |
 | 답글·방명록·블로그·첨부 업로드(`EgovFileMngUtil`) | 제거 | 공지 게시판에서 쓰지 않는 기능. 업로드는 검증이 더 강한 D-PMS `FileService` 를 쓴다 |
+| 등록 시 `ATCH_FILE_ID` 저장 (원본은 컨트롤러가 정한 값) | 6차: 항상 비움 → 8차: 서버가 새로 만든 첨부 ID 만 저장 (`Board` 를 업무 서비스가 새로 만들어 채움) | 화면 값으로 남의 첨부 묶음을 연결하지 못하게. 원본 v5.0.7 컨트롤러도 수정 때 "원본 게시물의 첨부 ID 만 쓴다"는 IDOR 조치를 해 두었다 |
+| 수정 시 `ATCH_FILE_ID` | 비어 있을 때만 연결(`IFNULL`), 이미 연결된 값은 바꾸지 않음 | 첫 첨부 때만 묶음을 연결하고, 다른 게시물의 묶음으로 바꿔치기할 수 없게 |
+| 목록의 `ATCH_FILE_ID` | 파일이 하나라도 남아 있을 때만 반환 (`EXISTS`) | 파일을 모두 지운 빈 묶음에 첨부 표시(클립)가 붙지 않게 |
+
+D-PMS 에서 더한 것: 공지 수정 전에 게시물 행을 `SELECT … FOR UPDATE` 로 잠그고(`NoticeMapper`), 게시판 속성의 첨부 가능 여부·개수·크기를 업무 서비스가 서버에서 검사한다. 원본은 게시판 속성을 게시판 속성관리(`EgovBBSMasterService`)로 읽지만, D-PMS 는 그 컴포넌트를 가져오지 않고 필요한 세 값만 조회한다.
 
 ### FAQ (`uss.olh.faq`)
 
@@ -74,8 +79,9 @@ NoticeController     NoticeServiceImpl                 EgovArticleService       
 | :--- | :--- | :--- |
 | `FILE_STRE_COURS` 에 서버 절대 경로 저장 | 업로드 루트 아래 하위 경로(`yyyy/MM`)만 저장, 루트는 설정값 | 서버를 옮겨도 DB 를 고칠 필요가 없고 서버 디렉터리 구조가 DB 에 남지 않는다 |
 | 물리 파일 삭제 `new File(경로, 이름).delete()` | 루트와 합친 뒤 루트 밖이면 삭제하지 않음 | 경로 조작(`../`)으로 다른 파일을 지우지 못하게 |
-| 업로드 처리 `EgovFileMngUtil.parseFileInf` | 가져오지 않음. D-PMS `FileServiceImpl` 이 확장자·시그니처 검사, UUID 저장명, 롤백 시 파일 삭제 후 `insertFileInf` 호출 | 원본 유틸은 정적 `globals.properties` 와 commons-lang 2 에 의존하고, D-PMS 에 이미 더 엄격한 검증이 있다 |
-| 다운로드 컨트롤러(`EgovFileDownloadController`) | 가져오지 않음. `/files/{FILE_ID}/{순번}` 경로 형식 고정 + 파일이 연결된 신청서·정산의 열람 권한 재검사 | 첨부파일 ID 는 순번이라 추측할 수 있다 (IDOR) |
+| `deleteFileInf`: DB 행을 지우기 전에 실제 파일부터 삭제 | DB 삭제 후 트랜잭션 **커밋 뒤에** 실제 파일 삭제 (8차) | 뒤에서 오류가 나 롤백되면 DB 에는 파일 정보가 남고 실제 파일만 사라졌다 |
+| 업로드 처리 `EgovFileMngUtil.parseFileInf` | 가져오지 않음. D-PMS `FileServiceImpl` 이 확장자·시그니처 검사, UUID 저장명, 롤백 시 파일 삭제 후 `insertFileInf`(파일 1개)·`insertFileInfs`/`updateFileInfs`(여러 개, 순번은 `getMaxFileSN`) 호출 | 원본 유틸은 정적 `globals.properties` 와 commons-lang 2 에 의존하고, D-PMS 에 이미 더 엄격한 검증이 있다 |
+| 다운로드 컨트롤러(`EgovFileDownloadController`) | 가져오지 않음. 업무 첨부는 `/files/{FILE_ID}/{순번}`(로그인 + 신청서·정산 열람 권한 재검사), 공지 첨부는 `/notices/{번호}/files/{순번}`(삭제되지 않은 공지의 파일만, 비로그인 허용) | 첨부파일 ID 는 순번이라 추측할 수 있다 (IDOR). 공개 범위를 "공개된 게시물의 첨부"로 좁혔다 |
 
 ### 공통코드 (`cmm.service.EgovCmmUseService`)
 
@@ -107,9 +113,11 @@ NoticeController     NoticeServiceImpl                 EgovArticleService       
 
 `CommonComponentIntegrationTest` 가 옛 테이블이 없어졌는지, 건수·ID 형식·채번 다음 번호가 맞는지 확인한다.
 
+8차의 `V3__allow_notice_attachments.sql` 은 데이터를 옮기지 않고 게시판 속성 값만 바꾼다: 공지 게시판 첨부 가능(`FILE_ATCH_POSBL_AT='Y'`), 공지 하나에 3개(`ATCH_POSBL_FILE_NUMBER`), 파일당 10MB(`ATCH_POSBL_FILE_SIZE`, 바이트). 규칙을 바꿀 때 코드가 아니라 이 값을 고치면 된다 (`NoticeAttachmentIntegrationTest` 가 속성을 N 으로 바꾸면 업로드를 거부하는지 확인).
+
 ## 5. 원본을 업데이트할 때
 
 1. 새 태그를 받아 이 문서의 파일 목록과 비교한다 (`git diff v5.0.7 v5.0.x -- <파일>`).
 2. 원본 변경을 반영한 뒤 위 "바꾼 점"을 다시 적용한다. 각 파일 머리말 개정이력의 `D-PMS 적용` 줄이 체크리스트다.
-3. 테이블 구조가 바뀌었으면 새 Flyway 버전(V3 …)으로 추가한다. 이미 적용한 V1·V2 파일은 고치지 않는다.
+3. 테이블 구조가 바뀌었으면 새 Flyway 버전(V4 …)으로 추가한다. 이미 적용한 V1~V3 파일은 고치지 않는다.
 4. `./mvnw clean verify` 로 전체 테스트를 확인한다.

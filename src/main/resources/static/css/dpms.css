@@ -2175,6 +2175,75 @@ a.cell-link:hover {
     min-width: 14rem;
 }
 
+/* 첨부파일 목록 (공지 상세·수정) */
+.file-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.file-list > li {
+    display: flex;
+    align-items: center;
+    gap: .625rem;
+    padding: .875rem 1.5rem;
+    border-bottom: 1px solid var(--dp-line-soft);
+}
+
+.file-list > li:last-child {
+    border-bottom: 0;
+}
+
+.file-icon {
+    flex: none;
+    color: var(--dp-primary-text);
+    font-size: 1.25rem;
+    line-height: 1;
+}
+
+.file-name {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    font-weight: 500;
+}
+
+a.file-name {
+    color: var(--dp-text);
+    text-decoration: none;
+}
+
+a.file-name:hover {
+    color: var(--dp-primary-text);
+    text-decoration: underline;
+}
+
+.file-size {
+    flex: none;
+    color: var(--dp-text-muted);
+    font-size: var(--dp-fs-small);
+}
+
+.file-download {
+    flex: none;
+    margin-left: auto;
+    color: var(--krds-gray-50);
+}
+
+/* 수정 화면: 이미 올린 파일 목록은 테두리 상자로 */
+.file-list-edit {
+    border: 1px solid var(--dp-line);
+    border-radius: var(--dp-radius-lg);
+}
+
+.file-list-edit > li {
+    padding: .75rem 1rem;
+}
+
+.attach-mark {
+    margin-left: .25rem;
+    color: var(--dp-text-muted);
+}
+
 /* ---------- 알림 ---------- */
 
 .alert {
@@ -2606,6 +2675,7 @@ a.cell-link:hover {
     .panel-body,
     .ann-list > li,
     .notice-list > li,
+    .file-list > li,
     .link-list a {
         padding-left: 1.25rem;
         padding-right: 1.25rem;

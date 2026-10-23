@@ -4,6 +4,27 @@
 
 ---
 
+## [0.8.0] 8차 스프린트 — 공지사항 첨부파일 (2026-10-23)
+브랜치: `feature/sprint8-notice-attachments` · 상세: [docs/SPRINT8_NOTICE_ATTACHMENTS.md](docs/SPRINT8_NOTICE_ATTACHMENTS.md)
+
+### 추가 (Added)
+- 공지사항 첨부파일: 공지 하나에 3개, 파일당 10MB. 허용 여부·개수·크기는 공통컴포넌트 게시판 속성(`COMTNBBSMASTER`)에서 읽음 (Flyway V3)
+- 공지 첨부 다운로드 `/notices/{번호}/files/{순번}` (비로그인 허용, 삭제된 공지·없는 순번은 404)
+- 수정 화면의 기존 첨부 삭제 표시, 선택한 파일 이름·크기와 더 올릴 수 있는 개수 안내
+- 공지 상세 첨부 목록(형식 아이콘·크기), 목록·메인 화면의 첨부 표시
+- 테스트 166건 (+10): 게시판 속성, 첨부 ID 위조 무시, 비로그인 다운로드·404, 개수·크기·형식 거부, 수정 시 순번, 커밋 뒤 파일 삭제, 첨부 금지 설정, 기업회원 거부
+
+### 변경 (Changed)
+- 공지 등록·수정과 첨부 저장을 한 트랜잭션으로 처리. 수정은 게시물 행을 잠그고, 첨부 ID 는 잠근 행의 값만 씀
+- 첨부 저장(`FileService.storeFiles`)은 모든 파일을 먼저 검사한 뒤 저장하고, 기존 묶음에는 마지막 순번 다음부터 추가
+- 공통컴포넌트 게시판 SQL: 등록 시 서버가 만든 첨부 ID 저장, 수정 시 비어 있을 때만 연결, 목록은 파일이 남아 있을 때만 첨부 ID 반환
+- 버전 0.8.0-SNAPSHOT
+
+### 수정 (Fixed)
+- 공통컴포넌트 `EgovFileMngServiceImpl.deleteFileInf` 가 DB 삭제 전에 실제 파일부터 지워, 뒤에서 롤백되면 DB 에는 남고 파일만 사라지던 문제 (커밋 뒤에 지우도록 변경)
+
+---
+
 ## [0.7.0] 7차 스프린트 — 화면 디자인 개편 (KRDS 기준) (2026-10-23)
 브랜치: `feature/sprint7-design-renewal` · 상세: [docs/SPRINT7_DESIGN_RENEWAL.md](docs/SPRINT7_DESIGN_RENEWAL.md)
 
