@@ -20,6 +20,7 @@
             <p class="lead-sub">
                 비밀번호를 <span th:text="${lockPolicy.maxFailures}">5</span>회 연속 틀린 계정은
                 <span th:text="${lockPolicy.lockMinutes}">30</span>분 동안 잠깁니다. 본인 확인 후 바로 풀어 줄 수 있습니다.
+                가입 화면으로 들어온 기업회원은 기업 정보를 확인한 뒤 승인해야 로그인할 수 있습니다.
                 연락처·이메일은 가려서 표시합니다.
             </p>
         </div>
@@ -27,7 +28,7 @@
 
     <div class="container">
         <form id="searchForm" th:action="@{/admin/users}" th:object="${searchVO}" method="get" class="search-box" role="search"
-              th:with="filtered=${!#strings.isEmpty(searchVO.role) or !#strings.isEmpty(searchVO.searchKeyword) or searchVO.lockedOnly == 'Y'}">
+              th:with="filtered=${!#strings.isEmpty(searchVO.role) or !#strings.isEmpty(searchVO.searchKeyword) or searchVO.lockedOnly == 'Y' or searchVO.pendingOnly == 'Y'}">
             <input type="hidden" th:field="*{pageIndex}">
             <div class="row g-3 align-items-end">
                 <div class="col-12 col-md-3">
@@ -45,9 +46,15 @@
                     <input type="search" th:field="*{searchKeyword}" class="form-control" placeholder="아이디·이름·소속" maxlength="50">
                 </div>
                 <div class="col-12 col-md-auto">
-                    <div class="form-check mb-md-3">
-                        <input type="checkbox" th:field="*{lockedOnly}" value="Y" class="form-check-input">
-                        <label class="form-check-label" th:for="${#ids.prev('lockedOnly')}">잠긴 계정만</label>
+                    <div class="d-flex flex-wrap gap-3 mb-md-3">
+                        <div class="form-check m-0">
+                            <input type="checkbox" th:field="*{lockedOnly}" value="Y" class="form-check-input">
+                            <label class="form-check-label" th:for="${#ids.prev('lockedOnly')}">잠긴 계정만</label>
+                        </div>
+                        <div class="form-check m-0">
+                            <input type="checkbox" th:field="*{pendingOnly}" value="Y" class="form-check-input">
+                            <label class="form-check-label" th:for="${#ids.prev('pendingOnly')}">승인 대기만</label>
+                        </div>
                     </div>
                 </div>
                 <div class="col-12 col-md-auto">
@@ -80,21 +87,28 @@
                     </thead>
                     <tbody>
                     <tr th:each="u : ${users}">
-                        <td class="cell-title fw-bold" th:text="${u.userId}">company1</td>
+                        <td class="cell-title">
+                            <span class="fw-bold" th:text="${u.userId}">company1</span>
+                            <span class="cell-sub text-nowrap" th:if="${u.createdAt != null}">가입 <span th:text="${#temporals.format(u.createdAt, 'yyyy-MM-dd')}">2026-10-21</span></span>
+                        </td>
                         <td data-label="이름" th:text="${u.userName}">이대표</td>
                         <td data-label="권한"><span class="status status-blue" th:text="${u.roleLabel}">기업회원</span></td>
-                        <td data-label="소속" class="small" th:text="${u.companyName}">소속</td>
+                        <td data-label="소속" class="small">
+                            <span th:text="${u.companyName}">소속</span>
+                            <span class="cell-sub text-nowrap" th:if="${u.role == 'ROLE_COMPANY'}" th:text="${u.businessNo}">504-81-98761</span>
+                        </td>
                         <td data-label="연락처" class="text-nowrap" th:text="${u.phone}">010-****-4001</td>
                         <td data-label="이메일" class="small" th:text="${u.email}">ce*@example.com</td>
                         <td data-label="계정 상태" class="text-center">
                             <span th:if="${!u.enabled}" class="status status-neutral">사용 중지</span>
-                            <div th:if="${u.enabled and u.lockedAt != null}">
+                            <span th:if="${u.enabled and !u.approved}" class="status status-warning">승인 대기</span>
+                            <div th:if="${u.enabled and u.approved and u.lockedAt != null}">
                                 <span class="status status-danger">잠김</span>
                                 <div class="small text-sub mt-1">
                                     <span th:text="${#temporals.format(lockPolicy.unlockAt(u.lockedAt), 'HH:mm')}">10:30</span> 해제 예정
                                 </div>
                             </div>
-                            <div th:if="${u.enabled and u.lockedAt == null}">
+                            <div th:if="${u.enabled and u.approved and u.lockedAt == null}">
                                 <span class="status status-success">정상</span>
                                 <div th:if="${u.loginFailCount > 0}" class="small text-sub mt-1">
                                     연속 실패 <span th:text="${u.loginFailCount}">1</span>회
@@ -103,13 +117,20 @@
                         </td>
                         <td data-label="최근 로그인" class="text-center small text-nowrap"
                             th:text="${u.lastLoginAt != null} ? ${#temporals.format(u.lastLoginAt, 'yyyy-MM-dd HH:mm')} : '-'">-</td>
-                        <td class="text-center cell-actions" th:if="${u.lockedAt != null}">
+                        <td class="text-center cell-actions" th:if="${u.enabled and !u.approved}">
+                            <form th:action="@{/admin/users/{id}/approve(id=${u.userId})}" method="post" class="m-0"
+                                  th:attr="data-confirm=${u.userId} + ' 계정(' + ${u.companyName} + ')의 가입을 승인하시겠습니까? 기업명과 사업자등록번호를 먼저 확인하세요.'">
+                                <button type="submit" class="btn btn-sm btn-primary text-nowrap">가입 승인</button>
+                            </form>
+                        </td>
+                        <td class="text-center cell-actions" th:if="${u.approved and u.lockedAt != null}">
                             <form th:action="@{/admin/users/{id}/unlock(id=${u.userId})}" method="post" class="m-0"
                                   th:attr="data-confirm=${u.userId} + ' 계정의 잠금을 해제하시겠습니까?'">
                                 <button type="submit" class="btn btn-sm btn-outline-primary text-nowrap">잠금 해제</button>
                             </form>
                         </td>
-                        <td class="text-center text-sub small d-none d-md-table-cell" th:if="${u.lockedAt == null}">-</td>
+                        <td class="text-center text-sub small d-none d-md-table-cell"
+                            th:if="${!(u.enabled and !u.approved) and !(u.approved and u.lockedAt != null)}">-</td>
                     </tr>
                     <tr th:if="${#lists.isEmpty(users)}">
                         <td colspan="9" class="empty-row">조건에 맞는 사용자가 없습니다.</td>

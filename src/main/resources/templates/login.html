@@ -14,6 +14,9 @@
                 <h1>로그인</h1>
                 <p class="text-sub mb-4">지원사업 신청·심사·정산 업무를 이용하려면 로그인하세요.</p>
 
+                <div th:if="${signupDone}" class="alert alert-success" role="status">
+                    <i class="bi bi-check-circle-fill me-1" aria-hidden="true"></i><span th:text="${signupDone}">기업회원 가입 신청을 받았습니다.</span>
+                </div>
                 <div th:if="${loginError}" class="alert alert-danger" role="alert">
                     <i class="bi bi-exclamation-triangle-fill me-1" aria-hidden="true"></i><span th:text="${loginError}">아이디 또는 비밀번호가 일치하지 않습니다.</span>
                 </div>
@@ -31,6 +34,7 @@
                     </div>
                     <button type="submit" class="btn btn-primary btn-xl w-100">로그인</button>
                 </form>
+                <p class="login-links">지원사업을 신청할 기업이신가요?<a th:href="@{/signup}">기업회원 가입</a></p>
                 <p class="notice-box mt-3 mb-0">
                     <i class="bi bi-shield-lock" aria-hidden="true"></i><span th:text="${loginPolicy}">비밀번호를 5회 연속 틀리면 계정이 30분 동안 잠깁니다.</span>
                 </p>

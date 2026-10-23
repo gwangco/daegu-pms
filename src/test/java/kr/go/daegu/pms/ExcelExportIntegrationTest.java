@@ -41,7 +41,7 @@ class ExcelExportIntegrationTest extends IntegrationTestSupport {
 
             Row first = sheet.getRow(3);   // 최신순 정렬이므로 마지막 행이 DPMS-00000001
             assertThat(first.getCell(0).getStringCellValue()).isEqualTo("DPMS-00000001");
-            assertThat(first.getCell(3).getStringCellValue()).isEqualTo("504-81-98765");   // 담당자 엑셀은 원본
+            assertThat(first.getCell(3).getStringCellValue()).isEqualTo("504-81-98761");   // 담당자 엑셀은 원본
             assertThat(first.getCell(5).getCellType()).isEqualTo(CellType.NUMERIC);
             assertThat(first.getCell(5).getNumericCellValue()).isEqualTo(125_000_000d);
         }

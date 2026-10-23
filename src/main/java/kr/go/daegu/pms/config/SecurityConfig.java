@@ -65,8 +65,9 @@ public class SecurityConfig {
                 // 공지사항 등록/수정/삭제는 담당자/관리자 (아래 공지 조회 허용 규칙보다 먼저)
                 .requestMatchers("/notices/new", "/notices/*/edit", "/notices/*/delete").hasAnyRole("MANAGER", "ADMIN")
                 .requestMatchers("/faqs/new", "/faqs/*/edit", "/faqs/*/delete").hasAnyRole("MANAGER", "ADMIN")
-                // 공개 페이지 (메인, 로그인, 공고 목록/상세 조회)
-                .requestMatchers("/", "/login", "/privacy").permitAll()
+                // 공개 페이지 (메인, 로그인, 기업회원 가입, 공고 목록/상세 조회)
+                // 가입 화면은 로그인한 사용자가 열면 컨트롤러가 메인으로 돌려보낸다
+                .requestMatchers("/", "/login", "/privacy", "/signup").permitAll()
                 .requestMatchers(HttpMethod.GET, "/announcements", "/announcements/*").permitAll()
                 // 공지 첨부는 공지처럼 누구나 받는다. 삭제된 공지의 파일인지는 FileService 가 다시 확인한다
                 .requestMatchers(HttpMethod.GET, "/notices", "/notices/*", "/notices/*/files/*").permitAll()

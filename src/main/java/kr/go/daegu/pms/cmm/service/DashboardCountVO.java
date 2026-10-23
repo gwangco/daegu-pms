@@ -16,4 +16,5 @@ public class DashboardCountVO {
     // 총괄관리자
     private int lockedUsers;
     private int loginFailuresToday;
+    private int pendingMembers;
 }

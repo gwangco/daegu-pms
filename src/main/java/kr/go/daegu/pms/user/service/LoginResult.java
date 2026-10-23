@@ -10,6 +10,7 @@ public enum LoginResult {
     FAIL_UNKNOWN_ID("없는 아이디"),
     LOCKED("잠긴 계정 시도"),
     DISABLED("중지된 계정 시도"),
+    PENDING("승인 대기 계정 시도"),
     LOGOUT("로그아웃");
 
     private final String label;

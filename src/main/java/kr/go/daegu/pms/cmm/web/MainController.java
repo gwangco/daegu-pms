@@ -60,6 +60,7 @@ public class MainController {
                 case LoginFailureHandler.ERROR_LOCKED ->
                         messages.text("login.locked", lockPolicy.getMaxFailures(), lockPolicy.getLockMinutes());
                 case LoginFailureHandler.ERROR_DISABLED -> messages.text("login.disabled");
+                case LoginFailureHandler.ERROR_PENDING -> messages.text("login.pending");
                 default -> messages.text("login.failed");
             };
             model.addAttribute("loginError", message);

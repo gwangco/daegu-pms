@@ -21,7 +21,7 @@
 
     <groupId>kr.go.daegu</groupId>
     <artifactId>daegu-pms</artifactId>
-    <version>0.8.0-SNAPSHOT</version>
+    <version>0.9.0-SNAPSHOT</version>
     <name>daegu-pms</name>
     <description>D-PMS 대구형 공공 R&amp;D·창업 지원사업 통합관리 및 e-정산 시스템 (eGovFrame 5.1)</description>
 

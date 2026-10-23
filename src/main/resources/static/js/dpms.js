@@ -226,6 +226,34 @@
         }
     });
 
+    // ---------- 모두 동의 (기업회원 가입 약관) ----------
+    // data-check-all="그룹" 상자를 누르면 같은 그룹(data-check-group)을 모두 바꾸고,
+    // 그룹 상자를 하나씩 바꾸면 모두 동의 상자도 따라 바뀐다. 동의 여부는 서버가 각 필수 항목을 다시 확인한다
+    function syncCheckAll(group) {
+        var all = document.querySelector('[data-check-all="' + group + '"]');
+        var items = document.querySelectorAll('[data-check-group="' + group + '"]');
+        if (all && items.length > 0) {
+            all.checked = Array.prototype.every.call(items, function (item) { return item.checked; });
+        }
+    }
+
+    document.querySelectorAll('[data-check-all]').forEach(function (all) {
+        var group = all.getAttribute('data-check-all');
+        syncCheckAll(group);   // 오류로 다시 그린 화면에서 이미 체크된 상태를 반영
+        all.addEventListener('change', function () {
+            document.querySelectorAll('[data-check-group="' + group + '"]').forEach(function (item) {
+                item.checked = all.checked;
+            });
+        });
+    });
+
+    document.addEventListener('change', function (event) {
+        var group = event.target.getAttribute && event.target.getAttribute('data-check-group');
+        if (group) {
+            syncCheckAll(group);
+        }
+    });
+
     // ---------- 데모 계정 빠른 입력 (로그인 화면) ----------
     document.querySelectorAll('[data-demo-user]').forEach(function (button) {
         button.addEventListener('click', function () {

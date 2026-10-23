@@ -56,6 +56,17 @@ public class AdminUserController {
         return "redirect:/admin/users";
     }
 
+    @PostMapping("/users/{userId}/approve")
+    public String approve(@PathVariable("userId") String userId, RedirectAttributes redirectAttributes) {
+        try {
+            userManageService.updateUserApprove(userId);
+            redirectAttributes.addFlashAttribute("successMessage", messages.text("user.approved", userId));
+        } catch (BusinessException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
+        return "redirect:/admin/users?pendingOnly=Y";
+    }
+
     @GetMapping("/login-history")
     public String loginHistory(@ModelAttribute("searchVO") LoginHistorySearchVO searchVO, Model model) {
         PaginationInfo paginationInfo = pagingHelper.prepare(searchVO);

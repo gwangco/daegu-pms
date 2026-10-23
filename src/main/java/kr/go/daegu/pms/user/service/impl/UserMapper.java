@@ -41,4 +41,13 @@ public interface UserMapper {
     List<UserVO> selectPlainContactList(@Param("prefix") String prefix);
 
     int updateUserContact(@Param("userId") String userId, @Param("email") String email, @Param("phone") String phone);
+
+    /** 기업회원 중 같은 사업자등록번호 수 (생성 컬럼 company_business_no 의 UNIQUE 인덱스로 찾는다) */
+    int selectCompanyBusinessNoCnt(@Param("businessNo") String businessNo);
+
+    /** 기업회원 가입: 권한·승인 대기·동의 일시는 SQL 이 정한다 */
+    int insertCompanyMember(UserVO member);
+
+    /** 승인 대기 계정만 승인된다. 반환값 0 이면 승인 대기가 아닌 계정 */
+    int updateUserApprove(@Param("userId") String userId);
 }

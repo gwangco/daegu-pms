@@ -21,6 +21,13 @@ public interface LoginPolicyService {
     /** 잠긴 계정·사용 중지 계정의 로그인 시도 기록 (실패 횟수는 올리지 않음) */
     void insertBlockedLogin(String loginId, String clientIp, LoginResult result);
 
+    /**
+     * 로그인할 수 없는 계정(Spring Security 의 DisabledException)의 시도 기록.
+     * 가입 승인 대기인지 사용 중지인지 구분해 기록하고, 화면 안내를 고를 수 있게 그 결과를 돌려준다.
+     * @return {@link LoginResult#PENDING} 또는 {@link LoginResult#DISABLED}
+     */
+    LoginResult insertDisabledLogin(String loginId, String clientIp);
+
     void insertLogout(String userId, String clientIp);
 
     /** 접속 기록 목록 (총괄관리자) */

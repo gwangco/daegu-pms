@@ -7,6 +7,7 @@
     <!-- 비밀번호 해시는 인증 쿼리(selectUserForLogin)에서만 조회한다 -->
     <sql id="userColumns">
             user_id, user_name, email, phone, company_name, business_no, role, enabled,
+            approval_status, approved_at, terms_agreed_at, privacy_agreed_at,
             login_fail_count, locked_at, last_login_at, created_at
     </sql>
 
@@ -35,7 +36,7 @@
 
     <!-- 로그인 실패 처리: 같은 계정의 동시 실패가 서로 횟수를 덮어쓰지 않도록 행을 잠근 뒤 계산한다 -->
     <select id="selectUserForUpdate" resultType="userVO">
-        SELECT user_id, login_fail_count, locked_at, enabled
+        SELECT user_id, login_fail_count, locked_at, enabled, approval_status
         FROM users
         WHERE user_id = #{userId}
         FOR UPDATE
@@ -81,6 +82,9 @@
             <if test='lockedOnly == "Y"'>
                 AND locked_at &gt; #{lockedSince}
             </if>
+            <if test='pendingOnly == "Y"'>
+                AND approval_status = 'REQUESTED'
+            </if>
             <if test="searchKeyword != null and searchKeyword != ''">
                 <bind name="keywordPattern" value="'%' + searchKeyword + '%'"/>
                 AND (user_id LIKE #{keywordPattern} OR user_name LIKE #{keywordPattern} OR company_name LIKE #{keywordPattern})
@@ -121,5 +125,38 @@
         FROM users
         <include refid="userSearchCondition"/>
     </select>
+
+    <!-- 기업회원끼리만 비교한다. company_business_no 는 기업회원일 때만 값이 있는 생성 컬럼 (V4) -->
+    <select id="selectCompanyBusinessNoCnt" resultType="int">
+        SELECT COUNT(*)
+        FROM users
+        WHERE company_business_no = #{businessNo}
+    </select>
+
+    <!--
+        기업회원 가입. 권한(ROLE_COMPANY)과 승인 대기(REQUESTED)는 화면 값이 아니라 여기서 고정한다.
+        동의 일시·가입 일시는 업무 시계(audit.now)로 같은 시각을 남긴다.
+        같은 아이디(기본키)나 같은 기업회원 사업자등록번호(UNIQUE)가 먼저 저장돼 있으면 DuplicateKeyException
+    -->
+    <insert id="insertCompanyMember" parameterType="userVO">
+        INSERT INTO users (
+            user_id, password, user_name, email, phone, company_name, business_no,
+            role, enabled, approval_status, terms_agreed_at, privacy_agreed_at, created_at
+        ) VALUES (
+            #{userId}, #{password}, #{userName}, #{email}, #{phone}, #{companyName}, #{businessNo},
+            'ROLE_COMPANY', TRUE, 'REQUESTED', #{audit.now}, #{audit.now}, #{audit.now}
+        )
+    </insert>
+
+    <update id="updateUserApprove">
+        UPDATE users
+        SET approval_status = 'APPROVED',
+            approved_by = #{audit.userId},
+            approved_at = #{audit.now},
+            updated_by = #{audit.userId},
+            updated_at = #{audit.now}
+        WHERE user_id = #{userId}
+          AND approval_status = 'REQUESTED'
+    </update>
 
 </mapper>
