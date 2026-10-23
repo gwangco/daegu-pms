@@ -1,5 +1,6 @@
 package kr.go.daegu.pms.application.web;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import kr.go.daegu.pms.announcement.service.AnnouncementService;
 import kr.go.daegu.pms.announcement.service.AnnouncementVO;
@@ -10,6 +11,8 @@ import kr.go.daegu.pms.application.service.ApplicationVO;
 import kr.go.daegu.pms.cmm.exception.BusinessException;
 import kr.go.daegu.pms.cmm.message.AppMessages;
 import kr.go.daegu.pms.cmm.pagination.PagingHelper;
+import kr.go.daegu.pms.cmm.service.PrivacyAccessLogService;
+import kr.go.daegu.pms.cmm.service.PrivacyAccessLogVO;
 import kr.go.daegu.pms.cmm.util.SecurityUtil;
 import kr.go.daegu.pms.evaluation.service.EvaluationService;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +39,7 @@ public class ApplicationController {
     private final EvaluationService evaluationService;
     private final PagingHelper pagingHelper;
     private final AppMessages messages;
+    private final PrivacyAccessLogService privacyAccessLogService;
 
     // 기업: 본인 신청 내역 / 평가위원: 배정 과제 / 담당자·관리자: 전체 (범위는 서비스에서 강제)
     @GetMapping
@@ -208,8 +212,13 @@ public class ApplicationController {
 
     // 신청서 상세 조회 (열람 권한은 서비스에서 검사)
     @GetMapping("/{id}")
-    public String detail(@PathVariable("id") Long id, Model model) {
+    public String detail(@PathVariable("id") Long id, Model model, HttpServletRequest request) {
         ApplicationVO application = applicationService.selectApplication(id);
+        if (!application.getCompanyUserId().equals(SecurityUtil.getCurrentUserId())) {
+            // 담당자·평가위원이 기업의 신청 정보(대표 연락처·사업자등록번호 등)를 본 기록. 본인 열람은 남기지 않는다
+            privacyAccessLogService.insertPrivacyAccess(PrivacyAccessLogVO.ACTION_VIEW, PrivacyAccessLogVO.TARGET_APPLICATION,
+                    String.valueOf(id), application.getCompanyUserId(), 1, request.getRemoteAddr());
+        }
         model.addAttribute("app", application);
         model.addAttribute("settlementAccessible", !SecurityUtil.hasRole(SecurityUtil.ROLE_EVALUATOR));
         // 기업 본인 신청서: 임시저장이면 이어서 작성·삭제, 접수완료면 제출 취소를 보여 준다 (서버가 다시 확인)

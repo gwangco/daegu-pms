@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}">
+<head>
+    <title>개인정보 처리 기록</title>
+</head>
+<body>
+<th:block layout:fragment="content">
+    <div class="page-head">
+        <div class="container">
+            <nav aria-label="현재 위치">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a th:href="@{/}">홈</a></li>
+                    <li class="breadcrumb-item">시스템 관리</li>
+                    <li class="breadcrumb-item active" aria-current="page">개인정보 처리 기록</li>
+                </ol>
+            </nav>
+            <h1>개인정보 처리 기록</h1>
+            <p class="lead-sub">담당자·평가위원·관리자가 기업의 신청서·서류, 사용자 목록, 엑셀처럼 남의 개인정보가 담긴 화면·파일을 조회하거나 내려받은 기록입니다.
+                본인 정보를 본 것은 남기지 않습니다. 운영에서는 1년 이상 보관하고 월 1회 이상 점검합니다.</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <form id="searchForm" th:action="@{/admin/privacy-log}" th:object="${searchVO}" method="get" class="search-box" role="search"
+              th:with="filtered=${!#strings.isEmpty(searchVO.searchKeyword) or !#strings.isEmpty(searchVO.action) or searchVO.fromDate != null or searchVO.toDate != null}">
+            <input type="hidden" th:field="*{pageIndex}">
+            <div class="row g-3 align-items-end">
+                <div class="col-12 col-md-3">
+                    <label for="searchKeyword" class="form-label">처리자 아이디</label>
+                    <input type="search" th:field="*{searchKeyword}" class="form-control" maxlength="50">
+                </div>
+                <div class="col-12 col-md-2">
+                    <label for="action" class="form-label">수행 업무</label>
+                    <select th:field="*{action}" class="form-select">
+                        <option value="">전체</option>
+                        <option value="VIEW">조회</option>
+                        <option value="DOWNLOAD">다운로드</option>
+                    </select>
+                </div>
+                <div class="col-6 col-md">
+                    <label for="fromDate" class="form-label">시작일</label>
+                    <input type="date" th:field="*{fromDate}" class="form-control">
+                </div>
+                <div class="col-6 col-md">
+                    <label for="toDate" class="form-label">종료일</label>
+                    <input type="date" th:field="*{toDate}" class="form-control">
+                </div>
+                <div class="col-12 col-md-auto">
+                    <div class="search-actions">
+                        <button type="submit" class="btn btn-secondary"><i class="bi bi-search me-1" aria-hidden="true"></i>검색</button>
+                        <a th:if="${filtered}" th:href="@{/admin/privacy-log}" class="btn btn-outline-secondary">초기화</a>
+                    </div>
+                </div>
+            </div>
+        </form>
+
+        <th:block th:replace="~{fragments/common :: resultCount(${paginationInfo})}"></th:block>
+
+        <div class="panel">
+            <div class="table-responsive">
+                <table class="table table-hover table-cards">
+                    <caption class="visually-hidden">개인정보 처리 기록: 일시, 처리자, 수행 업무, 대상, 정보주체, 건수, 접속 IP</caption>
+                    <thead>
+                    <tr>
+                        <th scope="col">일시</th>
+                        <th scope="col">처리자</th>
+                        <th scope="col" class="text-center">수행 업무</th>
+                        <th scope="col">대상</th>
+                        <th scope="col">정보주체</th>
+                        <th scope="col" class="text-end">건수</th>
+                        <th scope="col">접속 IP</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="p : ${logs}">
+                        <td class="cell-title text-nowrap" th:text="${#temporals.format(p.accessedAt, 'yyyy-MM-dd HH:mm:ss')}">2026-10-21 10:00:00</td>
+                        <td data-label="처리자">
+                            <span class="fw-bold" th:text="${p.userId}">manager1</span>
+                            <span class="cell-sub" th:if="${p.userName != null}" th:text="${p.userName}">김담당</span>
+                        </td>
+                        <td data-label="수행 업무" class="text-center">
+                            <span class="status" th:classappend="${p.action == 'DOWNLOAD'} ? 'status-warning' : 'status-neutral'" th:text="${p.actionLabel}">조회</span>
+                        </td>
+                        <td data-label="대상">
+                            <span th:text="${p.targetLabel}">신청서 상세</span>
+                            <span class="cell-sub text-nowrap" th:if="${p.targetId != null}" th:text="${p.targetId}">1</span>
+                        </td>
+                        <td data-label="정보주체" th:text="${p.subjectId != null} ? ${p.subjectId} : '-'">company1</td>
+                        <td data-label="건수" class="text-end" th:text="${p.recordCount}">1</td>
+                        <td data-label="접속 IP" class="small text-nowrap" th:text="${p.clientIp}">127.0.0.1</td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(logs)}">
+                        <td colspan="7" class="empty-row">조건에 맞는 처리 기록이 없습니다.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <th:block th:replace="~{fragments/common :: pagination(${paginationInfo})}"></th:block>
+    </div>
+</th:block>
+</body>
+</html>

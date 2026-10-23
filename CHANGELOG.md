@@ -4,6 +4,20 @@
 
 ---
 
+## [0.11.0] 11차 스프린트 — 개인정보 처리 기록 (2026-10-23)
+브랜치: `feature/sprint11-privacy-access-log` · 상세: [docs/SPRINT11_PRIVACY_ACCESS_LOG.md](docs/SPRINT11_PRIVACY_ACCESS_LOG.md)
+
+### 추가 (Added)
+- 개인정보 처리 기록 `privacy_access_log` (Flyway V6): 담당자·평가위원·관리자의 신청서 상세 조회, 첨부파일·엑셀 다운로드, 사용자 목록 조회
+- 시스템 관리 > 개인정보 처리 기록 (`/admin/privacy-log`, 총괄관리자): 처리자·업무·기간 검색
+- 테스트 238건 (+5)
+
+### 변경 (Changed)
+- README 미구현 목록에서 개인정보 조회 기록 제거. 공고 마감 배치의 eGov 배치 전환은 다음 작업으로
+- 버전 0.11.0-SNAPSHOT
+
+---
+
 ## [0.10.0] 10차 스프린트 — 신청서 임시저장·제출 취소 (2026-10-23)
 브랜치: `feature/sprint10-application-draft` · 상세: [docs/SPRINT10_APPLICATION_DRAFT.md](docs/SPRINT10_APPLICATION_DRAFT.md)
 

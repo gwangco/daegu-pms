@@ -1,6 +1,10 @@
 package kr.go.daegu.pms.cmm.web;
 
+import jakarta.servlet.http.HttpServletRequest;
 import kr.go.daegu.pms.cmm.service.FileService;
+import kr.go.daegu.pms.cmm.service.PrivacyAccessLogService;
+import kr.go.daegu.pms.cmm.service.PrivacyAccessLogVO;
+import kr.go.daegu.pms.cmm.util.SecurityUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ContentDisposition;
@@ -27,11 +31,19 @@ import java.nio.charset.StandardCharsets;
 public class FileController {
 
     private final FileService fileService;
+    private final PrivacyAccessLogService privacyAccessLogService;
 
     @GetMapping("/{atchFileId:FILE_\\d{15}}/{fileSn:\\d{1,5}}")
     public ResponseEntity<Resource> download(@PathVariable("atchFileId") String atchFileId,
-                                             @PathVariable("fileSn") int fileSn) {
-        return attachment(fileService.loadDownload(atchFileId, fileSn));
+                                             @PathVariable("fileSn") int fileSn,
+                                             HttpServletRequest request) {
+        FileService.Download download = fileService.loadDownload(atchFileId, fileSn);
+        if (SecurityUtil.isStaff() || SecurityUtil.hasRole(SecurityUtil.ROLE_EVALUATOR)) {
+            // 기업이 낸 서류(사업계획서·증빙)를 담당자·평가위원이 내려받은 기록. 기업 본인은 남기지 않는다
+            privacyAccessLogService.insertPrivacyAccess(PrivacyAccessLogVO.ACTION_DOWNLOAD, PrivacyAccessLogVO.TARGET_FILE,
+                    atchFileId + "/" + fileSn, null, 1, request.getRemoteAddr());
+        }
+        return attachment(download);
     }
 
     /** 내려받기 응답 (업무 첨부·공지 첨부 공통) */

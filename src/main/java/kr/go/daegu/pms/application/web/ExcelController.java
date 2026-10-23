@@ -1,5 +1,10 @@
 package kr.go.daegu.pms.application.web;
 
+import jakarta.servlet.http.HttpServletRequest;
+import kr.go.daegu.pms.application.service.ApplicationVO;
+import kr.go.daegu.pms.cmm.service.PrivacyAccessLogService;
+import kr.go.daegu.pms.cmm.service.PrivacyAccessLogVO;
+import java.util.List;
 import kr.go.daegu.pms.application.service.ApplicationSearchVO;
 import kr.go.daegu.pms.application.service.ApplicationService;
 import kr.go.daegu.pms.application.service.ExcelService;
@@ -26,13 +31,19 @@ public class ExcelController {
 
     private final ApplicationService applicationService;
     private final ExcelService excelService;
+    private final PrivacyAccessLogService privacyAccessLogService;
     private final Clock clock;
 
     /** 목록 화면과 같은 검색 조건으로 전체 건(페이징 없음)을 엑셀로 내려받는다 */
     @GetMapping("/applications")
     @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
-    public ResponseEntity<byte[]> downloadApplicationsExcel(@ModelAttribute ApplicationSearchVO searchVO) {
-        byte[] excelBytes = excelService.exportApplicationsToExcel(applicationService.selectApplicationList(searchVO));
+    public ResponseEntity<byte[]> downloadApplicationsExcel(@ModelAttribute ApplicationSearchVO searchVO,
+                                                            HttpServletRequest request) {
+        List<ApplicationVO> applications = applicationService.selectApplicationList(searchVO);
+        byte[] excelBytes = excelService.exportApplicationsToExcel(applications);
+        // 기업명·사업자등록번호가 담긴 파일을 내려받은 기록 (여러 기업이라 정보주체는 비우고 건수를 남긴다)
+        privacyAccessLogService.insertPrivacyAccess(PrivacyAccessLogVO.ACTION_DOWNLOAD, PrivacyAccessLogVO.TARGET_EXCEL,
+                null, null, applications.size(), request.getRemoteAddr());
 
         String dateStr = LocalDate.now(clock).format(DateTimeFormatter.ofPattern("yyyyMMdd"));
         ContentDisposition disposition = ContentDisposition.attachment()
