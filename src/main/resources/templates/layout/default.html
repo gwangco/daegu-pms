@@ -86,6 +86,9 @@
                             <li><a class="dropdown-item" th:href="@{/admin/login-history}"
                                    th:classappend="${currentPath == '/admin/login-history'} ? 'active'"
                                    th:attr="aria-current=${currentPath == '/admin/login-history'} ? 'page' : null">접속 기록</a></li>
+                            <li><a class="dropdown-item" th:href="@{/admin/privacy-log}"
+                                   th:classappend="${currentPath == '/admin/privacy-log'} ? 'active'"
+                                   th:attr="aria-current=${currentPath == '/admin/privacy-log'} ? 'page' : null">개인정보 처리 기록</a></li>
                         </ul>
                     </li>
                 </ul>

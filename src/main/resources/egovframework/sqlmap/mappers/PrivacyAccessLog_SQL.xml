@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- 개인정보 처리 기록 (V6 privacy_access_log). 처리 일시는 업무 시계(audit.now) -->
+<mapper namespace="kr.go.daegu.pms.cmm.service.impl.PrivacyAccessLogMapper">
+
+    <insert id="insertPrivacyAccess" parameterType="privacyAccessLogVO" useGeneratedKeys="true" keyProperty="logId">
+        INSERT INTO privacy_access_log (user_id, action, target_type, target_id, subject_id, record_count, client_ip, accessed_at)
+        VALUES (#{userId}, #{action}, #{targetType}, #{targetId}, #{subjectId}, #{recordCount}, #{clientIp}, #{audit.now})
+    </insert>
+
+    <sql id="searchCondition">
+        <where>
+            <if test="searchKeyword != null and searchKeyword != ''">
+                AND p.user_id = #{searchKeyword}
+            </if>
+            <if test="action != null and action != ''">
+                AND p.action = #{action}
+            </if>
+            <if test="fromDate != null">
+                AND p.accessed_at &gt;= #{fromDate}
+            </if>
+            <if test="toDate != null">
+                AND p.accessed_at &lt; #{toDateExclusive}
+            </if>
+        </where>
+    </sql>
+
+    <select id="selectPrivacyAccessList" parameterType="privacyAccessSearchVO" resultType="privacyAccessLogVO">
+        SELECT p.log_id, p.user_id, u.user_name, p.action, p.target_type, p.target_id, p.subject_id,
+               p.record_count, p.client_ip, p.accessed_at
+        FROM privacy_access_log p
+        LEFT JOIN users u ON p.user_id = u.user_id
+        <include refid="searchCondition"/>
+        ORDER BY p.accessed_at DESC, p.log_id DESC
+        <if test="recordCountPerPage > 0">
+            LIMIT #{recordCountPerPage} OFFSET #{firstIndex}
+        </if>
+    </select>
+
+    <select id="selectPrivacyAccessListTotCnt" parameterType="privacyAccessSearchVO" resultType="int">
+        SELECT COUNT(*)
+        FROM privacy_access_log p
+        <include refid="searchCondition"/>
+    </select>
+
+</mapper>
