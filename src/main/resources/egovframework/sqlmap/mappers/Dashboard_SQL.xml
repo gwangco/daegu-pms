@@ -12,6 +12,8 @@
                 AND status IN ('SUBMITTED', 'DOCUMENT_PASSED', 'EVALUATING')) AS in_progress,
             (SELECT COUNT(*) FROM application
               WHERE company_user_id = #{userId} AND status = 'SELECTED') AS selected,
+            (SELECT COUNT(*) FROM application
+              WHERE company_user_id = #{userId} AND status = 'TEMP_SAVED') AS drafts,
             (SELECT COUNT(*) FROM settlement s
               INNER JOIN application a ON s.application_id = a.application_id
               WHERE a.company_user_id = #{userId} AND s.status = 'REJECTED') AS rejected_settlement

@@ -35,6 +35,8 @@ public class DashboardServiceImpl extends EgovAbstractServiceImpl implements Das
         }
         if (SecurityUtil.hasRole(SecurityUtil.ROLE_COMPANY)) {
             DashboardCountVO c = dashboardMapper.selectCompanyTaskCounts(userId);
+            tasks.add(new TaskVO(messages.text("dashboard.task.drafts"), c.getDrafts(),
+                    "/applications?status=TEMP_SAVED", false));
             tasks.add(new TaskVO(messages.text("dashboard.task.inProgress"), c.getInProgress(),
                     "/applications", false));
             tasks.add(new TaskVO(messages.text("dashboard.task.selected"), c.getSelected(),

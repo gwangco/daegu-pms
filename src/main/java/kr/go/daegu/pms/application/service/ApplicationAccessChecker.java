@@ -26,10 +26,14 @@ public class ApplicationAccessChecker {
     private final AppMessages messages;
 
     /**
-     * 신청서 열람 권한: 담당자/관리자 = 전체, 기업 = 본인 신청서, 평가위원 = 배정받은 과제
+     * 신청서 열람 권한: 담당자/관리자 = 전체, 기업 = 본인 신청서, 평가위원 = 배정받은 과제.
+     * 임시저장(작성 중)은 제출 전이라 본인만 본다. 다른 사람에게는 없는 신청서처럼 404 로 답한다
      */
     public ApplicationVO getReadableApplication(Long applicationId) {
         ApplicationVO application = findApplication(applicationId);
+        if (ApplicationStatus.TEMP_SAVED.name().equals(application.getStatus()) && !isOwner(application)) {
+            throw messages.notFound("application.notFound");
+        }
         if (SecurityUtil.isStaff() || isOwner(application) || isAssignedEvaluator(applicationId)) {
             return application;
         }

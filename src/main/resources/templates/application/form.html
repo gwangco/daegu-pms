@@ -31,13 +31,22 @@
 
     <div class="container">
         <div class="detail-layout">
-            <!--/* 파일 업로드가 있으므로 multipart/form-data. th:action 을 쓰면 CSRF 토큰이 자동으로 들어간다 */-->
-            <form th:action="@{/applications/apply}" th:object="${app}" method="post" enctype="multipart/form-data" class="panel form-panel">
+            <!--/*
+                파일 업로드가 있으므로 multipart/form-data. th:action 을 쓰면 CSRF 토큰이 자동으로 들어간다.
+                처음 쓰면 /applications/apply, 임시저장한 신청서를 이어서 쓰면 /applications/{번호}/edit.
+                "임시저장" 버튼은 name=draft 로 보내 필수 항목 검사 없이 저장하고(formnovalidate), "제출"은 모두 검사한다
+            */-->
+            <form th:action="${app.applicationId == null} ? @{/applications/apply} : @{/applications/{id}/edit(id=${app.applicationId})}"
+                  th:object="${app}" method="post" enctype="multipart/form-data" class="panel form-panel">
                 <input type="hidden" th:field="*{announcementId}">
 
                 <div th:if="${#fields.hasGlobalErrors()}" class="alert alert-danger" role="alert">
                     <div th:each="err : ${#fields.globalErrors()}" th:text="${err}">오류</div>
+                    <div class="small mt-1">입력한 내용은 그대로 두었습니다. 사업계획서 파일은 다시 선택하세요.</div>
                 </div>
+                <p th:if="${app.applicationId != null}" class="notice-box mb-4">
+                    <i class="bi bi-floppy" aria-hidden="true"></i><span>임시저장한 신청서입니다. 아직 제출하지 않았으므로 담당자에게 보이지 않습니다.</span>
+                </p>
 
                 <section class="form-section" aria-labelledby="sec-project">
                     <h2 id="sec-project" class="form-section-title">과제 정보</h2>
@@ -84,16 +93,26 @@
                 <section class="form-section" aria-labelledby="sec-file">
                     <h2 id="sec-file" class="form-section-title">제출 서류</h2>
                     <label for="planFile" class="form-label">사업계획서 파일 <span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden">(필수)</span></label>
+                    <p th:if="${app.planAtchFileId != null}" class="form-text mt-0 mb-2">
+                        저장된 파일: <a th:href="@{/files/{id}/{sn}(id=${app.planAtchFileId}, sn=0)}" th:text="${app.planFileName}">plan.pdf</a>
+                        — 새 파일을 고르면 바뀝니다.
+                    </p>
                     <input type="file" id="planFile" name="planFile" class="form-control" accept=".pdf,.hwp,.hwpx,.doc,.docx,.zip"
-                           aria-describedby="planFileHelp" data-max-mb="20" required>
+                           aria-describedby="planFileHelp" data-max-mb="20" th:required="${app.planAtchFileId == null}">
                     <div id="planFileHelp" class="form-text">PDF·HWP(X)·DOC(X)·ZIP, 최대 20MB. 확장자와 실제 파일 형식이 다르면 접수되지 않습니다.</div>
                 </section>
 
                 <div class="form-actions">
-                    <a th:href="@{/announcements/{id}(id=${announcement.announcementId})}" class="btn btn-outline-secondary">취소</a>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-send me-1" aria-hidden="true"></i>사업계획서 제출
-                    </button>
+                    <a th:href="${app.applicationId == null} ? @{/announcements/{id}(id=${announcement.announcementId})} : @{/applications/{id}(id=${app.applicationId})}"
+                       class="btn btn-outline-secondary">취소</a>
+                    <div class="form-actions-end">
+                        <button type="submit" name="draft" value="true" class="btn btn-outline-primary" formnovalidate>
+                            <i class="bi bi-floppy me-1" aria-hidden="true"></i>임시저장
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-send me-1" aria-hidden="true"></i>사업계획서 제출
+                        </button>
+                    </div>
                 </div>
             </form>
 
@@ -102,8 +121,9 @@
                 <ol class="form-guide">
                     <li>신청 지원금은 기업당 최대 지원금을 넘을 수 없습니다.</li>
                     <li>기업 자부담금은 총 소요 예산에서 신청 지원금을 뺀 금액입니다.</li>
+                    <li>임시저장은 과제명만 있으면 됩니다. 접수 기간 안에 내 신청 현황에서 이어서 작성해 제출하세요.</li>
                     <li>제출하면 접수번호(DPMS-…)가 발급되고, 내 신청 현황에서 심사 진행 상태를 볼 수 있습니다.</li>
-                    <li>제출한 신청서는 이 화면에서 수정할 수 없습니다.</li>
+                    <li>서류 검토가 시작되기 전이고 접수 기간 안이면, 상세 화면에서 제출을 취소하고 고칠 수 있습니다. 접수번호는 그대로입니다.</li>
                 </ol>
             </aside>
         </div>

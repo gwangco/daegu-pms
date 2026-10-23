@@ -38,6 +38,17 @@
             form.elements.pageIndex.value = 1;
         }
         if (!form.hasAttribute('data-allow-resubmit')) {
+            // 비활성화한 버튼의 값은 전송되지 않는다. 누른 버튼(name=draft 등)의 값을 숨은 칸으로 옮겨 둔다
+            var submitter = event.submitter;
+            form.querySelectorAll('input[data-submitter-copy]').forEach(function (old) { old.remove(); });
+            if (submitter && submitter.name) {
+                var hidden = document.createElement('input');
+                hidden.type = 'hidden';
+                hidden.name = submitter.name;
+                hidden.value = submitter.value;
+                hidden.setAttribute('data-submitter-copy', '');
+                form.appendChild(hidden);
+            }
             form.querySelectorAll('button[type="submit"]').forEach(function (button) {
                 button.disabled = true;
                 button.setAttribute('aria-busy', 'true');
@@ -47,6 +58,8 @@
 
     // 뒤로 가기로 돌아온 화면(bfcache)에서는 비활성화한 버튼을 되돌린다
     window.addEventListener('pageshow', function () {
+        // 뒤로 가기로 돌아온 폼에 지난번 누른 버튼 값(임시저장)이 남아 있으면 다음 제출이 엉뚱한 곳으로 간다
+        document.querySelectorAll('input[data-submitter-copy]').forEach(function (old) { old.remove(); });
         document.querySelectorAll('button[aria-busy="true"]').forEach(function (button) {
             button.disabled = false;
             button.removeAttribute('aria-busy');

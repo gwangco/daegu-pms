@@ -9,6 +9,7 @@ public class DashboardCountVO {
     private int inProgress;
     private int selected;
     private int rejectedSettlement;
+    private int drafts;
     // 담당자·관리자
     private int submitted;
     private int readyToSelect;

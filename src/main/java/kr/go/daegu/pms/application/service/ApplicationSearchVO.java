@@ -19,4 +19,7 @@ public class ApplicationSearchVO extends ComDefaultVO {
     private String status;
     private String companyUserId;   // 기업회원: 본인 신청서만
     private String evaluatorUserId; // 평가위원: 배정받은 과제만
+
+    /** 임시저장 제외 (담당자·평가위원). 서비스가 권한에 따라 덮어쓰므로 화면 값은 쓰이지 않는다 */
+    private boolean excludeDraft;
 }

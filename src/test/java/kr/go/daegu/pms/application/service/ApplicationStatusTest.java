@@ -34,6 +34,18 @@ class ApplicationStatusTest {
     }
 
     @Test
+    @DisplayName("임시저장은 기업이 제출하는 작성 중 상태: 담당자가 고를 다음 상태가 없고, 제출 취소는 서류 검토 전(접수완료)만")
+    void draftAndWithdraw() {
+        assertThat(TEMP_SAVED.canTransitionTo(SUBMITTED)).isTrue();
+        assertThat(TEMP_SAVED.manualNextStatuses()).isEmpty();
+        assertThat(SUBMITTED.manualNextStatuses()).doesNotContain(TEMP_SAVED);
+        assertThat(TEMP_SAVED.isDraft()).isTrue();
+        assertThat(SUBMITTED.isWithdrawable()).isTrue();
+        assertThat(DOCUMENT_PASSED.isWithdrawable()).isFalse();
+        assertThat(SELECTED.isWithdrawable()).isFalse();
+    }
+
+    @Test
     @DisplayName("존재하지 않는 코드는 빈 Optional")
     void convertFromCode() {
         assertThat(fromCode("SELECTED")).contains(SELECTED);

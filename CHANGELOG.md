@@ -4,6 +4,24 @@
 
 ---
 
+## [0.10.0] 10차 스프린트 — 신청서 임시저장·제출 취소 (2026-10-23)
+브랜치: `feature/sprint10-application-draft` · 상세: [docs/SPRINT10_APPLICATION_DRAFT.md](docs/SPRINT10_APPLICATION_DRAFT.md)
+
+### 추가 (Added)
+- 신청서 임시저장(과제명만 필수), 이어서 작성(`/applications/{번호}/edit`)·제출, 임시저장 삭제
+- 제출 취소: 서류 검토 전(접수완료)·접수 기간 안이면 임시저장으로 되돌림, 다시 제출해도 같은 접수번호
+- 메인 처리할 일 "작성 중인 신청서", 상세 화면의 이어서 작성·삭제·제출 취소 안내
+- Flyway V5: 임시저장용 NULL 허용 + CHECK 제약(임시저장이 아니면 필수 항목 모두 존재)
+- 테스트 233건 (+9)
+
+### 변경 (Changed)
+- 임시저장은 신청한 기업만 봄: 담당자·평가위원 목록·상태 검색·메인 통계에서 제외, 다른 사람에게 상세는 404
+- 같은 공고 신청 화면을 다시 열면 임시저장은 이어서 작성으로, 제출한 공고는 상세로 이동
+- 공통 스크립트: 중복 제출 방지가 누른 버튼 값을 지우지 않도록 숨은 칸으로 옮긴 뒤 비활성화
+- 버전 0.10.0-SNAPSHOT
+
+---
+
 ## [0.9.0] 9차 스프린트 — 기업회원 가입 (2026-10-23)
 브랜치: `feature/sprint9-company-signup` · 상세: [docs/SPRINT9_COMPANY_SIGNUP.md](docs/SPRINT9_COMPANY_SIGNUP.md)
 

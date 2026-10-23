@@ -1998,6 +1998,12 @@ a.cell-link:hover {
     font-size: var(--dp-fs-small);
 }
 
+/* 기업 본인 신청서의 임시저장·제출 취소 안내 */
+.draft-panel {
+    border-color: var(--krds-primary-10);
+    background: var(--dp-primary-soft);
+}
+
 /* 진행 단계 (신청 과제) */
 .stepper {
     display: grid;
