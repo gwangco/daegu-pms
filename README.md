@@ -9,7 +9,7 @@
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.16-6DB33F?logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
 [![MyBatis](https://img.shields.io/badge/MyBatis-3.5.19-C70D2C)](https://mybatis.org/mybatis-3/)
 [![MySQL](https://img.shields.io/badge/MySQL-8.4%20LTS-4479A1?logo=mysql&logoColor=white)](https://dev.mysql.com/doc/relnotes/mysql/8.4/en/)
-[![Tests](https://img.shields.io/badge/Tests-233%20passed-brightgreen)](#5-실행과-테스트)
+[![Tests](https://img.shields.io/badge/Tests-238%20passed-brightgreen)](#5-실행과-테스트)
 
 > 취업 포트폴리오용 데모입니다. 기관·사업·기업명은 설명을 위한 가상의 예시이며 실제 기관과 관련이 없습니다.
 
@@ -75,7 +75,7 @@ flowchart LR
 | 공고·신청 | 공통코드 분야 필터, 접수기간·최대지원금·중복신청 검증, 접수번호 채번, 임시저장·이어서 작성·제출 취소(서류 검토 전) |
 | 심사·평가 | 평가위원 배정, 전용 채점 화면, 제출 후 수정 불가 |
 | e-정산 | 비목별 집행·증빙, 부가세 서버 계산, 잔액 초과 차단, 반려 건 보완 재요청과 처리 이력, 담당자 검수함 |
-| 개인정보 | 연락처·이메일 ARIA 암호화, 목록·평가위원 화면 마스킹, 본인 정보 화면 |
+| 개인정보 | 연락처·이메일 ARIA 암호화, 목록·평가위원 화면 마스킹, 본인 정보 화면, 개인정보 처리 기록(남의 정보 조회·다운로드)과 관리자 점검 화면 |
 | 공통 | 수정자·수정일시 자동 기록(MyBatis 인터셉터), 엑셀 다운로드(SXSSF), 공통 레이아웃 |
 | 화면 | KRDS 디자인 토큰, Pretendard GOV 내장, 모바일 카드형 목록, 금액 한글 단위·한도 안내, 공고 마감 D-day, 정적 리소스 해시 주소·1년 캐시 |
 
@@ -91,7 +91,7 @@ flowchart LR
 | 파일 | 확장자 화이트리스트 + 시그니처 검사, 웹 루트 밖 UUID 저장, 다운로드 주소 형식 고정 + 권한 재검사, 첨부 ID 는 화면 값을 쓰지 않음, 공지 첨부는 삭제되지 않은 공지의 것만 공개 |
 | DB 계정 | 테이블 변경 계정과 실행 계정 분리 (실행 계정은 조회·등록·수정·삭제만), 비밀번호는 저장소 밖 |
 | 계정 | 로그인 실패 잠금(사용자 행 잠금으로 횟수 계산), 잠긴 계정은 비밀번호 비교 전 거부, 비밀번호 규칙(KISA 조합·길이 기준), 가입 후 관리자 승인 전 로그인 불가, 사업자등록번호당 기업회원 하나(DB UNIQUE) |
-| 개인정보 | 암호화 저장, 서버 마스킹, 암호화 라이브러리 DEBUG 로그(평문·키 출력) 차단 |
+| 개인정보 | 암호화 저장, 서버 마스킹, 암호화 라이브러리 DEBUG 로그(평문·키 출력) 차단, 처리 기록(처리자·일시·IP·정보주체·업무) |
 | 동시성 | 심사·평가·정산이 같은 신청서 행을 `SELECT … FOR UPDATE`로 잠근 뒤 검사, 공지 첨부 수정은 게시물 행을 잠근 뒤 파일 순번 계산 |
 | 금액 | 양수 검사, `Math.addExact`로 합계 오버플로 차단 |
 | 세션·화면 | 쿠키 HttpOnly·SameSite=Lax, URL 세션 ID 미사용, 30분 만료, 다른 사이트의 iframe 포함 차단 |
@@ -116,9 +116,9 @@ JDK 17 과 MySQL 8.x(8.4 LTS 권장)가 필요합니다. Maven Wrapper 와 내�
 - 스크립트를 쓰지 않을 때는 `config/dpms-secret.example.yml` 을 참고해 같은 계정을 만들거나 환경변수 `DPMS_DB_*` 를 지정합니다.
 - 개발 환경: [Eclipse](docs/ECLIPSE_SETUP.md) (기본) · [VS Code](docs/VS_CODE_SETUP.md)
 
-테스트 224건: 상태머신·마스킹·업무 시간대·비밀번호 규칙·사업자등록번호 검증번호 단위 테스트, MockMvc 통합 테스트(인가·CSRF·파일 위조·예산 초과·계정 잠금·암호화·공지·공지 첨부·FAQ·기업회원 가입과 승인·신청서 임시저장과 제출 취소), 별도 스레드와 MySQL 행 잠금 대기로 확인하는 동시성 테스트, eGov 실행환경·공통컴포넌트 구성과 V2~V5 마이그레이션 결과(CHECK 제약 포함) 테스트, 모든 주요 화면의 공통 규칙(CSP·접근성)과 정적 리소스 캐시 테스트. Pull Request 마다 GitHub Actions 가 MySQL 8.4 컨테이너로 실행합니다.
+테스트 224건: 상태머신·마스킹·업무 시간대·비밀번호 규칙·사업자등록번호 검증번호 단위 테스트, MockMvc 통합 테스트(인가·CSRF·파일 위조·예산 초과·계정 잠금·암호화·공지·공지 첨부·FAQ·기업회원 가입과 승인·신청서 임시저장과 제출 취소·개인정보 처리 기록), 별도 스레드와 MySQL 행 잠금 대기로 확인하는 동시성 테스트, eGov 실행환경·공통컴포넌트 구성과 V2~V6 마이그레이션 결과(CHECK 제약 포함) 테스트, 모든 주요 화면의 공통 규칙(CSP·접근성)과 정적 리소스 캐시 테스트. Pull Request 마다 GitHub Actions 가 MySQL 8.4 컨테이너로 실행합니다.
 
-공개 샘플 계정을 쓰는 로컬 데모입니다. 기업회원은 가입 화면(`/signup`)에서 직접 만들 수 있고, 총괄관리자(`admin`)가 사용자 관리에서 승인하면 로그인됩니다. 개인정보 조회 기록은 아직 구현하지 않았습니다.
+공개 샘플 계정을 쓰는 로컬 데모입니다. 기업회원은 가입 화면(`/signup`)에서 직접 만들 수 있고, 총괄관리자(`admin`)가 사용자 관리에서 승인하면 로그인됩니다. 공고 마감 배치는 아직 eGov 배치가 아닌 Spring 스케줄러로 돌립니다.
 
 | 권한 | 아이디 | 비밀번호 |
 | :--- | :--- | :--- |
@@ -145,7 +145,7 @@ kr.go.daegu.pms
 ├── settlement/      사업비 정산   │
 └── user/            사용자·로그인·기업회원 가입 ─┘
 resources/
-├── db/migration/             Flyway V1(기본 스키마), V2(공통컴포넌트 전환), V3(공지 첨부 허용), V4(가입 승인·동의), V5(임시저장·CHECK)  · db/seed/ 데모 데이터
+├── db/migration/             Flyway V1(기본 스키마), V2(공통컴포넌트 전환), V3(공지 첨부 허용), V4(가입 승인·동의), V5(임시저장·CHECK), V6(개인정보 처리 기록)  · db/seed/ 데모 데이터
 ├── egovframework/mapper/com/ 공통컴포넌트 SQL (*_mysql.xml)
 ├── egovframework/sqlmap/     sql-mapper-config.xml, mappers/*_SQL.xml
 ├── egovframework/message/    메시지 번들
@@ -166,6 +166,7 @@ resources/
 | [SPRINT8_NOTICE_ATTACHMENTS.md](docs/SPRINT8_NOTICE_ATTACHMENTS.md) | 공지사항 첨부파일, 게시판 속성으로 개수·크기 관리, 첨부 ID 위조 차단, 공통컴포넌트 첨부 삭제 순서 수정 |
 | [SPRINT9_COMPANY_SIGNUP.md](docs/SPRINT9_COMPANY_SIGNUP.md) | 기업회원 가입, 약관 동의 기록, 승인 대기와 관리자 승인, 비밀번호 규칙, 사업자등록번호 검증·중복 방지 |
 | [SPRINT10_APPLICATION_DRAFT.md](docs/SPRINT10_APPLICATION_DRAFT.md) | 신청서 임시저장·이어서 작성·제출 취소, 임시저장 공개 범위, CHECK 제약, 버튼 두 개 폼과 중복 제출 방지 |
+| [SPRINT11_PRIVACY_ACCESS_LOG.md](docs/SPRINT11_PRIVACY_ACCESS_LOG.md) | 개인정보 처리 기록(안전성 확보조치 기준 접속기록), 읽기 전용 트랜잭션과 기록 위치, 관리자 점검 화면 |
 | [COMMON_COMPONENTS.md](docs/COMMON_COMPONENTS.md) | 가져온 공통컴포넌트 목록과 원본 대비 변경점 |
 | [ECLIPSE_SETUP.md](docs/ECLIPSE_SETUP.md) | Eclipse 워크스페이스·JDK·실행 설정 |
 | [egov-codegen/README.md](docs/egov-codegen/README.md) | 코드 생성기 원본과 보완 내용 비교 (공지사항, FAQ) |
