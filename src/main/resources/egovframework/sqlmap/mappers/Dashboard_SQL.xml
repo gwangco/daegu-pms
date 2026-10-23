@@ -40,6 +40,7 @@
 
     <select id="selectAdminTaskCounts" resultType="dashboardCountVO">
         SELECT
+            (SELECT COUNT(*) FROM users WHERE approval_status = 'REQUESTED') AS pending_members,
             (SELECT COUNT(*) FROM users WHERE locked_at &gt; #{lockedSince}) AS locked_users,
             (SELECT COUNT(*) FROM login_history
               WHERE result_code IN ('FAIL_PASSWORD', 'FAIL_UNKNOWN_ID', 'LOCKED')

@@ -77,6 +77,17 @@ public class LoginPolicyServiceImpl extends EgovAbstractServiceImpl implements L
     }
 
     @Override
+    public LoginResult insertDisabledLogin(String loginId, String clientIp) {
+        Optional<UserVO> found = findUserForUpdate(loginId);
+        LoginResult result = found.filter(user -> user.isEnabled() && !user.isApproved()).isPresent()
+                ? LoginResult.PENDING : LoginResult.DISABLED;
+        String userId = found.map(UserVO::getUserId).orElse(null);
+        record(userId, result, clientIp);
+        log.info("[로그인 차단] user={}, 사유={}, ip={}", userId, result, clientIp);
+        return result;
+    }
+
+    @Override
     public void insertLogout(String userId, String clientIp) {
         record(userId, LoginResult.LOGOUT, clientIp);
     }

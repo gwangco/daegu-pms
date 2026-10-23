@@ -52,6 +52,16 @@
                     <dt>연락처</dt>
                     <dd th:text="${me.phone}">010-0000-4001</dd>
                 </div>
+                <div th:if="${me.termsAgreedAt != null}">
+                    <dt>약관 동의</dt>
+                    <dd>
+                        이용약관·개인정보 수집·이용 <span th:text="${#temporals.format(me.termsAgreedAt, 'yyyy-MM-dd HH:mm')}">2026-10-21 10:00</span>
+                    </dd>
+                </div>
+                <div th:if="${me.approvedAt != null}">
+                    <dt>가입 승인</dt>
+                    <dd th:text="${#temporals.format(me.approvedAt, 'yyyy-MM-dd HH:mm')}">2026-10-21 11:00</dd>
+                </div>
                 <div>
                     <dt>최근 로그인</dt>
                     <dd th:text="${me.lastLoginAt != null} ? ${#temporals.format(me.lastLoginAt, 'yyyy-MM-dd HH:mm')} : '-'">-</dd>

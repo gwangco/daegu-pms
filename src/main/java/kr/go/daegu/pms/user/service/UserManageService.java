@@ -13,6 +13,9 @@ public interface UserManageService {
     /** 로그인 실패 잠금 해제 */
     void updateUserUnlock(String userId);
 
+    /** 기업회원 가입 승인 (승인 대기 계정만). 승인하면 로그인할 수 있다 */
+    void updateUserApprove(String userId);
+
     /** 로그인한 본인 정보 (연락처·이메일 복호화, 마스킹하지 않음) */
     UserVO selectMyInfo();
 

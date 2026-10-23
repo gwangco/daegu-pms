@@ -113,9 +113,9 @@ class PersonalInfoCryptoIntegrationTest extends IntegrationTestSupport {
             mockMvc.perform(get(path).with(user("evaluator1").roles("EVALUATOR")))
                     .andExpect(status().isOk())
                     .andExpect(content().string(containsString("504-86-*****")))
-                    .andExpect(content().string(not(containsString("504-86-54321"))));
+                    .andExpect(content().string(not(containsString("504-86-54322"))));
         }
         mockMvc.perform(get("/applications/2").with(user("manager1").roles("MANAGER")))
-                .andExpect(content().string(containsString("504-86-54321")));
+                .andExpect(content().string(containsString("504-86-54322")));
     }
 }

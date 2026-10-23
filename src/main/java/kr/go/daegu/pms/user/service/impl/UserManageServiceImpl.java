@@ -63,6 +63,16 @@ public class UserManageServiceImpl extends EgovAbstractServiceImpl implements Us
     }
 
     @Override
+    public void updateUserApprove(String userId) {
+        requireAdmin();
+        userMapper.selectUser(userId).orElseThrow(() -> messages.notFound("user.notFound"));
+        if (userMapper.updateUserApprove(userId) == 0) {
+            throw messages.business("user.approve.notPending");
+        }
+        log.info("[가입 승인] user={}, by={}", userId, SecurityUtil.getCurrentUserId());
+    }
+
+    @Override
     public UserVO selectMyInfo() {
         String userId = SecurityUtil.getCurrentUserId();
         if (userId == null) {

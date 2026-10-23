@@ -24,6 +24,7 @@ public class LoginFailureHandler implements AuthenticationFailureHandler {
     public static final String ERROR_BAD_CREDENTIALS = "true";
     public static final String ERROR_LOCKED = "locked";
     public static final String ERROR_DISABLED = "disabled";
+    public static final String ERROR_PENDING = "pending";
 
     private final LoginPolicyService loginPolicyService;
 
@@ -37,8 +38,9 @@ public class LoginFailureHandler implements AuthenticationFailureHandler {
             loginPolicyService.insertBlockedLogin(loginId, clientIp, LoginResult.LOCKED);
             error = ERROR_LOCKED;
         } else if (exception instanceof DisabledException) {
-            loginPolicyService.insertBlockedLogin(loginId, clientIp, LoginResult.DISABLED);
-            error = ERROR_DISABLED;
+            // 가입 승인 대기도 Spring Security 에는 disabled 로 넘기고, 여기서 어느 쪽인지 구분해 안내한다
+            LoginResult result = loginPolicyService.insertDisabledLogin(loginId, clientIp);
+            error = result == LoginResult.PENDING ? ERROR_PENDING : ERROR_DISABLED;
         } else {
             boolean lockedNow = loginPolicyService.insertPasswordFailure(loginId, clientIp);
             error = lockedNow ? ERROR_LOCKED : ERROR_BAD_CREDENTIALS;

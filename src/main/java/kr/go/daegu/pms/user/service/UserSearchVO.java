@@ -18,6 +18,9 @@ public class UserSearchVO extends ComDefaultVO {
     /** Y 이면 지금 잠겨 있는 계정만 */
     private String lockedOnly;
 
+    /** Y 이면 가입 승인 대기 계정만 */
+    private String pendingOnly;
+
     /** 잠금 판단 기준. 이 시각보다 뒤에 잠긴 계정이 아직 잠금 중이다 (서버가 채우며 화면 값은 받지 않음) */
     private LocalDateTime lockedSince;
 }

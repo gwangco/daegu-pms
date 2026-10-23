@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}">
+<head>
+    <title>기업회원 가입</title>
+</head>
+<body>
+<th:block layout:fragment="content">
+    <div class="page-head">
+        <div class="container">
+            <nav aria-label="현재 위치">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a th:href="@{/}">홈</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">기업회원 가입</li>
+                </ol>
+            </nav>
+            <h1>기업회원 가입</h1>
+            <p class="lead-sub">지원사업을 신청할 기업의 담당자 계정을 만듭니다. 가입을 신청하면 총괄관리자가 확인해 승인한 뒤 로그인할 수 있습니다.</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="detail-layout">
+            <!--/*
+                입력 규칙(아이디·비밀번호·사업자등록번호·연락처)은 서버(CompanySignupServiceImpl)가 모두 확인하고 칸별로 알려 준다.
+                비밀번호 칸은 오류로 다시 보여 줄 때 값을 채우지 않는다 (Thymeleaf 가 type="password" 의 값을 출력하지 않음)
+            */-->
+            <form th:action="@{/signup}" th:object="${signup}" method="post" class="panel form-panel" novalidate>
+                <div th:if="${#fields.hasErrors('*')}" class="alert alert-danger" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill me-1" aria-hidden="true"></i>입력값을 확인하세요.
+                    <span th:if="${#fields.hasGlobalErrors()}" th:each="err : ${#fields.globalErrors()}" th:text="${err}">오류</span>
+                    <div class="small mt-1">비밀번호는 보안을 위해 다시 입력해야 합니다.</div>
+                </div>
+
+                <section class="form-section" aria-labelledby="sec-consent">
+                    <h2 id="sec-consent" class="form-section-title">약관 동의</h2>
+
+                    <div class="form-check consent-all">
+                        <input type="checkbox" id="agreeAll" class="form-check-input" data-check-all="signup-consent">
+                        <label class="form-check-label" for="agreeAll">아래 필수 약관에 모두 동의합니다.</label>
+                    </div>
+
+                    <div class="consent-item">
+                        <h3 id="terms-title" class="consent-title">이용약관 <span class="consent-required">(필수)</span></h3>
+                        <div class="terms-box" tabindex="0" role="region" aria-labelledby="terms-title">
+                            <p><strong>제1조 (목적)</strong> 이 약관은 D-PMS(대구 지원사업 통합관리·e-정산 시스템)에서 지원사업 신청·심사·정산 서비스를 이용하는 기업회원의 권리와 의무를 정합니다.</p>
+                            <p><strong>제2조 (가입과 승인)</strong> 기업회원 가입은 신청한 뒤 총괄관리자가 기업 정보를 확인해 승인하면 완료됩니다. 한 기업(사업자등록번호)은 계정 하나만 만들 수 있습니다.</p>
+                            <p><strong>제3조 (회원의 의무)</strong> 회원은 사실과 같은 정보를 입력하고, 아이디와 비밀번호를 남에게 알려 주거나 함께 쓰지 않습니다. 정보가 바뀌면 사업담당자에게 알립니다.</p>
+                            <p><strong>제4조 (서비스 이용)</strong> 회원은 지원사업 공고를 확인하고 신청서를 제출하며, 선정된 과제의 사업비 집행·증빙을 등록할 수 있습니다. 제출한 서류는 심사와 정산 검수에 쓰입니다.</p>
+                            <p class="mb-0"><strong>부칙</strong> 이 시스템은 포트폴리오용 데모이며 실제 지원사업을 운영하지 않습니다.</p>
+                        </div>
+                        <div class="form-check mt-2">
+                            <input type="checkbox" th:field="*{agreeTerms}" class="form-check-input" th:errorclass="is-invalid"
+                                   data-check-group="signup-consent" aria-describedby="agreeTermsError">
+                            <label class="form-check-label" th:for="${#ids.prev('agreeTerms')}">이용약관에 동의합니다. (필수)</label>
+                        </div>
+                        <div id="agreeTermsError" class="invalid-feedback d-block" th:errors="*{agreeTerms}"></div>
+                    </div>
+
+                    <div class="consent-item">
+                        <h3 id="privacy-title" class="consent-title">개인정보 수집·이용 동의 <span class="consent-required">(필수)</span></h3>
+                        <div class="terms-box" tabindex="0" role="region" aria-labelledby="privacy-title">
+                            <dl class="consent-list">
+                                <div>
+                                    <dt>수집 항목</dt>
+                                    <dd>아이디, 비밀번호, 담당자 이름, 이메일, 연락처, 기업명, 사업자등록번호</dd>
+                                </div>
+                                <div>
+                                    <dt>이용 목적</dt>
+                                    <dd>회원 확인과 가입 승인, 지원사업 신청·심사·협약·정산 업무 연락</dd>
+                                </div>
+                                <div>
+                                    <dt>보유 기간</dt>
+                                    <dd>회원 탈퇴 시까지. 단, 법령에 보존 기간이 있으면 그 기간까지 (데모는 데이터베이스를 다시 만들면 삭제)</dd>
+                                </div>
+                                <div>
+                                    <dt>동의 거부</dt>
+                                    <dd>동의하지 않을 수 있습니다. 다만 위 항목은 회원 확인과 업무 연락에 꼭 필요해 동의하지 않으면 가입할 수 없습니다.</dd>
+                                </div>
+                            </dl>
+                            <p class="mb-0 small">비밀번호는 복원할 수 없는 방식(BCrypt)으로, 이메일과 연락처는 암호화(ARIA)해 저장합니다.</p>
+                        </div>
+                        <div class="form-check mt-2">
+                            <input type="checkbox" th:field="*{agreePrivacy}" class="form-check-input" th:errorclass="is-invalid"
+                                   data-check-group="signup-consent" aria-describedby="agreePrivacyError">
+                            <label class="form-check-label" th:for="${#ids.prev('agreePrivacy')}">개인정보 수집·이용에 동의합니다. (필수)</label>
+                        </div>
+                        <div id="agreePrivacyError" class="invalid-feedback d-block" th:errors="*{agreePrivacy}"></div>
+                    </div>
+                </section>
+
+                <section class="form-section" aria-labelledby="sec-account">
+                    <h2 id="sec-account" class="form-section-title">계정 정보</h2>
+                    <div class="mb-3">
+                        <label for="userId" class="form-label">아이디 <span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden">(필수)</span></label>
+                        <input type="text" th:field="*{userId}" class="form-control" th:errorclass="is-invalid" maxlength="20"
+                               autocomplete="username" autocapitalize="off" spellcheck="false" required
+                               aria-describedby="userIdHelp userIdError">
+                        <div id="userIdHelp" class="form-text">영문 소문자로 시작하는 영문 소문자·숫자 4~20자</div>
+                        <div id="userIdError" class="invalid-feedback" th:errors="*{userId}"></div>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-12 col-md-6">
+                            <label for="newPassword" class="form-label">비밀번호 <span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden">(필수)</span></label>
+                            <input type="password" th:field="*{newPassword}" class="form-control" th:errorclass="is-invalid" maxlength="64"
+                                   autocomplete="new-password" required aria-describedby="passwordHelp newPasswordError">
+                            <div id="newPasswordError" class="invalid-feedback" th:errors="*{newPassword}"></div>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label for="newPasswordConfirm" class="form-label">비밀번호 확인 <span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden">(필수)</span></label>
+                            <input type="password" th:field="*{newPasswordConfirm}" class="form-control" th:errorclass="is-invalid" maxlength="64"
+                                   autocomplete="new-password" required aria-describedby="newPasswordConfirmError">
+                            <div id="newPasswordConfirmError" class="invalid-feedback" th:errors="*{newPasswordConfirm}"></div>
+                        </div>
+                    </div>
+                    <ul id="passwordHelp" class="form-text password-rules mb-0">
+                        <li>영문 대문자·소문자·숫자·특수문자 중 3종류 이상이면 8자, 2종류면 10자 이상 (최대 64자)</li>
+                        <li>아이디, 같은 문자 3번 연속(aaa), 연속된 문자 4자(1234, abcd)는 쓸 수 없습니다</li>
+                    </ul>
+                </section>
+
+                <section class="form-section" aria-labelledby="sec-company">
+                    <h2 id="sec-company" class="form-section-title">기업 정보</h2>
+                    <div class="row g-3">
+                        <div class="col-12 col-md-6">
+                            <label for="companyName" class="form-label">기업명 <span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden">(필수)</span></label>
+                            <input type="text" th:field="*{companyName}" class="form-control" th:errorclass="is-invalid" maxlength="100"
+                                   autocomplete="organization" required aria-describedby="companyNameError">
+                            <div id="companyNameError" class="invalid-feedback" th:errors="*{companyName}"></div>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label for="businessNo" class="form-label">사업자등록번호 <span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden">(필수)</span></label>
+                            <input type="text" th:field="*{businessNo}" class="form-control" th:errorclass="is-invalid" maxlength="12"
+                                   inputmode="numeric" placeholder="000-00-00000" required aria-describedby="businessNoHelp businessNoError">
+                            <div id="businessNoHelp" class="form-text">사업자등록증의 10자리. 한 기업은 계정 하나만 만들 수 있습니다.</div>
+                            <div id="businessNoError" class="invalid-feedback" th:errors="*{businessNo}"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="form-section" aria-labelledby="sec-manager">
+                    <h2 id="sec-manager" class="form-section-title">담당자 정보</h2>
+                    <div class="row g-3">
+                        <div class="col-12 col-md-4">
+                            <label for="userName" class="form-label">담당자 이름 <span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden">(필수)</span></label>
+                            <input type="text" th:field="*{userName}" class="form-control" th:errorclass="is-invalid" maxlength="50"
+                                   autocomplete="name" required aria-describedby="userNameError">
+                            <div id="userNameError" class="invalid-feedback" th:errors="*{userName}"></div>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <label for="email" class="form-label">이메일 <span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden">(필수)</span></label>
+                            <input type="email" th:field="*{email}" class="form-control" th:errorclass="is-invalid" maxlength="100"
+                                   autocomplete="email" required aria-describedby="emailError">
+                            <div id="emailError" class="invalid-feedback" th:errors="*{email}"></div>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <label for="phone" class="form-label">연락처 <span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden">(필수)</span></label>
+                            <input type="tel" th:field="*{phone}" class="form-control" th:errorclass="is-invalid" maxlength="13"
+                                   inputmode="tel" autocomplete="tel" placeholder="010-0000-0000" required aria-describedby="phoneError">
+                            <div id="phoneError" class="invalid-feedback" th:errors="*{phone}"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <div class="form-actions">
+                    <a th:href="@{/login}" class="btn btn-outline-secondary">취소</a>
+                    <button type="submit" class="btn btn-primary">가입 신청</button>
+                </div>
+            </form>
+
+            <aside class="aside-card" aria-labelledby="signup-steps-title">
+                <h2 id="signup-steps-title">가입 절차</h2>
+                <ol class="stepper">
+                    <li class="is-current"><span class="step-dot" aria-hidden="true"></span><span>약관 동의·정보 입력</span><span class="visually-hidden">(현재 단계)</span></li>
+                    <li><span class="step-dot" aria-hidden="true"></span><span>총괄관리자 승인</span></li>
+                    <li><span class="step-dot" aria-hidden="true"></span><span>로그인 후 지원사업 신청</span></li>
+                </ol>
+                <ol class="form-guide mt-4">
+                    <li>승인 전에는 로그인할 수 없습니다. 담당자가 기업 정보를 확인한 뒤 승인합니다.</li>
+                    <li>이미 가입된 사업자등록번호로는 다시 가입할 수 없습니다. 기존 계정은 사업담당자에게 문의하세요.</li>
+                    <li>데모 시스템이므로 실제 개인정보를 입력하지 마세요.</li>
+                </ol>
+            </aside>
+        </div>
+    </div>
+</th:block>
+</body>
+</html>

@@ -17,6 +17,8 @@ import java.util.List;
  *
  * 잠긴 계정은 accountNonLocked=false 로 돌려준다. 그러면 Spring Security 가 비밀번호를 비교하기 전에
  * LockedException 을 던지므로, 잠긴 상태에서는 비밀번호가 맞았는지 틀렸는지 알려 주지 않는다.
+ * 가입 승인 대기 계정(기업회원 가입 직후)은 사용 중지와 같이 enabled=false 로 넘긴다.
+ * 어느 쪽인지는 LoginFailureHandler 가 다시 조회해 안내 문구만 다르게 한다.
  */
 @Service
 @RequiredArgsConstructor
@@ -33,7 +35,7 @@ public class CustomUserDetailsService implements UserDetailsService {
 
         return User.withUsername(user.getUserId())
                 .password(user.getPassword())
-                .disabled(!user.isEnabled())
+                .disabled(!user.isEnabled() || !user.isApproved())
                 .accountLocked(lockPolicy.isLocked(user.getLockedAt()))
                 .authorities(List.of(new SimpleGrantedAuthority(user.getRole())))
                 .build();

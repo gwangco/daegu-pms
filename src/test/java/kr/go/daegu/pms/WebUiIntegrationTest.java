@@ -33,6 +33,7 @@ class WebUiIntegrationTest extends IntegrationTestSupport {
             Map.entry("/", ANONYMOUS),
             Map.entry("/login", ANONYMOUS),
             Map.entry("/privacy", ANONYMOUS),
+            Map.entry("/signup", ANONYMOUS),
             Map.entry("/announcements", ANONYMOUS),
             Map.entry("/announcements/13", ANONYMOUS),
             Map.entry("/notices", ANONYMOUS),

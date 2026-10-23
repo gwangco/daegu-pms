@@ -5,6 +5,7 @@
 
 <!--/* 헤더 사용자 영역. PC 는 로고 줄 오른쪽, 모바일은 펼친 메뉴 아래에 같은 내용을 넣는다 */-->
 <th:block th:fragment="userMenu">
+    <a sec:authorize="isAnonymous()" class="btn btn-outline-secondary" th:href="@{/signup}">기업회원 가입</a>
     <a sec:authorize="isAnonymous()" class="btn btn-primary" th:href="@{/login}">
         <i class="bi bi-box-arrow-in-right me-1" aria-hidden="true"></i>로그인
     </a>

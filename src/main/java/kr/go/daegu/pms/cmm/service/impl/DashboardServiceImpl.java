@@ -58,6 +58,8 @@ public class DashboardServiceImpl extends EgovAbstractServiceImpl implements Das
         if (SecurityUtil.hasRole(SecurityUtil.ROLE_ADMIN)) {
             LocalDate today = lockPolicy.now().toLocalDate();
             DashboardCountVO c = dashboardMapper.selectAdminTaskCounts(lockPolicy.activeLockSince(), today.atStartOfDay());
+            tasks.add(new TaskVO(messages.text("dashboard.task.pendingMembers"), c.getPendingMembers(),
+                    "/admin/users?pendingOnly=Y", false));
             tasks.add(new TaskVO(messages.text("dashboard.task.lockedUsers"), c.getLockedUsers(),
                     "/admin/users?lockedOnly=Y", true));
             tasks.add(new TaskVO(messages.text("dashboard.task.loginFailuresToday"), c.getLoginFailuresToday(),
