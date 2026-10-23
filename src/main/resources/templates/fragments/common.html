@@ -55,6 +55,16 @@
     </span>
 </th:block>
 
+<!--/* 첨부파일 형식 아이콘 (bootstrap-icons). 글자로 파일 이름이 함께 나오므로 화면낭독기에서는 숨긴다 */-->
+<th:block th:fragment="fileIcon(ext)">
+    <i class="bi file-icon" aria-hidden="true"
+       th:classappend="${ext == 'pdf' ? 'bi-file-earmark-pdf'
+                       : (ext == 'xls' or ext == 'xlsx' ? 'bi-file-earmark-excel'
+                       : (ext == 'doc' or ext == 'docx' ? 'bi-file-earmark-word'
+                       : (ext == 'jpg' or ext == 'jpeg' or ext == 'png' ? 'bi-file-earmark-image'
+                       : (ext == 'zip' ? 'bi-file-earmark-zip' : 'bi-file-earmark-text'))))}"></i>
+</th:block>
+
 <!--/* 지원 분야 칩. 점 색은 분야 코드(DPM001)마다 CSS 에서 정한다 (field-mobility 등) */-->
 <th:block th:fragment="fieldChip(code, name)">
     <span class="field-chip" th:classappend="${code != null ? 'field-' + #strings.toLowerCase(code) : ''}" th:text="${name}">미래 모빌리티/부품</span>

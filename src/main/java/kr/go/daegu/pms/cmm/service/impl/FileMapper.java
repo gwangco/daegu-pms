@@ -15,4 +15,7 @@ public interface FileMapper {
 
     /** 이 첨부파일을 증빙으로 연결한 정산 건의 신청서 ID (없으면 null) */
     Long selectApplicationIdByReceiptFile(@Param("atchFileId") String atchFileId);
+
+    /** 삭제되지 않은 공지(공통컴포넌트 게시판 COMTNBBS)에 연결된 첨부파일 ID (없거나 삭제된 글이면 null) */
+    String selectNoticeAtchFileId(@Param("bbsId") String bbsId, @Param("nttId") long nttId);
 }

@@ -141,6 +141,9 @@
                         <li th:each="n : ${notices}">
                             <span th:if="${n.noticeAt == 'Y'}" class="status status-danger">중요</span>
                             <a th:href="@{/notices/{id}(id=${n.nttId})}" th:title="${n.nttSj}" th:text="${n.nttSj}">공지 제목</a>
+                            <th:block th:unless="${#strings.isEmpty(n.atchFileId)}">
+                                <i class="bi bi-paperclip attach-mark" aria-hidden="true"></i><span class="visually-hidden">첨부파일 있음</span>
+                            </th:block>
                             <span class="notice-date" th:text="${n.frstRegisterPnttm}">2026-10-21</span>
                         </li>
                         <li th:if="${#lists.isEmpty(notices)}" class="empty-state">등록된 공지사항이 없습니다.</li>
