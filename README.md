@@ -1,201 +1,166 @@
-# D-PMS — 대구 지원사업 통합관리·e-정산 시스템
+# D-PMS
 
-전자정부 표준프레임워크(eGovFrame) 5.1 실행환경과 공통컴포넌트로 만든 공공 SI 포트폴리오 프로젝트입니다.
-지원사업 공고부터 온라인 신청, 서류 검토, 평가위원 채점, 최종 선정, 사업비 집행·증빙 정산까지 한 시스템에서 처리합니다.
+대구 지원사업 관리·정산 시스템입니다. 전자정부 표준프레임워크(eGovFrame) 5.1 과 공통컴포넌트로 만든 공공 SI 포트폴리오 프로젝트입니다.
+
+담당자가 지원사업 공고를 올리면 기업이 사업계획서를 내고, 담당자가 서류를 검토해 평가위원에게 배정합니다. 채점 결과로 선정된 기업은 사업비를 쓰고 증빙을 올리고, 담당자가 이를 검수합니다. 이 흐름을 한 시스템에서 처리합니다.
 
 [![CI](https://github.com/gwangco/daegu-pms/actions/workflows/ci.yml/badge.svg)](https://github.com/gwangco/daegu-pms/actions/workflows/ci.yml)
 [![eGovFrame](https://img.shields.io/badge/eGovFrame-5.1.0-134F8C)](https://www.egovframe.go.kr)
 [![Java](https://img.shields.io/badge/Java-17-ED8B00?logo=openjdk&logoColor=white)](https://adoptium.net/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.16-6DB33F?logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
-[![MyBatis](https://img.shields.io/badge/MyBatis-3.5.19-C70D2C)](https://mybatis.org/mybatis-3/)
 [![MySQL](https://img.shields.io/badge/MySQL-8.4%20LTS-4479A1?logo=mysql&logoColor=white)](https://dev.mysql.com/doc/relnotes/mysql/8.4/en/)
-[![Tests](https://img.shields.io/badge/Tests-249%20passed-brightgreen)](#5-실행과-테스트)
+[![Tests](https://img.shields.io/badge/Tests-249%20passed-brightgreen)](#테스트)
 
-> 취업 포트폴리오용 데모입니다. 기관·사업·기업명은 설명을 위한 가상의 예시이며 실제 기관과 관련이 없습니다.
+> 취업 포트폴리오용 데모입니다. 기관, 사업, 기업 이름은 모두 가상입니다.
 
-화면은 KRDS(대한민국 정부 디자인 시스템) 디자인 토큰과 Pretendard GOV 글꼴을 기준으로 만들었습니다 ([7차 스프린트](docs/SPRINT7_DESIGN_RENEWAL.md)).
-
-| 메인 — 공고 검색과 역할별 처리할 일 (사업담당자) | 사업비 e-정산 — 집행률과 증빙 검수 (기업회원) |
+| 메인 (사업담당자) | e-정산 (기업회원) |
 | :---: | :---: |
 | ![메인 화면](docs/images/main-manager.png) | ![정산 화면](docs/images/settlement-company.png) |
-| **자주 묻는 질문 — 전자정부 공통컴포넌트 FAQ** | **사용자 관리 — 연락처·이메일 암호화 저장 후 서버 마스킹** |
+| **FAQ** | **사용자 관리** |
 | ![FAQ 화면](docs/images/faq-manager.png) | ![사용자 관리 화면](docs/images/admin-users.png) |
 
-| 모바일 (390px) — 메인, 카드형 신청 목록, e-정산 |
-| :---: |
-| ![모바일 화면](docs/images/mobile-company.png) |
+![모바일 화면](docs/images/mobile-company.png)
 
-SI 산출물: [테이블 정의서](docs/si/TABLE_DEFINITION.md) · [ERD](docs/si/ERD.md) · [화면 목록과 요구사항 추적표](docs/si/SCREEN_LIST.md) (테이블 정의서와 ERD 는 `scripts/generate-db-docs.py` 가 실제 DB 에서 생성)
+## 기술 스택
 
----
+- Java 17, Spring Boot 3.5.16 (eGovFrame 5.1.0 부모 POM), Spring Security
+- MyBatis, MySQL 8.4, Flyway
+- Thymeleaf, Bootstrap 5, KRDS 디자인 토큰
+- Spring Batch (eGov 배치)
+- JUnit, MockMvc, GitHub Actions, Docker Compose
 
-## 1. eGovFrame을 어디에 썼나
+## 실행
 
-| 구성요소 | 이 프로젝트에서 한 일 | 화면·동작으로 보이는 결과 | 코드 |
-| :--- | :--- | :--- | :--- |
-| 부모 POM `egovframe-boot-starter-parent` | Spring Boot·Spring Security·eGov 모듈 버전을 한 곳에서 관리 | 5.0.2 → 5.1.0 업그레이드를 부모 버전 변경과 회귀 테스트로 끝냄 | `pom.xml` |
-| `EgovAbstractServiceImpl` | 모든 ServiceImpl 이 상속 | — | `*/service/impl` |
-| `@EgovMapper` + MyBatis | Mapper 인터페이스 스캔, SQL 은 `*_SQL.xml` | — | `config/EgovConfigMapper` |
-| AOP 선언적 트랜잭션 | `@Transactional` 없이 메서드 이름으로 규칙 적용 (`select*` 읽기 전용, 체크 예외 롤백) | 저장 중 오류가 나면 같은 요청의 변경이 모두 취소됨 | `config/EgovConfigTransaction` |
-| 예외 후처리 `ExceptionTransfer` | 장애 로그 후처리, 업무 안내 예외는 제외하도록 조정 | "잔액 초과" 같은 안내는 장애 로그로 남지 않음 | `config/EgovConfigAspect` |
-| `EgovPropertyService` | 페이징 설정값(pageUnit·pageSize) | 모든 목록 10건씩 | `config/EgovConfigProperties` |
-| ID Generation | 테이블 채번 (`COMTECOPSEQ`) | 접수번호 `DPMS-00000001`, 첨부파일 `FILE_…`, 게시물 번호, FAQ `FAQ_…` | `config/EgovConfigIdGeneration` |
-| `PaginationInfo` + 렌더러 | 페이지 계산 + Bootstrap 렌더러(Thymeleaf Dialect) | 목록 하단 페이지 번호 바 | `cmm/pagination` |
-| 암호화 서비스 (ARIA) | 연락처·이메일 암호화 저장, 키는 환경변수 | DB 에는 `{ARIA}…`, 관리자 화면에는 가린 값 | `cmm/crypto` |
-| `MessageSource` | UTF-8 업무 메시지 번들 + `AppMessages` | 모든 안내 문구, 누락 키는 테스트에서 실패 | `egovframework/message` |
-| **공통컴포넌트** v5.0.7 | 공통코드·첨부파일·게시판·FAQ 의 서비스·DAO·SQL 을 가져와 업무 서비스가 호출. 원본의 트랜잭션 충돌·검색 오류·화면 값 저장·첨부 삭제 순서를 고쳐 씀 | 공지사항 = 게시판, FAQ = FAQ 관리, 모든 첨부 = 첨부파일 관리, 선택 상자 = 공통코드 | `egovframework/com`, [사용 내역](docs/COMMON_COMPONENTS.md) |
-| VS Code 확장 코드 생성기 | 공지사항·FAQ CRUD 를 DDL 로 생성한 뒤 보안·업무 규칙 보완 (6차에 공통컴포넌트로 교체) | 원본과 보완본, 검토 항목 15개 기록 | [`docs/egov-codegen`](docs/egov-codegen/README.md) |
-| 배치 실행환경 (eGov 배치) | 공고 마감을 잡·스텝·청크로 구성 (MyBatis 페이징 리더, 일괄 쓰기, 요약 리스너), 메타데이터는 Flyway | 시스템 관리 > 배치 실행 이력, 같은 기준일은 한 번만 실행 | `announcement/batch`, [11차 2부](docs/SPRINT11_EGOV_BATCH.md) |
-| Log4j2 | 실행환경 표준 로깅, 업무·Mapper 기본 INFO | SQL 바인딩 값이 기본 로그에 남지 않음 | `log4j2-spring.xml` |
-
-Spring Boot 단독 구성에서 eGovFrame으로 옮긴 과정은 [전환 기록](docs/EGOVFRAME_MIGRATION.md)에 있습니다.
-
-## 2. 업무 흐름
-
-```mermaid
-flowchart LR
-    A[담당자: 공고 등록] --> B[기업: 사업계획서 제출<br/>접수번호 발급]
-    B --> C[담당자: 서류 검토]
-    C --> D[담당자: 평가위원 배정]
-    D --> E[평가위원: 정량40 + 정성60 채점]
-    E --> F[담당자: 최종 선정]
-    F --> G[기업: 비목별 집행 + 증빙 첨부]
-    G --> H[담당자: 검수]
-    H -- 반려 --> I[기업: 보완 후 재요청]
-    I --> H
-```
-
-- 신청서는 허용된 다음 상태로만 바뀝니다(`ApplicationStatus`). 배정된 평가위원이 모두 채점해야 최종 선정할 수 있습니다.
-- 로그인하면 메인 화면에 역할별 처리할 일(서류 검토 대기, 채점 대기, 정산 검수 대기 등)이 건수와 함께 나옵니다.
-- 공고 접수 마감은 매일 자정 eGov 배치 잡이 처리합니다. 총괄관리자는 실행 이력을 보고 바로 실행할 수도 있습니다.
-
-## 3. 주요 기능
-
-| 영역 | 내용 |
-| :--- | :--- |
-| 인증·계정 | 4개 역할, BCrypt, 5회 연속 실패 시 30분 잠금, 접속 기록, 관리자 잠금 해제, 기업회원 가입(약관 동의·승인 대기·총괄관리자 승인) |
-| 공지·FAQ | 공통컴포넌트 게시판·FAQ 기반, 중요 공지 고정, 작성자 검색, FAQ 분류 탭·검색, 논리 삭제, 공지 첨부파일(개수·크기는 게시판 속성, 비로그인 다운로드) |
-| 공고·신청 | 공통코드 분야 필터, 접수기간·최대지원금·중복신청 검증, 접수번호 채번, 임시저장·이어서 작성·제출 취소(서류 검토 전) |
-| 심사·평가 | 평가위원 배정, 전용 채점 화면, 제출 후 수정 불가 |
-| e-정산 | 비목별 집행·증빙, 부가세 서버 계산, 잔액 초과 차단, 반려 건 보완 재요청과 처리 이력, 담당자 검수함 |
-| 개인정보 | 연락처·이메일 ARIA 암호화, 목록·평가위원 화면 마스킹, 본인 정보 화면, 개인정보 처리 기록(남의 정보 조회·다운로드)과 관리자 점검 화면 |
-| 공통 | 수정자·수정일시 자동 기록(MyBatis 인터셉터), 엑셀 다운로드(SXSSF), 공통 레이아웃, 배치 실행 이력과 수동 실행 |
-| 화면 | KRDS 디자인 토큰, Pretendard GOV 내장, 모바일 카드형 목록, 금액 한글 단위·한도 안내, 공고 마감 D-day, 정적 리소스 해시 주소·1년 캐시 |
-
-## 4. 보안
-
-| 항목 | 대응 |
-| :--- | :--- |
-| SQL 삽입 | MyBatis `#{}` 바인딩만 사용 |
-| XSS | Thymeleaf `th:text` 이스케이프, CSP `script-src 'self'` (인라인 스크립트 없음) |
-| 인가 | URL · `@PreAuthorize` · 서비스 계층에서 소유자·배정 여부 재검사 |
-| 대량 할당 | 소유자·금액·채번 ID·감사 컬럼 등 서버가 정하는 필드는 바인딩 차단, 가입 입력에는 권한·승인 상태 필드 자체가 없음 |
-| CSRF | Spring Security 토큰, 상태 변경은 모두 POST |
-| 파일 | 확장자 화이트리스트 + 시그니처 검사, 웹 루트 밖 UUID 저장, 다운로드 주소 형식 고정 + 권한 재검사, 첨부 ID 는 화면 값을 쓰지 않음, 공지 첨부는 삭제되지 않은 공지의 것만 공개 |
-| DB 계정 | 테이블 변경 계정과 실행 계정 분리 (실행 계정은 조회·등록·수정·삭제만), 비밀번호는 저장소 밖 |
-| 계정 | 로그인 실패 잠금(사용자 행 잠금으로 횟수 계산), 잠긴 계정은 비밀번호 비교 전 거부, 비밀번호 규칙(KISA 조합·길이 기준), 가입 후 관리자 승인 전 로그인 불가, 사업자등록번호당 기업회원 하나(DB UNIQUE) |
-| 개인정보 | 암호화 저장, 서버 마스킹, 암호화 라이브러리 DEBUG 로그(평문·키 출력) 차단, 처리 기록(처리자·일시·IP·정보주체·업무) |
-| 동시성 | 심사·평가·정산이 같은 신청서 행을 `SELECT … FOR UPDATE`로 잠근 뒤 검사, 공지 첨부 수정은 게시물 행을 잠근 뒤 파일 순번 계산 |
-| 금액 | 양수 검사, `Math.addExact`로 합계 오버플로 차단 |
-| 세션·화면 | 쿠키 HttpOnly·SameSite=Lax, URL 세션 ID 미사용, 30분 만료, 다른 사이트의 iframe 포함 차단 |
-| 공급망 | Maven Wrapper SHA-256 검증, GitHub Actions 커밋 SHA·MySQL 이미지 digest 고정, 외부 CDN 대신 WebJars, 글꼴도 서버에 내장(배포본 무결성 값 확인) |
-
-## 5. 실행과 테스트
-
-JDK 17 과 MySQL 8.x(8.4 LTS 권장)가 필요합니다. Maven Wrapper 와 내장 Tomcat 을 씁니다.
+Docker 가 있으면 이 방법이 제일 간단합니다. 자세한 내용은 [DOCKER.md](docs/DOCKER.md) 에 있습니다.
 
 ```bash
-# 1) 처음 한 번: DB(dpms, dpms_test)와 계정을 만들고 비밀번호 파일(config/dpms-secret.yml)을 생성 (Windows PowerShell)
-.\scripts\setup-local-mysql.ps1
-
-# 2) 실행 (서버가 뜰 때 Flyway 가 스키마와 데모 데이터를 적용)
-.\mvnw.cmd spring-boot:run
-
-# 3) 테스트 (dpms_test 를 비우고 다시 만든 뒤 실행)
-.\mvnw.cmd clean verify
+cp .env.example .env          # 비밀번호 세 개를 바꿉니다
+docker compose up -d --build  # http://localhost:8080
 ```
 
-- 웹: http://localhost:8080
-- 스크립트를 쓰지 않을 때는 `config/dpms-secret.example.yml` 을 참고해 같은 계정을 만들거나 환경변수 `DPMS_DB_*` 를 지정합니다.
-- 개발 환경: [Eclipse](docs/ECLIPSE_SETUP.md) (기본) · [VS Code](docs/VS_CODE_SETUP.md)
-
-**Docker 로 실행** (JDK·MySQL 설치 없이, 자세한 내용은 [DOCKER.md](docs/DOCKER.md))
+직접 실행하려면 JDK 17 과 MySQL 8.x 가 필요합니다.
 
 ```bash
-cp .env.example .env          # 비밀번호 세 개를 바꾼다 (PowerShell: Copy-Item .env.example .env)
-docker compose up -d --build  # 앱 + MySQL 8.4, http://localhost:8080
+.\scripts\setup-local-mysql.ps1   # 처음 한 번: DB, 계정, 비밀번호 파일 생성
+.\mvnw.cmd spring-boot:run        # 실행 (Flyway 가 스키마와 데모 데이터를 넣습니다)
+.\mvnw.cmd clean verify           # 테스트
 ```
 
-테스트 249건: 상태머신·마스킹·업무 시간대·비밀번호 규칙·사업자등록번호 검증번호 단위 테스트, MockMvc 통합 테스트(인가·CSRF·파일 위조·예산 초과·계정 잠금·암호화·공지·공지 첨부·FAQ·기업회원 가입과 승인·신청서 임시저장과 제출 취소·개인정보 처리 기록·공고 마감 배치), 별도 스레드와 MySQL 행 잠금 대기로 확인하는 동시성 테스트(신청서 상태 경쟁, 공지 동시 첨부, 동시 가입), eGov 실행환경·공통컴포넌트 구성과 V2~V7 마이그레이션 결과(CHECK 제약 포함) 테스트, 모든 주요 화면의 공통 규칙(CSP·접근성)과 정적 리소스 캐시 테스트. Pull Request 마다 GitHub Actions 가 MySQL 8.4 컨테이너로 실행합니다.
+개발 환경 설정은 [Eclipse](docs/ECLIPSE_SETUP.md), [VS Code](docs/VS_CODE_SETUP.md) 문서를 보면 됩니다.
 
-공개 샘플 계정을 쓰는 로컬 데모입니다. 기업회원은 가입 화면(`/signup`)에서 직접 만들 수 있고, 총괄관리자(`admin`)가 사용자 관리에서 승인하면 로그인됩니다.
+### 데모 계정
 
-| 권한 | 아이디 | 비밀번호 |
+| 역할 | 아이디 | 비밀번호 |
 | :--- | :--- | :--- |
 | 총괄관리자 | `admin` | `admin1234` |
 | 사업담당자 | `manager1` | `manager1234` |
 | 평가위원 | `evaluator1`, `evaluator2` | `eval1234` |
 | 기업회원 | `company1`, `company2` | `company1234` |
 
-## 6. 구조
+기업회원은 `/signup` 에서 직접 가입할 수도 있습니다. 총괄관리자가 승인하면 로그인됩니다.
 
-```text
-egovframework.com    전자정부 공통컴포넌트 v5.0.7 (원본 패키지 그대로, 고친 파일은 개정이력에 기록)
-├── cmm/             공통 기반, 공통코드(EgovCmmUseService), 첨부파일(EgovFileMngService)
-├── cop/bbs/         게시판(EgovArticleService) → 공지사항
-└── uss/olh/faq/     FAQ(EgovFaqService)
-kr.go.daegu.pms
-├── config/          Security, EgovConfig*(Common·Mapper·Transaction·Aspect·Properties·IdGeneration·Web)
-├── cmm/             공통: crypto, exception, message, mybatis(감사 인터셉터), pagination, util, web, service
-├── notice/          공지사항 (공통컴포넌트 게시판·첨부파일 호출) ─┐
-├── faq/             자주 묻는 질문 (공통컴포넌트 FAQ 호출) │   업무 패키지마다
-├── announcement/    공고         │   ├── service/        인터페이스, VO
-├── application/     신청         │   ├── service/impl/   ServiceImpl, @EgovMapper
-├── evaluation/      평가         │   └── web/            Controller
-├── settlement/      사업비 정산   │
-└── user/            사용자·로그인·기업회원 가입 ─┘
-resources/
-├── db/migration/             Flyway V1(기본 스키마), V2(공통컴포넌트 전환), V3(공지 첨부 허용), V4(가입 승인·동의), V5(임시저장·CHECK), V6(개인정보 처리 기록), V7(배치 메타데이터)  · db/seed/ 데모 데이터
-├── egovframework/mapper/com/ 공통컴포넌트 SQL (*_mysql.xml)
-├── egovframework/sqlmap/     sql-mapper-config.xml, mappers/*_SQL.xml
-├── egovframework/message/    메시지 번들
-├── templates/                Thymeleaf (layout/, fragments/, 업무별 화면)
-├── static/                   css/dpms.css(KRDS 토큰), js/dpms.js, fonts/pretendard-gov, images/logo.svg
-└── application.yml, log4j2-spring.xml
+## 업무 흐름
+
+```mermaid
+flowchart LR
+    A[담당자: 공고 등록] --> B[기업: 사업계획서 제출]
+    B --> C[담당자: 서류 검토]
+    C --> D[담당자: 평가위원 배정]
+    D --> E[평가위원: 채점]
+    E --> F[담당자: 최종 선정]
+    F --> G[기업: 집행 등록과 증빙 첨부]
+    G --> H[담당자: 검수]
+    H -- 반려 --> I[기업: 보완 후 재요청]
+    I --> H
 ```
 
-## 7. 문서
+신청서는 정해진 다음 상태로만 바뀌고, 배정된 평가위원이 모두 채점해야 선정할 수 있습니다. 공고 마감은 매일 자정에 배치가 처리합니다.
 
-| 문서 | 내용 |
+## 주요 기능
+
+- 계정: 역할 4개, 로그인 5회 실패 시 30분 잠금, 접속 기록, 기업회원 가입과 관리자 승인
+- 공고와 신청: 접수 기간과 최대 지원금 검증, 접수번호 채번, 임시저장과 제출 취소
+- 심사: 평가위원 배정, 채점(정량 40점, 정성 60점), 최종 선정
+- e-정산: 비목별 집행과 증빙, 부가세 서버 계산, 잔액 초과 차단, 반려 건 보완 후 재요청
+- 공지와 FAQ: 공통컴포넌트 게시판과 FAQ, 공지 첨부파일
+- 개인정보: 연락처와 이메일 암호화, 화면 마스킹, 개인정보 처리 기록
+- 관리: 사용자 관리, 배치 실행 이력, 엑셀 다운로드
+
+## eGovFrame 을 쓴 곳
+
+- 부모 POM 으로 Spring Boot, Spring Security, eGov 모듈 버전을 관리합니다. 5.0.2 에서 5.1.0 으로 올릴 때도 부모 버전만 바꾸고 회귀 테스트로 확인했습니다.
+- 모든 ServiceImpl 은 `EgovAbstractServiceImpl` 을 상속하고, Mapper 는 `@EgovMapper` 를 씁니다.
+- 트랜잭션은 AOP 로 메서드 이름 규칙을 적용합니다. `select*` 는 읽기 전용입니다.
+- ID Generation 으로 접수번호(`DPMS-00000001`)를 채번합니다.
+- 암호화 서비스(ARIA)로 연락처와 이메일을 암호화해 저장합니다.
+- `PaginationInfo`, `EgovPropertyService`, `MessageSource`, 예외 후처리, Log4j2 를 씁니다.
+- 공통컴포넌트 v5.0.7 의 공통코드, 첨부파일, 게시판, FAQ 를 가져와 고쳐 썼습니다 ([사용 내역](docs/COMMON_COMPONENTS.md)).
+- 공고 마감은 eGov 배치 잡으로 만들었습니다 ([11차 2부](docs/SPRINT11_EGOV_BATCH.md)).
+
+Spring Boot 단독 구성에서 eGovFrame 으로 옮긴 과정은 [전환 기록](docs/EGOVFRAME_MIGRATION.md) 에 있습니다.
+
+## 보안에서 신경 쓴 것
+
+- SQL 은 `#{}` 바인딩만 쓰고, 화면은 Thymeleaf 이스케이프와 CSP(`script-src 'self'`)로 막습니다.
+- 권한은 URL, `@PreAuthorize`, 서비스 세 곳에서 확인합니다. 서비스에서 "자기 신청서인가", "배정된 평가위원인가"를 다시 봅니다.
+- 소유자, 금액, 감사 컬럼처럼 서버가 정해야 하는 값은 요청에서 받지 않습니다.
+- 업로드 파일은 확장자와 시그니처를 검사하고, 웹 루트 밖에 UUID 이름으로 저장합니다.
+- 심사, 평가, 정산은 신청서 행을 `SELECT ... FOR UPDATE` 로 잠근 뒤 검사합니다.
+- DB 계정을 테이블 변경용과 실행용으로 나누고, 비밀번호는 저장소 밖에 둡니다.
+- Maven Wrapper 체크섬, GitHub Actions 커밋 SHA, MySQL 이미지 digest 를 고정했습니다.
+
+## 테스트
+
+테스트는 249건입니다. 상태 흐름이나 비밀번호 규칙 같은 단위 테스트, 권한과 CSRF, 파일 위조, 예산 초과, 계정 잠금을 보는 MockMvc 통합 테스트, 그리고 MySQL 행 잠금 대기를 실제로 확인하는 동시성 테스트가 있습니다.
+
+Pull Request 마다 GitHub Actions 가 MySQL 8.4 컨테이너로 테스트를 돌리고, Docker Compose 로 앱을 실제로 띄워 응답까지 확인합니다.
+
+## 구조
+
+```text
+egovframework.com      공통컴포넌트 v5.0.7 (원본 패키지 그대로)
+kr.go.daegu.pms
+├── config/            Security, eGov 설정
+├── cmm/               공통 (암호화, 예외, 메시지, 감사 인터셉터, 페이징)
+├── announcement/      공고, 마감 배치
+├── application/       신청
+├── evaluation/        평가
+├── settlement/        정산
+├── notice/, faq/      공지사항, FAQ (공통컴포넌트 호출)
+└── user/              사용자, 로그인, 가입
+resources/
+├── db/migration/      Flyway V1~V7 (데모 데이터는 db/seed/)
+├── egovframework/     SQL 매퍼, 메시지
+├── templates/         Thymeleaf 화면
+└── static/            CSS(KRDS 토큰), JS, 글꼴
+```
+
+업무 패키지는 eGov 표준대로 `service/`(인터페이스, VO), `service/impl/`(ServiceImpl, Mapper), `web/`(Controller) 로 나눴습니다.
+
+## 문서
+
+| 회차 | 내용 |
 | :--- | :--- |
-| [EGOVFRAME_MIGRATION.md](docs/EGOVFRAME_MIGRATION.md) | Spring Boot 구성 → eGovFrame 5.0 전환 과정과 트러블슈팅 |
-| [SPRINT4_MESSAGES_SECURITY.md](docs/SPRINT4_MESSAGES_SECURITY.md) | 메시지 외부화, 경쟁 상태·금액 오버플로·로그 노출 수정 |
-| [SPRINT5_ACCOUNT_PRIVACY_UI.md](docs/SPRINT5_ACCOUNT_PRIVACY_UI.md) | 계정 잠금, 개인정보 암호화, 감사 컬럼, 정산 재요청, 화면 개선 |
-| [SPRINT6_MYSQL_COMMON_COMPONENTS.md](docs/SPRINT6_MYSQL_COMMON_COMPONENTS.md) | MySQL·Flyway 전환, DB 계정 분리, 공통컴포넌트 도입, Eclipse 전환 |
-| [SPRINT7_DESIGN_RENEWAL.md](docs/SPRINT7_DESIGN_RENEWAL.md) | KRDS 기준 화면 개편, 글꼴 내장, 모바일 카드형 목록, 정적 리소스 캐시, 명도 대비 수치 |
-| [SPRINT8_NOTICE_ATTACHMENTS.md](docs/SPRINT8_NOTICE_ATTACHMENTS.md) | 공지사항 첨부파일, 게시판 속성으로 개수·크기 관리, 첨부 ID 위조 차단, 공통컴포넌트 첨부 삭제 순서 수정 |
-| [SPRINT9_COMPANY_SIGNUP.md](docs/SPRINT9_COMPANY_SIGNUP.md) | 기업회원 가입, 약관 동의 기록, 승인 대기와 관리자 승인, 비밀번호 규칙, 사업자등록번호 검증·중복 방지 |
-| [SPRINT10_APPLICATION_DRAFT.md](docs/SPRINT10_APPLICATION_DRAFT.md) | 신청서 임시저장·이어서 작성·제출 취소, 임시저장 공개 범위, CHECK 제약, 버튼 두 개 폼과 중복 제출 방지 |
-| [SPRINT11_PRIVACY_ACCESS_LOG.md](docs/SPRINT11_PRIVACY_ACCESS_LOG.md) | 개인정보 처리 기록(안전성 확보조치 기준 접속기록), 읽기 전용 트랜잭션과 기록 위치, 관리자 점검 화면 |
-| [SPRINT11_EGOV_BATCH.md](docs/SPRINT11_EGOV_BATCH.md) | 공고 마감 eGov 배치: 잡 구성, 같은 기준일 1회 실행, 페이징 리더 OFFSET 함정, 트랜잭션 밖 실행, 실행 이력 화면 |
-| [SPRINT12_FINAL.md](docs/SPRINT12_FINAL.md) | 마감: SI 산출물 생성 방식, 공지 동시 첨부·동시 가입 테스트, 하지 않은 것 |
-| [DOCKER.md](docs/DOCKER.md) | Docker 로 실행: 왜 쓰는지, 구성(앱 + MySQL, DB 계정 분리), 실행·명령, 알아 둘 점, CI 검증 |
-| [si/TABLE_DEFINITION.md](docs/si/TABLE_DEFINITION.md), [si/ERD.md](docs/si/ERD.md) | 테이블 정의서와 ERD (실제 DB 에서 생성) |
-| [si/SCREEN_LIST.md](docs/si/SCREEN_LIST.md) | 화면 목록 27개와 요구사항 추적표 13개 |
-| [COMMON_COMPONENTS.md](docs/COMMON_COMPONENTS.md) | 가져온 공통컴포넌트 목록과 원본 대비 변경점 |
-| [UAT_SEC_COMPARISON.md](docs/UAT_SEC_COMPARISON.md) | 공통컴포넌트 로그인·권한(uat, sec)과 D-PMS 비교, 옮겨야 할 때의 절차 |
-| [ECLIPSE_SETUP.md](docs/ECLIPSE_SETUP.md) | Eclipse 워크스페이스·JDK·실행 설정 |
-| [egov-codegen/README.md](docs/egov-codegen/README.md) | 코드 생성기 원본과 보완 내용 비교 (공지사항, FAQ) |
-| [CHANGELOG.md](CHANGELOG.md) | 스프린트별 변경 이력 |
+| [3차](docs/EGOVFRAME_MIGRATION.md) | eGovFrame 5.0 전환 |
+| [4차](docs/SPRINT4_MESSAGES_SECURITY.md) | 메시지 정리, 동시 요청과 금액 계산 보완 |
+| [5차](docs/SPRINT5_ACCOUNT_PRIVACY_UI.md) | 계정 잠금, 개인정보 암호화, 화면 정리 |
+| [6차](docs/SPRINT6_MYSQL_COMMON_COMPONENTS.md) | MySQL, Flyway, 공통컴포넌트 |
+| [7차](docs/SPRINT7_DESIGN_RENEWAL.md) | KRDS 기준 화면 개편 |
+| [8차](docs/SPRINT8_NOTICE_ATTACHMENTS.md) | 공지사항 첨부파일 |
+| [9차](docs/SPRINT9_COMPANY_SIGNUP.md) | 기업회원 가입 |
+| [10차](docs/SPRINT10_APPLICATION_DRAFT.md) | 신청서 임시저장, 제출 취소 |
+| [11차](docs/SPRINT11_PRIVACY_ACCESS_LOG.md) | 개인정보 처리 기록 |
+| [11차 2부](docs/SPRINT11_EGOV_BATCH.md) | 공고 마감 배치 |
+| [12차](docs/SPRINT12_FINAL.md) | SI 산출물, 동시성 테스트 |
 
-## 8. 하지 않은 것
+- SI 산출물: [테이블 정의서](docs/si/TABLE_DEFINITION.md), [ERD](docs/si/ERD.md), [화면 목록과 요구사항 추적표](docs/si/SCREEN_LIST.md)
+- [공통컴포넌트 사용 내역](docs/COMMON_COMPONENTS.md), [로그인·권한 비교](docs/UAT_SEC_COMPARISON.md)
+- [Docker 로 실행하기](docs/DOCKER.md), [코드 생성기 기록](docs/egov-codegen/README.md), [변경 이력](CHANGELOG.md)
 
-데모 범위에서 일부러 뺐거나 아직 하지 못한 것입니다. 자세한 내용은 각 스프린트 문서의 "남은 일"에 있습니다.
+## 하지 않은 것
 
-- 비밀번호 변경·찾기, 회원 탈퇴와 개인정보 파기, 비밀번호 유효기간
-- 첨부파일 바이러스 검사, 실패한 배치의 화면 재시작, 서버 이중화 시 배치 분산 락
-- 공통컴포넌트 로그인·권한(uat, sec) 대신 Spring Security 로 직접 구성 ([비교](docs/UAT_SEC_COMPARISON.md))
+- 비밀번호 변경과 찾기, 회원 탈퇴
+- 첨부파일 바이러스 검사, 실패한 배치를 화면에서 다시 실행하기
+- 로그인과 권한은 공통컴포넌트(uat, sec) 대신 Spring Security 로 직접 구성했습니다 ([이유](docs/UAT_SEC_COMPARISON.md))
 
-화면 기준: [KRDS](https://www.krds.go.kr) 디자인 토큰(krds-uiux 1.1.0)을 참고했고, 글꼴은 KRDS 배포본의 Pretendard GOV(SIL OFL 1.1)를 씁니다. 출처와 라이선스는 [`licenses/`](licenses)에 있습니다.
-
-교육 및 포트폴리오 목적으로 만들었습니다. © 2026 gwangco
+화면은 KRDS 디자인 토큰(krds-uiux 1.1.0)을 참고했고, 글꼴은 KRDS 배포본의 Pretendard GOV(SIL OFL 1.1)를 씁니다. 출처와 라이선스는 [`licenses/`](licenses) 에 있습니다.
