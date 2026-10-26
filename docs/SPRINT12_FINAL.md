@@ -44,7 +44,7 @@
 
 ## 5. 하지 않은 것과 남은 일
 
-- [ ] Docker Compose 한 번에 실행 (앱 + MySQL). 이 PC 에 Docker 가 없어 검증할 수 없는 설정은 넣지 않았다. GitHub Actions 에서 이미지 빌드와 기동을 확인하는 방법으로 진행할 수 있다
+- [x] Docker Compose 한 번에 실행 (앱 + MySQL) — 1.0.0 에서 추가, GitHub Actions 에서 기동을 확인한다 ([DOCKER.md](DOCKER.md))
 - [ ] 시연 영상
 - [ ] 비밀번호 변경·찾기, 회원 탈퇴와 개인정보 파기, 비밀번호 유효기간
 - [ ] 첨부파일 바이러스 검사, 실패한 배치의 화면 재시작
