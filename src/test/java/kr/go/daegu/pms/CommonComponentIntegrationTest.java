@@ -121,7 +121,7 @@ class CommonComponentIntegrationTest extends IntegrationTestSupport {
         assertThat(nextId("FILE_ID")).isGreaterThanOrEqualTo(1);
 
         assertThat(jdbc.queryForList("SELECT version FROM flyway_schema_history WHERE success = 1 ORDER BY installed_rank", String.class))
-                .containsExactly("1", "1.1", "2", "3", "4", "4.1", "5", "6");
+                .containsExactly("1", "1.1", "2", "3", "4", "4.1", "5", "6", "7");
     }
 
     private long nextId(String tableName) {

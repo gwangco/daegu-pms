@@ -54,7 +54,8 @@ class WebUiIntegrationTest extends IntegrationTestSupport {
             Map.entry("/mypage", user("company1").roles("COMPANY")),
             Map.entry("/settlements/review", user("manager1").roles("MANAGER")),
             Map.entry("/admin/login-history", user("admin").roles("ADMIN")),
-            Map.entry("/admin/privacy-log", user("admin").roles("ADMIN")));
+            Map.entry("/admin/privacy-log", user("admin").roles("ADMIN")),
+            Map.entry("/admin/batch", user("admin").roles("ADMIN")));
 
     @Test
     @DisplayName("CSS·JS·글꼴을 외부 CDN 이 아닌 WebJars/정적 경로에서 비로그인으로 받을 수 있다")

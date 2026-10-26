@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+    배치 실행 이력: Spring Batch 메타데이터(V7)를 읽기만 한다. 테이블 이름은 Spring Batch 가 만든 대문자 그대로 쓴다.
+    파라미터(기준일·요청자)와 스텝 건수는 실행마다 한 줄이 되도록 스칼라 서브쿼리로 붙인다
+-->
+<mapper namespace="kr.go.daegu.pms.cmm.service.impl.BatchHistoryMapper">
+
+    <select id="selectBatchExecutionList" resultType="batchExecutionVO">
+        SELECT e.JOB_EXECUTION_ID AS execution_id,
+               i.JOB_NAME         AS job_name,
+               (SELECT p.PARAMETER_VALUE FROM BATCH_JOB_EXECUTION_PARAMS p
+                 WHERE p.JOB_EXECUTION_ID = e.JOB_EXECUTION_ID AND p.PARAMETER_NAME = 'targetDate') AS target_date,
+               (SELECT p.PARAMETER_VALUE FROM BATCH_JOB_EXECUTION_PARAMS p
+                 WHERE p.JOB_EXECUTION_ID = e.JOB_EXECUTION_ID AND p.PARAMETER_NAME = 'requestedBy') AS requested_by,
+               e.START_TIME AS start_time,
+               e.END_TIME   AS end_time,
+               e.STATUS     AS status,
+               e.EXIT_CODE  AS exit_code,
+               (SELECT COALESCE(SUM(s.READ_COUNT), 0) FROM BATCH_STEP_EXECUTION s
+                 WHERE s.JOB_EXECUTION_ID = e.JOB_EXECUTION_ID) AS read_count,
+               (SELECT COALESCE(SUM(s.WRITE_COUNT), 0) FROM BATCH_STEP_EXECUTION s
+                 WHERE s.JOB_EXECUTION_ID = e.JOB_EXECUTION_ID) AS write_count
+        FROM BATCH_JOB_EXECUTION e
+        INNER JOIN BATCH_JOB_INSTANCE i ON i.JOB_INSTANCE_ID = e.JOB_INSTANCE_ID
+        ORDER BY e.JOB_EXECUTION_ID DESC
+        LIMIT #{limit}
+    </select>
+
+</mapper>

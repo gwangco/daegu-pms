@@ -1,6 +1,5 @@
 package kr.go.daegu.pms;
 
-import kr.go.daegu.pms.announcement.service.AnnouncementService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +23,6 @@ class AuditColumnIntegrationTest extends IntegrationTestSupport {
     private static final LocalDateTime NOW = LocalDateTime.of(2026, 10, 21, 10, 0);
 
     @Autowired JdbcTemplate jdbc;
-    @Autowired AnnouncementService announcementService;
 
     @Test
     @DisplayName("심사 상태 변경: 수정자는 로그인한 담당자, 화면에서 보낸 updatedBy 는 무시")
@@ -76,20 +74,5 @@ class AuditColumnIntegrationTest extends IntegrationTestSupport {
                 .andExpect(flash().attributeExists("successMessage"));
         assertThat(jdbc.queryForObject("SELECT updated_by FROM settlement WHERE settlement_id = ?", String.class, settlementId))
                 .isEqualTo("manager1");
-    }
-
-    @Test
-    @DisplayName("로그인 사용자가 없는 배치 작업은 SYSTEM 으로 기록한다")
-    void batchRecordsSystem() {
-        jdbc.update("""
-                INSERT INTO announcement (title, field_code, total_budget, max_grant, start_date, end_date, content, status, writer_id)
-                VALUES ('감사 배치 확인', 'AI_SW', 1, 1, '2026-10-01', '2026-10-20', 'c', 'OPEN', 'manager1')
-                """);
-
-        assertThat(announcementService.closeExpiredAnnouncements()).isEqualTo(1);
-
-        Map<String, Object> row = jdbc.queryForMap("SELECT status, updated_by FROM announcement WHERE title = '감사 배치 확인'");
-        assertThat(row.get("status")).isEqualTo("CLOSED");
-        assertThat(row.get("updated_by")).isEqualTo("SYSTEM");
     }
 }

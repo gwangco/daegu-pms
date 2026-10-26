@@ -80,8 +80,4 @@ public class AnnouncementServiceImpl extends EgovAbstractServiceImpl implements 
         return announcementMapper.selectFieldBudgetStatList();
     }
 
-    @Override
-    public int closeExpiredAnnouncements() {
-        return announcementMapper.updateExpiredAnnouncementsToClosed(LocalDate.now(clock));
-    }
 }
