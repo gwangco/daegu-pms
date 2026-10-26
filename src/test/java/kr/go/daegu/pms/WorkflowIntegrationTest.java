@@ -1,8 +1,5 @@
 package kr.go.daegu.pms;
 
-import kr.go.daegu.pms.announcement.service.AnnouncementService;
-import kr.go.daegu.pms.announcement.service.AnnouncementVO;
-import kr.go.daegu.pms.announcement.service.impl.AnnouncementMapper;
 import kr.go.daegu.pms.application.service.ApplicationVO;
 import kr.go.daegu.pms.application.service.impl.ApplicationMapper;
 import kr.go.daegu.pms.evaluation.service.EvaluationVO;
@@ -18,7 +15,6 @@ import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDate;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -35,11 +31,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 class WorkflowIntegrationTest extends IntegrationTestSupport {
 
-    @Autowired AnnouncementMapper announcementMapper;
     @Autowired ApplicationMapper applicationMapper;
     @Autowired EvaluationMapper evaluationMapper;
     @Autowired SettlementMapper settlementMapper;
-    @Autowired AnnouncementService announcementService;
 
     // ───────────── 공고 등록 ─────────────
 
@@ -301,24 +295,6 @@ class WorkflowIntegrationTest extends IntegrationTestSupport {
         mockMvc.perform(post("/settlements/2/review").with(csrf())
                         .param("applicationId", "1").param("status", "APPROVED"))
                 .andExpect(flash().attribute("errorMessage", containsString("이미 검수")));
-    }
-
-    // ───────────── 배치 ─────────────
-
-    @Test
-    @DisplayName("마감 배치: 마감일이 지난 OPEN 공고만 CLOSED 로 전환")
-    void closeExpiredAnnouncements() {
-        AnnouncementVO expired = AnnouncementVO.builder()
-                .title("어제 마감된 공고").fieldCode("AI_SW").totalBudget(1L).maxGrant(1L)
-                .startDate(LocalDate.of(2026, 10, 1)).endDate(LocalDate.of(2026, 10, 20))
-                .content("c").status("OPEN").writerId("manager1").build();
-        announcementMapper.insertAnnouncement(expired);
-
-        int closed = announcementService.closeExpiredAnnouncements();
-
-        assertThat(closed).isEqualTo(1);
-        assertThat(announcementMapper.selectAnnouncement(expired.getAnnouncementId()).orElseThrow().getStatus()).isEqualTo("CLOSED");
-        assertThat(announcementMapper.selectAnnouncement(13L).orElseThrow().getStatus()).isEqualTo("OPEN");
     }
 
     // ───────────── 화면 렌더링 ─────────────

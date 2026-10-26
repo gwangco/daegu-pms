@@ -30,5 +30,4 @@ public interface AnnouncementService {
     List<FieldBudgetStatVO> selectFieldBudgetStatList();
 
     /** 접수 마감일이 지난 공고를 마감 처리하고 처리 건수를 반환 (배치) */
-    int closeExpiredAnnouncements();
 }

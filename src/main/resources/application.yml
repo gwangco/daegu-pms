@@ -48,6 +48,14 @@ spring:
     exceptiontranslation:
       enabled: false
 
+  # Spring Batch (eGov 배치): 잡은 스케줄러가 날짜 파라미터로 실행하므로 기동할 때 자동으로 돌리지 않고,
+  # 실행 이력 테이블(BATCH_*)은 Boot 가 만들지 않고 Flyway V7 로 관리한다
+  batch:
+    job:
+      enabled: false
+    jdbc:
+      initialize-schema: never
+
   # Flyway: db/migration 의 V1, V2 ... 를 순서대로 한 번씩 적용한다
   flyway:
     # 테이블 변경은 별도 계정으로만 (서버 실행 계정에는 DDL 권한이 없다)

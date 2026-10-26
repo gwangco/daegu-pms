@@ -97,14 +97,32 @@
         ORDER BY c.SORT_ORDR
     </select>
 
-    <!-- 배치: 마감일(end_date)이 오늘보다 이전인 접수중 공고를 마감 처리 -->
-    <update id="updateExpiredAnnouncementsToClosed">
+    <!--
+        마감 배치 읽기 (eGov MyBatis 페이징 리더, AnnouncementCloseJobConfig).
+        마감일(end_date)이 기준일보다 이전인 접수중 공고. 리더가 넘기는 _skiprows(OFFSET)는 쓰지 않고 늘 첫 쪽을 읽는다:
+        앞 청크에서 마감한 공고는 OPEN 조건에서 빠지므로 OFFSET 을 쓰면 아직 남은 공고를 건너뛴다.
+        (그래서 쪽 크기와 청크 크기가 같아야 한다)
+    -->
+    <select id="selectCloseTargetAnnouncementList" resultType="announcementVO">
+        SELECT announcement_id, title, end_date, status
+        FROM announcement
+        WHERE status = 'OPEN'
+          AND end_date &lt; #{targetDate}
+        ORDER BY announcement_id
+        LIMIT #{_pagesize}
+    </select>
+
+    <!--
+        마감 배치 쓰기 (eGov MyBatis 일괄 쓰기). 수정자는 정기 실행이면 로그인 사용자가 없어 SYSTEM,
+        관리자가 지금 실행하면 그 관리자로 남는다. 상태 조건은 동시에 돈 실행과 겹쳐도 한 번만 바뀌게 한다
+    -->
+    <update id="updateAnnouncementClosedByBatch" parameterType="announcementVO">
         UPDATE announcement
         SET status = 'CLOSED',
             updated_by = #{audit.userId},
             updated_at = #{audit.now}
-        WHERE status = 'OPEN'
-          AND end_date &lt; #{today}
+        WHERE announcement_id = #{announcementId}
+          AND status = 'OPEN'
     </update>
 
 </mapper>

@@ -6,7 +6,6 @@ import kr.go.daegu.pms.announcement.service.FieldBudgetStatVO;
 import org.apache.ibatis.annotations.Param;
 import org.egovframe.rte.psl.dataaccess.mapper.EgovMapper;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -21,5 +20,4 @@ public interface AnnouncementMapper {
     List<FieldBudgetStatVO> selectFieldBudgetStatList();
 
     /** 접수 마감일이 지난 OPEN 공고를 CLOSED 로 일괄 전환 (배치) */
-    int updateExpiredAnnouncementsToClosed(@Param("today") LocalDate today);
 }

@@ -4,6 +4,23 @@
 
 ---
 
+## [0.11.1] 11차 스프린트 2부 — 공고 마감 eGov 배치 (2026-10-26)
+브랜치: `feature/sprint11-egov-batch` · 상세: [docs/SPRINT11_EGOV_BATCH.md](docs/SPRINT11_EGOV_BATCH.md)
+
+### 추가 (Added)
+- eGov 배치(`egovframe-rte-bat-core`) 잡 `announcementCloseJob`: MyBatis 페이징 리더로 마감 대상을 읽고 일괄 쓰기로 마감, 요약 리스너
+- Spring Batch 메타데이터 테이블 (Flyway V7)
+- 시스템 관리 > 배치 실행 이력 (`/admin/batch`, 총괄관리자): 기준일, 실행 시각과 소요 시간, 결과, 읽은·처리 건수, 실행한 사람, 지금 실행
+- 테스트 246건 (+8, 예전 마감 테스트 2건은 배치 테스트로 옮김)
+
+### 변경 (Changed)
+- 공고 마감을 서비스의 UPDATE 한 번에서 청크 처리(100건)로. 같은 기준일은 한 번만 실행하고, 지금 실행은 요청 시각을 붙여 새로 실행
+- 마감 대상 SQL 은 OFFSET 없이 첫 쪽만 읽음 (읽은 공고가 조건에서 빠져 OFFSET 이 남은 공고를 건너뛰기 때문)
+- `spring.batch.job.enabled=false`, `spring.batch.jdbc.initialize-schema=never`
+- 버전 0.11.1-SNAPSHOT
+
+---
+
 ## [0.11.0] 11차 스프린트 — 개인정보 처리 기록 (2026-10-23)
 브랜치: `feature/sprint11-privacy-access-log` · 상세: [docs/SPRINT11_PRIVACY_ACCESS_LOG.md](docs/SPRINT11_PRIVACY_ACCESS_LOG.md)
 

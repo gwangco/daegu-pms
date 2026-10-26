@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}">
+<head>
+    <title>배치 실행 이력</title>
+</head>
+<body>
+<th:block layout:fragment="content">
+    <div class="page-head">
+        <div class="container">
+            <nav aria-label="현재 위치">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a th:href="@{/}">홈</a></li>
+                    <li class="breadcrumb-item">시스템 관리</li>
+                    <li class="breadcrumb-item active" aria-current="page">배치 실행 이력</li>
+                </ol>
+            </nav>
+            <div class="page-head-row">
+                <div>
+                    <h1>배치 실행 이력</h1>
+                    <p class="lead-sub">공고 접수 마감 배치(eGov 배치)는 매일 자정과 서버 기동 직후에 그날 날짜로 한 번 실행됩니다.
+                        같은 날짜로는 두 번 돌지 않고, 지금 실행하면 요청 시각을 붙여 새로 실행합니다. 최근 20건을 보여 줍니다.</p>
+                </div>
+                <div class="page-actions">
+                    <form th:action="@{/admin/batch/announcement-close}" method="post" class="m-0"
+                          data-confirm="공고 접수 마감 배치를 지금 실행하시겠습니까? 마감일이 지난 접수중 공고가 접수마감으로 바뀝니다.">
+                        <button type="submit" class="btn btn-primary btn-lg"><i class="bi bi-play-fill me-1" aria-hidden="true"></i>공고 마감 지금 실행</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="panel">
+            <div class="table-responsive">
+                <table class="table table-hover table-cards">
+                    <caption class="visually-hidden">배치 실행 이력: 실행 번호, 배치, 기준일, 실행 시각과 소요 시간, 결과, 읽은 건수, 처리 건수, 실행한 사람</caption>
+                    <thead>
+                    <tr>
+                        <th scope="col">실행 번호</th>
+                        <th scope="col">배치</th>
+                        <th scope="col">기준일</th>
+                        <th scope="col">실행 시각</th>
+                        <th scope="col" class="text-center col-status">결과</th>
+                        <th scope="col" class="text-end">읽음</th>
+                        <th scope="col" class="text-end">처리</th>
+                        <th scope="col">실행</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="e : ${executions}">
+                        <td class="cell-title fw-bold" th:text="'#' + ${e.executionId}">#1</td>
+                        <td data-label="배치">
+                            <div>
+                                <span th:text="${e.jobLabel}">공고 접수 마감</span>
+                                <span class="cell-sub" th:text="${e.jobName}">announcementCloseJob</span>
+                            </div>
+                        </td>
+                        <td data-label="기준일" class="text-nowrap" th:text="${e.targetDate != null} ? ${e.targetDate} : '-'">2026-10-26</td>
+                        <td data-label="실행 시각" class="small text-nowrap">
+                            <div>
+                                <span th:text="${e.startTime != null} ? ${#temporals.format(e.startTime, 'yyyy-MM-dd HH:mm:ss')} : '-'">2026-10-26 00:00:00</span>
+                                <span class="cell-sub" th:text="${e.durationLabel != null} ? '소요 ' + ${e.durationLabel} : '진행 중'">소요 1초 미만</span>
+                            </div>
+                        </td>
+                        <td data-label="결과" class="text-center">
+                            <span class="status" th:classappend="${e.status == 'COMPLETED'} ? 'status-success' : (${e.status == 'FAILED'} ? 'status-danger' : 'status-warning')"
+                                  th:text="${e.statusLabel}">완료</span>
+                        </td>
+                        <td data-label="읽음" class="text-end" th:text="${e.readCount}">0</td>
+                        <td data-label="처리" class="text-end fw-bold" th:text="${e.writeCount}">0</td>
+                        <td data-label="실행" th:text="${e.requestedBy != null} ? ${e.requestedBy} + ' (수동)' : '정기'">정기</td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(executions)}">
+                        <td colspan="8" class="empty-row">아직 실행한 배치가 없습니다.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</th:block>
+</body>
+</html>
