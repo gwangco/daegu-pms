@@ -6,6 +6,11 @@
 
 FROM eclipse-temurin:17-jdk@sha256:fe947d993c32dd9cf651a4353a6ed723c2370b3a9d034ea4cab4775404ea531a AS build
 WORKDIR /workspace
+# Maven Wrapper 는 unzip 이 없으면 .tar.gz 배포본을 받는데, 체크섬(distributionSha256Sum)은 .zip 기준이라 검증에 실패한다.
+# 그래서 unzip 을 먼저 설치해 .zip 을 받게 한다 (체크섬 검증은 그대로 유지)
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends unzip \
+    && rm -rf /var/lib/apt/lists/*
 COPY .mvn/ .mvn/
 COPY mvnw pom.xml ./
 COPY src/ src/
