@@ -9,16 +9,12 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -30,8 +26,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * 서로 다른 스레드·DB 커넥션·트랜잭션의 경쟁을 검증한다.
  * 상위 테스트의 자동 롤백을 해제하고 전용 과제를 생성/삭제하므로 시드 데이터는 변경하지 않는다.
- * 고정 sleep 으로 순서를 추측하지 않고 MySQL performance_schema.data_lock_waits(행 잠금 대기 목록)로 실제 잠금 대기를 확인한다.
- * (테스트 DB 계정에는 이 표의 조회 권한만 따로 준다: scripts/setup-local-mysql.ps1, CI 워크플로)
+ * 실제 잠금 대기 확인은 DatabaseLockWait 가 맡는다.
  */
 @Transactional(propagation = Propagation.NOT_SUPPORTED)
 @WithMockUser(username = "manager1", roles = "MANAGER")
@@ -126,21 +121,8 @@ class WorkflowConcurrencyIntegrationTest extends IntegrationTestSupport {
         Future<Throwable> competing = new TransactionTemplate(txManager).execute(status -> {
             // 첫 업무 변경은 같은 트랜잭션 안에서 실행되고 이 콜백 종료까지 커밋하지 않는다.
             firstChange.run();
-            Future<Throwable> future = executor.submit(() -> {
-                var context = SecurityContextHolder.createEmptyContext();
-                context.setAuthentication(new UsernamePasswordAuthenticationToken(user, "unused",
-                        List.of(new SimpleGrantedAuthority(role))));
-                SecurityContextHolder.setContext(context);
-                try {
-                    competingChange.run();
-                    return null;
-                } catch (Throwable failure) {
-                    return failure;
-                } finally {
-                    SecurityContextHolder.clearContext();
-                }
-            });
-            waitedOnDatabaseLock.set(awaitDatabaseLockOrCompletion(future));
+            Future<Throwable> future = DatabaseLockWait.submitAs(executor, user, role, competingChange);
+            waitedOnDatabaseLock.set(DatabaseLockWait.awaitLockWaitOrCompletion(jdbc, future));
             return future;
         });
         assertThat(competing).isNotNull();
@@ -148,26 +130,6 @@ class WorkflowConcurrencyIntegrationTest extends IntegrationTestSupport {
         assertThat(waitedOnDatabaseLock).as("두 번째 요청이 첫 요청의 신청서 행 잠금을 실제로 기다림").isTrue();
         assertThat(outcome).as("먼저 확정된 상태를 다시 읽고 업무 오류로 거부함")
                 .isInstanceOf(BusinessException.class);
-    }
-
-    private boolean awaitDatabaseLockOrCompletion(Future<?> competing) {
-        long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(1);
-        while (System.nanoTime() < deadline) {
-            Integer blocked = jdbc.queryForObject("SELECT COUNT(*) FROM performance_schema.data_lock_waits", Integer.class);
-            if (blocked != null && blocked > 0) {
-                return true;
-            }
-            if (competing.isDone()) {
-                return false;
-            }
-            try {
-                Thread.sleep(10);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                throw new IllegalStateException("잠금 대기 검증 중 중단됨", e);
-            }
-        }
-        return false;
     }
 
     private String applicationStatus() {

@@ -16,7 +16,7 @@
 | FAQ | `uss.olh.faq` (`EgovFaqService`) | `COMTNFAQINFO` | 자주 묻는 질문 |
 | 채번 | (실행환경 ID Generation) | `COMTECOPSEQ` | 접수번호, 첨부파일·게시물·FAQ ID |
 
-가져오지 않은 것: 로그인·권한(`uat`, `sec`), 회원 관리(`uss.umt`). D-PMS 는 역할 4개, 로그인 실패 잠금, 개인정보 암호화를 Spring Security 와 `users` 테이블로 이미 구현했고, 공통컴포넌트 로그인은 회원 테이블 3개와 세션 기반 `LoginVO` 를 전제로 해서 바꾸려면 인증 전체를 다시 만들어야 한다. 9차 기업회원 가입도 같은 이유로 `uss.umt` 의 기업회원 테이블(`COMTNENTRPRSMBER`)을 쓰지 않고 `users` 에 만들었으며, 가입을 신청 상태로 받고 관리자가 승인하는 흐름만 원본과 맞췄다([9차 문서](SPRINT9_COMPANY_SIGNUP.md) 5절). 화면(JSP)과 컨트롤러(`*.do`)도 가져오지 않았다. 서비스·DAO·SQL 만 쓰고 화면은 D-PMS 의 Thymeleaf 공통 레이아웃으로 만들었다.
+가져오지 않은 것: 로그인·권한(`uat`, `sec`), 회원 관리(`uss.umt`). D-PMS 는 역할 4개, 로그인 실패 잠금, 개인정보 암호화를 Spring Security 와 `users` 테이블로 이미 구현했고, 공통컴포넌트 로그인은 회원 테이블 3개와 세션 기반 `LoginVO` 를 전제로 해서 바꾸려면 인증 전체를 다시 만들어야 한다. 9차 기업회원 가입도 같은 이유로 `uss.umt` 의 기업회원 테이블(`COMTNENTRPRSMBER`)을 쓰지 않고 `users` 에 만들었으며, 가입을 신청 상태로 받고 관리자가 승인하는 흐름만 원본과 맞췄다([9차 문서](SPRINT9_COMPANY_SIGNUP.md) 5절). 항목별 비교와 실무에서 옮겨야 할 때의 절차는 [uat·sec 비교](UAT_SEC_COMPARISON.md)에 있다. 화면(JSP)과 컨트롤러(`*.do`)도 가져오지 않았다. 서비스·DAO·SQL 만 쓰고 화면은 D-PMS 의 Thymeleaf 공통 레이아웃으로 만들었다.
 
 ## 2. 연결 방식
 

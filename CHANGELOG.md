@@ -4,6 +4,25 @@
 
 ---
 
+## [0.12.0] 12차 스프린트 — 마감: SI 산출물, 후속 테스트, uat·sec 비교 (2026-10-26)
+브랜치: `feature/sprint12-final` · 상세: [docs/SPRINT12_FINAL.md](docs/SPRINT12_FINAL.md)
+
+### 추가 (Added)
+- SI 산출물: 테이블 정의서, ERD (`scripts/generate-db-docs.py` 가 실제 DB 의 information_schema 에서 생성), 화면 목록 27개와 요구사항 추적표 13개
+- 공지 동시 첨부 테스트 (게시물 행 잠금, 같은 첨부 묶음에 다음 순번), 동시 가입 테스트 (DB 중복 오류를 안내 문구로)
+- 공통컴포넌트 로그인·권한(uat, sec)과 D-PMS 비교 문서
+- 테스트 249건 (+3)
+
+### 변경 (Changed)
+- 행 잠금 대기 확인과 다른 스레드 실행을 `DatabaseLockWait` 로 묶어 동시성 테스트 세 클래스가 같이 씀
+- README: SI 산출물 링크, 문서 표, 하지 않은 것 절
+- 버전 0.12.0-SNAPSHOT
+
+### 하지 않음
+- Docker Compose 한 번에 실행: 개발 PC 에 Docker 가 없어 검증할 수 없는 설정은 넣지 않음
+
+---
+
 ## [0.11.1] 11차 스프린트 2부 — 공고 마감 eGov 배치 (2026-10-26)
 브랜치: `feature/sprint11-egov-batch` · 상세: [docs/SPRINT11_EGOV_BATCH.md](docs/SPRINT11_EGOV_BATCH.md)
 

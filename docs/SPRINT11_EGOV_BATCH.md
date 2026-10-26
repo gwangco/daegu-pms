@@ -1,6 +1,6 @@
 # 11차 스프린트 2부 — 공고 마감 eGov 배치
 
-작업일: 2026-10-26 · 브랜치: `feature/sprint11-egov-batch` · 이전 문서: [11차 1부 개인정보 처리 기록](SPRINT11_PRIVACY_ACCESS_LOG.md)
+작업일: 2026-10-26 · 브랜치: `feature/sprint11-egov-batch` · 이전 문서: [11차 1부 개인정보 처리 기록](SPRINT11_PRIVACY_ACCESS_LOG.md) · 다음 문서: [12차 마감](SPRINT12_FINAL.md)
 
 ## 한눈에 보기
 
