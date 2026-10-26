@@ -75,3 +75,51 @@ jobs:
           name: surefire-reports
           path: target/surefire-reports
           retention-days: 7
+
+  # Docker Compose 로 앱 + MySQL 을 실제로 띄워 응답을 확인한다 (README 의 Docker 실행 방법이 계속 동작하는지)
+  compose:
+    name: Docker Compose 실행 확인 (앱 + MySQL 8.4)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: 소스 체크아웃
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # .env 는 실행할 때마다 무작위 비밀번호로 만들고 로그에서는 가린다 (저장소에는 .env.example 만 있다)
+      - name: 실행 설정(.env) 준비
+        run: |
+          ROOT_PW="$(openssl rand -hex 16)"; OWNER_PW="$(openssl rand -hex 16)"; APP_PW="$(openssl rand -hex 16)"
+          echo "::add-mask::$ROOT_PW"; echo "::add-mask::$OWNER_PW"; echo "::add-mask::$APP_PW"
+          {
+            echo "MYSQL_ROOT_PASSWORD=$ROOT_PW"
+            echo "DPMS_DB_MIGRATION_PASSWORD=$OWNER_PW"
+            echo "DPMS_DB_PASSWORD=$APP_PW"
+          } > .env
+
+      - name: 이미지 빌드와 기동
+        run: docker compose up -d --build
+
+      # 앱은 DB 준비 확인이 통과한 뒤 뜨고, 뜰 때 Flyway 가 스키마와 데모 데이터를 넣는다
+      # (응답을 파일로 받은 뒤 확인한다: 파이프로 grep -q 에 넘기면 grep 이 먼저 끝나 curl 이 실패로 끝날 수 있다)
+      - name: 화면 응답과 데모 데이터 확인
+        run: |
+          for i in $(seq 1 90); do
+            if curl -fsS -o /dev/null http://localhost:8080/login; then break; fi
+            sleep 2
+          done
+          curl -fsS -o /dev/null -w "로그인 화면 %{http_code}\n" http://localhost:8080/login
+          curl -fsS -o /dev/null -w "메인 화면 %{http_code}\n" http://localhost:8080/
+          curl -fsS -o announcements.html http://localhost:8080/announcements
+          grep -q "대구 미래 모빌리티" announcements.html && echo "공고 목록에 데모 데이터가 보임"
+          docker compose logs --no-color app > app.log
+          grep -q "공고 마감" app.log && echo "기동 직후 공고 마감 배치 실행"
+
+      - name: 실패 시 로그 출력
+        if: failure()
+        run: docker compose logs --no-color --tail=200
+
+      - name: 정리
+        if: always()
+        run: docker compose down -v
