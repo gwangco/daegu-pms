@@ -36,13 +36,13 @@
         <div class="panel">
             <div class="table-responsive">
                 <table class="table table-hover table-cards">
-                    <caption class="visually-hidden">배치 실행 이력: 실행 번호, 배치, 기준일, 시작·종료, 결과, 읽은 건수, 처리 건수, 실행한 사람</caption>
+                    <caption class="visually-hidden">배치 실행 이력: 실행 번호, 배치, 기준일, 실행 시각과 소요 시간, 결과, 읽은 건수, 처리 건수, 실행한 사람</caption>
                     <thead>
                     <tr>
                         <th scope="col">실행 번호</th>
                         <th scope="col">배치</th>
                         <th scope="col">기준일</th>
-                        <th scope="col">시작 ~ 종료</th>
+                        <th scope="col">실행 시각</th>
                         <th scope="col" class="text-center col-status">결과</th>
                         <th scope="col" class="text-end">읽음</th>
                         <th scope="col" class="text-end">처리</th>
@@ -53,13 +53,17 @@
                     <tr th:each="e : ${executions}">
                         <td class="cell-title fw-bold" th:text="'#' + ${e.executionId}">#1</td>
                         <td data-label="배치">
-                            <span th:text="${e.jobLabel}">공고 접수 마감</span>
-                            <span class="cell-sub" th:text="${e.jobName}">announcementCloseJob</span>
+                            <div>
+                                <span th:text="${e.jobLabel}">공고 접수 마감</span>
+                                <span class="cell-sub" th:text="${e.jobName}">announcementCloseJob</span>
+                            </div>
                         </td>
                         <td data-label="기준일" class="text-nowrap" th:text="${e.targetDate != null} ? ${e.targetDate} : '-'">2026-10-26</td>
-                        <td data-label="시작 ~ 종료" class="small text-nowrap">
-                            <span th:text="${e.startTime != null} ? ${#temporals.format(e.startTime, 'yyyy-MM-dd HH:mm:ss')} : '-'">2026-10-26 00:00:00</span>
-                            <span class="cell-sub" th:text="${e.endTime != null} ? ${#temporals.format(e.endTime, 'HH:mm:ss')} : '진행 중'">00:00:01</span>
+                        <td data-label="실행 시각" class="small text-nowrap">
+                            <div>
+                                <span th:text="${e.startTime != null} ? ${#temporals.format(e.startTime, 'yyyy-MM-dd HH:mm:ss')} : '-'">2026-10-26 00:00:00</span>
+                                <span class="cell-sub" th:text="${e.durationLabel != null} ? '소요 ' + ${e.durationLabel} : '진행 중'">소요 1초 미만</span>
+                            </div>
                         </td>
                         <td data-label="결과" class="text-center">
                             <span class="status" th:classappend="${e.status == 'COMPLETED'} ? 'status-success' : (${e.status == 'FAILED'} ? 'status-danger' : 'status-warning')"

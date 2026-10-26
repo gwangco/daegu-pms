@@ -2,6 +2,7 @@ package kr.go.daegu.pms.cmm.service;
 
 import lombok.Data;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 
 /** 배치 실행 이력 한 건 (Spring Batch 메타데이터 BATCH_JOB_EXECUTION + 파라미터 + 스텝 건수) */
@@ -34,6 +35,18 @@ public class BatchExecutionVO {
             case "STOPPED", "STOPPING" -> "중지";
             default -> status;
         };
+    }
+
+    /** 걸린 시간 (화면용). 아직 끝나지 않았으면 null */
+    public String getDurationLabel() {
+        if (startTime == null || endTime == null) {
+            return null;
+        }
+        long seconds = Duration.between(startTime, endTime).toSeconds();
+        if (seconds < 1) {
+            return "1초 미만";
+        }
+        return seconds < 60 ? seconds + "초" : (seconds / 60) + "분 " + (seconds % 60) + "초";
     }
 
     public String getJobLabel() {
