@@ -4,6 +4,21 @@
 
 ---
 
+## [1.0.0] 최종 마감 — Docker Compose 실행 (2026-10-26)
+브랜치: `feature/docker-compose` · 상세: [docs/DOCKER.md](docs/DOCKER.md)
+
+### 추가 (Added)
+- `Dockerfile`(멀티 스테이지: Maven Wrapper 빌드 → JRE 17 실행, root 가 아닌 계정, 베이스 이미지 digest 고정)
+- `compose.yaml`(앱 + MySQL 8.4, DB 준비 확인 뒤 앱 시작, 볼륨), DB 계정을 둘로 나누는 초기화 스크립트, `.env.example`, `.dockerignore`
+- CI `compose` 잡: 무작위 비밀번호로 띄워 로그인·메인 응답, 공고 목록의 데모 데이터, 기동 직후 배치 실행 확인
+- `docs/DOCKER.md`: 왜 쓰는지, 구성, 실행 방법, 자주 쓰는 명령, 알아 둘 점
+
+### 변경 (Changed)
+- README: Docker 실행 방법, "하지 않은 것"에서 Docker 항목 제거
+- 버전 1.0.0 (로드맵 완료)
+
+---
+
 ## [0.12.0] 12차 스프린트 — 마감: SI 산출물, 후속 테스트, uat·sec 비교 (2026-10-26)
 브랜치: `feature/sprint12-final` · 상세: [docs/SPRINT12_FINAL.md](docs/SPRINT12_FINAL.md)
 

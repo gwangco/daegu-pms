@@ -1,0 +1,51 @@
+# D-PMS 를 Docker 로 한 번에 실행한다: 앱 + MySQL 8.4 (docs/DOCKER.md)
+#   1) .env.example 을 .env 로 복사하고 비밀번호를 바꾼다
+#   2) docker compose up -d --build  →  http://localhost:8080
+# 데모 데이터(db/seed)와 데모 암호화 키를 쓰는 local 프로필로 뜬다. 운영 구성이 아니다.
+name: dpms
+
+services:
+  db:
+    # CI 테스트 DB 와 같은 이미지 (digest 고정)
+    image: mysql:8.4.10@sha256:8dbcf531a03aade657e181b9cf2f1d1803ce621a1d55610cb44cb531ab7d7db6
+    command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_0900_ai_ci"]
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?.env 에 MYSQL_ROOT_PASSWORD 를 정하세요}
+      MYSQL_DATABASE: dpms
+      TZ: Asia/Seoul
+      # 초기화 스크립트(docker/mysql/init)가 계정 두 개를 만들 때 쓴다
+      DPMS_DB_MIGRATION_PASSWORD: ${DPMS_DB_MIGRATION_PASSWORD:?.env 에 DPMS_DB_MIGRATION_PASSWORD 를 정하세요}
+      DPMS_DB_PASSWORD: ${DPMS_DB_PASSWORD:?.env 에 DPMS_DB_PASSWORD 를 정하세요}
+    volumes:
+      - db-data:/var/lib/mysql
+      - ./docker/mysql/init:/docker-entrypoint-initdb.d:ro
+    # DB 포트는 밖으로 열지 않는다 (이 PC 의 MySQL 이 3306 을 써도 겹치지 않음). 앱은 같은 네트워크에서 db:3306 으로 붙는다
+    healthcheck:
+      # 초기화용 임시 서버는 TCP 를 열지 않으므로 127.0.0.1 로 확인해야 본 서버가 뜬 뒤에 통과한다
+      test: ["CMD-SHELL", "MYSQL_PWD=\"$$MYSQL_ROOT_PASSWORD\" mysqladmin ping -h 127.0.0.1 -uroot --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+
+  app:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: local
+      TZ: Asia/Seoul
+      DPMS_DB_URL: jdbc:mysql://db:3306/dpms?characterEncoding=UTF-8&connectionTimeZone=Asia/Seoul
+      DPMS_DB_USERNAME: dpms_app
+      DPMS_DB_PASSWORD: ${DPMS_DB_PASSWORD}
+      DPMS_DB_MIGRATION_USERNAME: dpms_owner
+      DPMS_DB_MIGRATION_PASSWORD: ${DPMS_DB_MIGRATION_PASSWORD}
+    ports:
+      - "${DPMS_PORT:-8080}:8080"
+    volumes:
+      - uploads:/app/uploads
+
+volumes:
+  db-data:
+  uploads:

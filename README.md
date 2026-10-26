@@ -119,6 +119,13 @@ JDK 17 과 MySQL 8.x(8.4 LTS 권장)가 필요합니다. Maven Wrapper 와 내�
 - 스크립트를 쓰지 않을 때는 `config/dpms-secret.example.yml` 을 참고해 같은 계정을 만들거나 환경변수 `DPMS_DB_*` 를 지정합니다.
 - 개발 환경: [Eclipse](docs/ECLIPSE_SETUP.md) (기본) · [VS Code](docs/VS_CODE_SETUP.md)
 
+**Docker 로 실행** (JDK·MySQL 설치 없이, 자세한 내용은 [DOCKER.md](docs/DOCKER.md))
+
+```bash
+cp .env.example .env          # 비밀번호 세 개를 바꾼다 (PowerShell: Copy-Item .env.example .env)
+docker compose up -d --build  # 앱 + MySQL 8.4, http://localhost:8080
+```
+
 테스트 249건: 상태머신·마스킹·업무 시간대·비밀번호 규칙·사업자등록번호 검증번호 단위 테스트, MockMvc 통합 테스트(인가·CSRF·파일 위조·예산 초과·계정 잠금·암호화·공지·공지 첨부·FAQ·기업회원 가입과 승인·신청서 임시저장과 제출 취소·개인정보 처리 기록·공고 마감 배치), 별도 스레드와 MySQL 행 잠금 대기로 확인하는 동시성 테스트(신청서 상태 경쟁, 공지 동시 첨부, 동시 가입), eGov 실행환경·공통컴포넌트 구성과 V2~V7 마이그레이션 결과(CHECK 제약 포함) 테스트, 모든 주요 화면의 공통 규칙(CSP·접근성)과 정적 리소스 캐시 테스트. Pull Request 마다 GitHub Actions 가 MySQL 8.4 컨테이너로 실행합니다.
 
 공개 샘플 계정을 쓰는 로컬 데모입니다. 기업회원은 가입 화면(`/signup`)에서 직접 만들 수 있고, 총괄관리자(`admin`)가 사용자 관리에서 승인하면 로그인됩니다.
@@ -172,6 +179,7 @@ resources/
 | [SPRINT11_PRIVACY_ACCESS_LOG.md](docs/SPRINT11_PRIVACY_ACCESS_LOG.md) | 개인정보 처리 기록(안전성 확보조치 기준 접속기록), 읽기 전용 트랜잭션과 기록 위치, 관리자 점검 화면 |
 | [SPRINT11_EGOV_BATCH.md](docs/SPRINT11_EGOV_BATCH.md) | 공고 마감 eGov 배치: 잡 구성, 같은 기준일 1회 실행, 페이징 리더 OFFSET 함정, 트랜잭션 밖 실행, 실행 이력 화면 |
 | [SPRINT12_FINAL.md](docs/SPRINT12_FINAL.md) | 마감: SI 산출물 생성 방식, 공지 동시 첨부·동시 가입 테스트, 하지 않은 것 |
+| [DOCKER.md](docs/DOCKER.md) | Docker 로 실행: 왜 쓰는지, 구성(앱 + MySQL, DB 계정 분리), 실행·명령, 알아 둘 점, CI 검증 |
 | [si/TABLE_DEFINITION.md](docs/si/TABLE_DEFINITION.md), [si/ERD.md](docs/si/ERD.md) | 테이블 정의서와 ERD (실제 DB 에서 생성) |
 | [si/SCREEN_LIST.md](docs/si/SCREEN_LIST.md) | 화면 목록 27개와 요구사항 추적표 13개 |
 | [COMMON_COMPONENTS.md](docs/COMMON_COMPONENTS.md) | 가져온 공통컴포넌트 목록과 원본 대비 변경점 |
@@ -184,7 +192,6 @@ resources/
 
 데모 범위에서 일부러 뺐거나 아직 하지 못한 것입니다. 자세한 내용은 각 스프린트 문서의 "남은 일"에 있습니다.
 
-- Docker Compose 한 번에 실행: 개발 PC 에 Docker 가 없어 검증할 수 없는 설정은 넣지 않았습니다
 - 비밀번호 변경·찾기, 회원 탈퇴와 개인정보 파기, 비밀번호 유효기간
 - 첨부파일 바이러스 검사, 실패한 배치의 화면 재시작, 서버 이중화 시 배치 분산 락
 - 공통컴포넌트 로그인·권한(uat, sec) 대신 Spring Security 로 직접 구성 ([비교](docs/UAT_SEC_COMPARISON.md))
